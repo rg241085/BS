@@ -863,11 +863,10 @@
                     <thead>
                         <tr>
                             <th class="th-reg">Date</th>
-                            <th class="th-reg">Action Type</th>
                             <th class="th-reg">Receipt / Parchi No.</th>
-                            <th class="th-reg">Item Name</th>
-                            <th class="th-reg">Lot No</th>
-                            <th class="th-reg" style="text-align:center;">Qty IN</th>
+                            <th class="th-reg" style="text-align:center;">Total Items</th>
+                            <th class="th-reg" style="text-align:center;">Total Qty IN</th>
+                            <th class="th-reg" style="text-align:center;">Action</th>
                         </tr>
                     </thead>
                     <tbody id="receiptHistBody"></tbody>
@@ -881,15 +880,37 @@
                             <th class="th-reg">Date</th>
                             <th class="th-reg">Action Type</th>
                             <th class="th-reg">Chalan / Bill No.</th>
-                            <th class="th-reg">Item Name</th>
-                            <th class="th-reg">Lot No</th>
-                            <th class="th-reg" style="text-align:center;">Qty OUT</th>
+                            <th class="th-reg" style="text-align:center;">Total Items</th>
+                            <th class="th-reg" style="text-align:center;">Total Qty OUT</th>
+                            <th class="th-reg" style="text-align:center;">Action</th>
                         </tr>
                     </thead>
                     <tbody id="chalanHistBody"></tbody>
                 </table>
             </div>
         </div>
+    </div>
+
+    <div id="docDetailsModal" class="overlay no-print" style="z-index: 1060; background: rgba(0,0,0,0.8);">
+        <div class="form-card" style="max-width: 800px; border-top: 5px solid #3498db;">
+            <span class="close-x" onclick="document.getElementById('docDetailsModal').style.display='none'">×</span>
+            <h3 id="docDetailsTitle"
+                style="color:#2980b9; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top:0;">
+                📄 Document Details
+            </h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="background:#34495e; color:white;">Item Name</th>
+                        <th style="background:#34495e; color:white;">Lot No</th>
+                        <th style="background:#34495e; color:white;">Qty</th>
+                    </tr>
+                </thead>
+                <tbody id="docDetailsBody"></tbody>
+            </table>
+        </div>
+    </div>
+    </div>
     </div>
 
     <div id="zeroStockModal" class="overlay no-print">
@@ -1434,23 +1455,33 @@
         function renderReceiptRegister() {
             let tbody = document.getElementById('receiptHistBody');
             tbody.innerHTML = "";
-            // Sirf wahi history nikaalo jisme Qty IN hui hai
             let receipts = lotHistory.filter(h => h.qtyIn !== '-' && parseFloat(h.qtyIn) > 0);
 
             if (receipts.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#777;">Koi aamad (Receipt) nahi hai.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#777;">Koi aamad (Receipt) nahi hai.</td></tr>`;
                 return;
             }
 
-            // Reverse kiya hai taaki naya data sabse upar dikhe
-            [...receipts].reverse().forEach(h => {
+            // Parchi No. aur Date ke hisaab se Group karna
+            let grouped = {};
+            receipts.forEach(h => {
+                let key = h.date + "|" + h.ref;
+                if (!grouped[key]) grouped[key] = { date: h.date, ref: h.ref, totalQty: 0, itemsCount: 0 };
+                grouped[key].totalQty += parseFloat(h.qtyIn);
+                grouped[key].itemsCount += 1;
+            });
+
+            Object.values(grouped).reverse().forEach(g => {
+                let safeRef = g.ref.replace(/'/g, "\\'"); // Agar naam me apostrophe ho toh error na aaye
                 tbody.innerHTML += `<tr>
-                    <td>${h.date}</td>
-                    <td style="color:#2980b9; font-weight:bold;">${h.type}</td>
-                    <td>${h.ref}</td>
-                    <td><b>${h.name}</b></td>
-                    <td><span class="badge-lot">${h.lot}</span></td>
-                    <td style="color:#27ae60; font-weight:bold; text-align:center;">${h.qtyIn}</td>
+                    <td>${g.date}</td>
+                    <td style="font-weight:bold; color:#2980b9;">${g.ref}</td>
+                    <td style="text-align:center;">${g.itemsCount} Item(s)</td>
+                    <td style="color:#27ae60; font-weight:bold; text-align:center;">${g.totalQty}</td>
+                    <td style="text-align:center;">
+                        <button style="padding:6px 12px; cursor:pointer; background:#2980b9; color:white; border:none; border-radius:4px; font-weight:bold;" 
+                        onclick="showDocDetails('${g.date}', '${safeRef}', 'IN')">👁️ View</button>
+                    </td>
                 </tr>`;
             });
         }
@@ -1458,7 +1489,6 @@
         function renderChalanRegister() {
             let tbody = document.getElementById('chalanHistBody');
             tbody.innerHTML = "";
-            // Sirf wahi history nikaalo jisme Qty OUT hui hai
             let chalans = lotHistory.filter(h => h.qtyOut !== '-' && parseFloat(h.qtyOut) > 0);
 
             if (chalans.length === 0) {
@@ -1466,18 +1496,51 @@
                 return;
             }
 
-            // Reverse kiya hai taaki naya data sabse upar dikhe
-            [...chalans].reverse().forEach(h => {
-                let typeColor = h.type.includes("Sale") ? "#8e44ad" : "#e67e22";
+            // Chalan No. aur Date ke hisaab se Group karna
+            let grouped = {};
+            chalans.forEach(h => {
+                let key = h.date + "|" + h.ref + "|" + h.type;
+                if (!grouped[key]) grouped[key] = { date: h.date, ref: h.ref, type: h.type, totalQty: 0, itemsCount: 0 };
+                grouped[key].totalQty += parseFloat(h.qtyOut);
+                grouped[key].itemsCount += 1;
+            });
+
+            Object.values(grouped).reverse().forEach(g => {
+                let typeColor = g.type.includes("Sale") ? "#8e44ad" : "#e67e22";
+                let safeRef = g.ref.replace(/'/g, "\\'");
                 tbody.innerHTML += `<tr>
-                    <td>${h.date}</td>
-                    <td style="color:${typeColor}; font-weight:bold;">${h.type}</td>
-                    <td>${h.ref}</td>
-                    <td><b>${h.name}</b></td>
-                    <td><span class="badge-lot">${h.lot}</span></td>
-                    <td style="color:#c0392b; font-weight:bold; text-align:center;">${h.qtyOut}</td>
+                    <td>${g.date}</td>
+                    <td style="color:${typeColor}; font-weight:bold;">${g.type}</td>
+                    <td style="font-weight:bold;">${g.ref}</td>
+                    <td style="text-align:center;">${g.itemsCount} Item(s)</td>
+                    <td style="color:#c0392b; font-weight:bold; text-align:center;">${g.totalQty}</td>
+                    <td style="text-align:center;">
+                        <button style="padding:6px 12px; cursor:pointer; background:${typeColor}; color:white; border:none; border-radius:4px; font-weight:bold;" 
+                        onclick="showDocDetails('${g.date}', '${safeRef}', 'OUT')">👁️ View</button>
+                    </td>
                 </tr>`;
             });
+        }
+
+        // View button dabane par andar ka maal dikhane wala function
+        function showDocDetails(date, ref, typeFlag) {
+            let tbody = document.getElementById('docDetailsBody');
+            tbody.innerHTML = "";
+            document.getElementById('docDetailsTitle').innerText = `📄 Parchi/Bill Details: ${ref} (${date})`;
+
+            let filtered = lotHistory.filter(h => h.date === date && h.ref === ref && (typeFlag === 'IN' ? h.qtyIn !== '-' : h.qtyOut !== '-'));
+
+            filtered.forEach(h => {
+                let qty = typeFlag === 'IN' ? h.qtyIn : h.qtyOut;
+                let color = typeFlag === 'IN' ? '#27ae60' : '#c0392b';
+                tbody.innerHTML += `<tr>
+                    <td><b>${h.name}</b></td>
+                    <td><span class="badge-lot">${h.lot}</span></td>
+                    <td style="color:${color}; font-weight:bold; font-size:15px;">${qty}</td>
+                </tr>`;
+            });
+
+            document.getElementById('docDetailsModal').style.display = 'block';
         }
 
         function renderMasterTable() {
@@ -1704,6 +1767,7 @@
         window.extractQtyFromMarka = extractQtyFromMarka;
         window.renderReceiptRegister = renderReceiptRegister;
         window.renderChalanRegister = renderChalanRegister;
+        window.showDocDetails = showDocDetails;
 
         // Export New Functions
         window.searchMasterTable = searchMasterTable;
