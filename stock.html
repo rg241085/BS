@@ -795,8 +795,9 @@
             <h3 style="color:#d35400; border-bottom: 1px solid #eee; padding-bottom: 10px;">🛠️ Edit ya Adjust Lot</h3>
             <div style="background:#fff3e0; padding:15px; border-radius:5px; margin-bottom:15px;">
                 <label style="color:#d35400;">Lot No. Search Karein (Jise theek karna hai)</label>
-                <input type="text" id="editSearchLot" oninput="fetchLotForEdit(this.value)" list="lotList"
-                    placeholder="Lot No type karein..." style="font-size:16px; font-weight:bold; border-color:#d35400;">
+                <input type="text" id="editSearchLot" oninput="fetchLotForEdit(this.value)" list="editSmartList"
+                    placeholder="🔍 Search Party, Lot, Item ya Marka..."
+                    style="font-size:16px; font-weight:bold; border-color:#d35400; padding:10px; width:100%; box-sizing:border-box;">
                 <p id="editErrorMsg" style="color:red; font-size:12px; margin-top:5px; display:none;">❌ Yeh Lot No nahi
                     mila.</p>
             </div>
@@ -947,6 +948,7 @@
     <datalist id="receiptList"></datalist>
     <datalist id="chalanList"></datalist>
     <datalist id="shopAvailableMarkList"></datalist>
+    <datalist id="editSmartList"></datalist>
 
     <script type="module">
         import { db, doc, setDoc, onSnapshot } from './firebase-config.js';
@@ -1117,7 +1119,22 @@
             document.getElementById('partyList').innerHTML = savedParties.map(p => `<option value="${p}">`).join('');
             let availableShopMarks = shopStock.filter(s => s.qty > 0 && s.mark).map(s => s.mark);
             document.getElementById('shopAvailableMarkList').innerHTML = [...new Set(availableShopMarks)].map(m => `<option value="${m}">`).join('');
-        }
+        // Naya code: Edit form ke liye Smart Search List banana
+            let uniqueLotsForEdit = {};
+            // Cold aur Shop dono ke items ko ek jagah ikattha karna
+            coldStock.forEach(s => uniqueLotsForEdit[s.lot] = s);
+            shopStock.forEach(s => uniqueLotsForEdit[s.lot] = s);
+            
+            let smartListHtml = "";
+            Object.values(uniqueLotsForEdit).forEach(item => {
+                let markText = item.mark !== "-" ? item.mark : "No Marka";
+                // List mein Lot ke saath Item, Party aur Marka bhi dikhega
+                smartListHtml += `<option value="${item.lot}">Item: ${item.name} | Party: ${item.party} | Marka: ${markText}</option>`;
+            });
+            
+            let editSmartListEl = document.getElementById('editSmartList');
+            if (editSmartListEl) editSmartListEl.innerHTML = smartListHtml;
+            }
 
         function saveInwardReceipt() {
             let destination = document.getElementById('inDestination').value;
