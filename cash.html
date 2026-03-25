@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Perpetual Cash Management (Dryfu ERP)</title>
+    <style>
+        /* SECURITY: Jab tak login verify na ho, screen par kuch nahi dikhega */
+        body {
+            display: none;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f4f4f4;
+            justify-content: center;
+            /* Will be set to flex via JS */
+        }
+
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .page-wrapper {
+            width: 95%;
+            max-width: 1600px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin: 0 0 15px;
+        }
+
+        .day-component {
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            background: #fff;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .day-header {
+            background: #007bff;
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .header-date {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .date-wrap {
+            position: relative;
+            width: 160px;
+        }
+
+        .fake-date {
+            width: 100%;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, .6);
+            background: #fff;
+            color: #333;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .real-date {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .header-metrics {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .header-metrics .metric {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, .15);
+            padding: 6px 10px;
+            border-radius: 6px;
+            backdrop-filter: blur(2px);
+        }
+
+        .summary-difference {
+            font-weight: 700;
+            padding: 6px 10px;
+            border-radius: 6px;
+            color: #fff;
+        }
+
+        .summary-difference.match {
+            background: #2e7d32;
+        }
+
+        .summary-difference.short {
+            background: #c62828;
+        }
+
+        .summary-difference.extra {
+            background: #1565c0;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .header-buttons .btn {
+            padding: 8px 14px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        .add-new-day-btn {
+            background: #28a745;
+        }
+
+        .add-new-day-btn:hover {
+            background: #218838;
+        }
+
+        .clear-day-btn {
+            background: #6c757d;
+        }
+
+        .clear-day-btn:hover {
+            background: #5a6268;
+        }
+
+        .recalc-all-btn {
+            background: #17a2b8;
+        }
+
+        .recalc-all-btn:hover {
+            background: #138496;
+        }
+
+        .day-component:not(:first-child) .header-buttons {
+            display: none;
+        }
+
+        .main-layout-wrapper {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding: 0 20px;
+        }
+
+        .layout-column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .column-left {
+            flex: 3;
+        }
+
+        .column-right {
+            flex: 2;
+        }
+
+        .container {
+            width: 100%;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        .counter-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .counter-table th,
+        .counter-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .counter-table th {
+            background: #f2f2f2;
+        }
+
+        .denom-value {
+            font-weight: bold;
+            font-size: 16px;
+            width: 80px;
+        }
+
+        .count-input {
+            width: 100%;
+            min-width: 50px;
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .count-input:disabled {
+            background: #eee;
+            border: none;
+        }
+
+        .grand-total-row {
+            background: #e9f5ff;
+        }
+
+        .grand-total-label {
+            text-align: right;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .grand-total-value {
+            font-weight: bold;
+            font-size: 18px;
+            color: #0056b3;
+        }
+
+        .extra-list-body .entry-item {
+            display: table-row;
+        }
+
+        .extra-list-body .remove-col {
+            width: 40px;
+            text-align: center;
+        }
+
+        .extra-list-body .narration-text {
+            text-align: center;
+            font-style: italic;
+            color: #333;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .extra-list-body .narration-text.editable-text {
+            cursor: pointer;
+        }
+
+        .extra-list-body .editable-amount {
+            font-weight: bold;
+            display: inline-block;
+            padding: 3px 5px;
+            cursor: pointer;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: right;
+        }
+
+        .opening-balance {
+            width: 100%;
+            padding: 10px;
+            font-size: 18px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-weight: bold;
+        }
+
+        .opening-balance:disabled {
+            background: #eee;
+            color: #555;
+        }
+
+        .opening-balance:not(:disabled) {
+            background: #fff3cd !important;
+        }
+
+        .hisab-entry-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .hisab-entry-form input {
+            flex-grow: 1;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .hisab-entry-form button {
+            padding: 8px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            color: #fff;
+            border-radius: 4px;
+        }
+
+        .incoming-form button {
+            background: #28a745;
+        }
+
+        .outgoing-form button {
+            background: #dc3545;
+        }
+
+        .entry-list {
+            border: 1px solid #eee;
+            min-height: 150px;
+            padding: 10px;
+            background: #fdfdfd;
+            flex-grow: 1;
+            overflow: visible;
+            max-height: none;
+            border-radius: 4px;
+        }
+
+        .incoming-list .entry-item,
+        .outgoing-list .entry-item {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 5px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .incoming-list .entry-item button,
+        .outgoing-list .entry-item button {
+            font-size: 12px;
+            background: #ffc107;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+            padding: 2px 5px;
+            margin: 0;
+            color: black;
+            font-weight: bold;
+        }
+
+        .incoming-list .entry-item span.editable-amount,
+        .outgoing-list .entry-item span.editable-amount {
+            flex-grow: 1;
+            font-size: 16px;
+            text-align: left;
+            padding: 3px 5px;
+            cursor: pointer;
+            border-bottom: 1px dashed transparent;
+        }
+
+        .incoming-list .entry-item span.editable-amount:hover,
+        .outgoing-list .entry-item span.editable-amount:hover {
+            background: #f9f9f9;
+            border-bottom: 1px dashed #007bff;
+        }
+
+        /* =========================================
+   📱 MOBILE RESPONSIVE DESIGN (Media Queries)
+   ========================================= */
+        @media (max-width: 850px) {
+
+            /* Main Layout: Cash Counter aur Ledger ko ek ke neeche ek set karna */
+            .main-layout-wrapper {
+                flex-direction: column;
+                padding: 0 10px;
+                gap: 15px;
+            }
+
+            /* Hisab Layout: Incoming aur Outgoing ko stack karna */
+            .hisab-layout-wrapper {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            /* Totals Grid: Totals ko bhi stack karna */
+            .hisab-totals-grid {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            /* Header ko mobile ke hisaab se adjust karna */
+            .header-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .header-metrics {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .header-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .header-buttons .btn {
+                flex: 1;
+                text-align: center;
+                padding: 10px;
+            }
+
+            /* Table ko scrollable banana taaki wo bahar na nikle */
+            .container {
+                padding: 15px 10px;
+                overflow-x: auto;
+            }
+
+            .counter-table {
+                min-width: 600px;
+                /* Table ko chota hone se rokega, iski jagah scroll aa jayega */
+            }
+
+            .counter-table th,
+            .counter-table td {
+                padding: 6px;
+                font-size: 13px;
+            }
+
+            .hisab-title-wrapper {
+                gap: 10px;
+            }
+        }
+
+        /* Extra chhoti screen (jaise chote phones) ke liye thoda aur adjustment */
+        @media (max-width: 480px) {
+            .header-metrics {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .metric {
+                justify-content: space-between;
+            }
+
+            .header-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+        <!-- <h1>💵 Dryfu - Cash Management System</h1> -->
+        <div id="day-container"></div>
+    </div>
+
+    <template id="day-template">
+        <div class="day-component">
+            <div class="day-header">
+                <div class="header-row">
+                    <div class="header-date">
+                        <span>Date:</span>
+                        <div class="date-wrap">
+                            <input type="text" class="fake-date" placeholder="DD-MM-YYYY" readonly>
+                            <input type="date" class="real-date transaction-date">
+                        </div>
+                    </div>
+
+                    <div class="header-metrics">
+                        <div class="metric"><span>By Ledger:</span><span class="summary-expected">0.00</span></div>
+                        <div class="metric"><span>By Count:</span><span class="summary-physical">0.00</span></div>
+                        <div class="metric"><span class="summary-difference match">MATCHED: 0.00</span></div>
+                    </div>
+
+                    <div class="header-buttons">
+                        <button class="btn add-new-day-btn">Add New Day</button>
+                        <button class="btn clear-day-btn" title="Clear only this day">Clear Current Day</button>
+                        <button class="btn recalc-all-btn"
+                            title="Set each day's opening from previous day's closing">Recalculate All Days</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-layout-wrapper">
+                <div class="layout-column column-left">
+                    <div class="container">
+                        <h2 style="margin-top: 0; border-bottom: 2px solid #ccc; padding-bottom: 10px;">Cash Counter
+                            (Galla)</h2>
+
+                        <form class="hisab-entry-form extra-amount-form">
+                            <input type="text" class="extra-narration" placeholder="Narration (e.g., IN BOX)" required>
+                            <input type="number" class="extra-amount" placeholder="Amount" min="0" required>
+                            <button type="submit" style="background:#007bff;">Add Note</button>
+                        </form>
+
+                        <table class="counter-table">
+                            <thead>
+                                <tr>
+                                    <th>Denomination</th>
+                                    <th>Packets (x100)</th>
+                                    <th>Loose 1</th>
+                                    <th>Loose 2</th>
+                                    <th>Loose 3</th>
+                                    <th>Coins</th>
+                                    <th>Total Count</th>
+                                    <th>Total Value</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-body"></tbody>
+                            <tbody class="extra-list-body"></tbody>
+                            <tfoot>
+                                <tr class="grand-total-row">
+                                    <td colspan="7" class="grand-total-label">PHYSICAL CASH (Total):</td>
+                                    <td class="grand-total-value">0.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="layout-column column-right">
+                    <div class="container">
+                        <h2 style="margin-top: 0; border-bottom: 2px solid #ccc; padding-bottom: 10px;">Daily Ledger
+                            (Hisab)</h2>
+
+                        <div class="hisab-opening" style="margin-bottom: 15px;">
+                            <label>Opening Balance</label>
+                            <input type="number" class="opening-balance hisab-input" value="0" min="0" disabled>
+                        </div>
+
+                        <div class="hisab-title-wrapper" style="display:flex; gap:20px;">
+                            <h3 style="flex:1; color:#28a745; margin-bottom:5px;">Incoming (+)</h3>
+                            <h3 style="flex:1; color:#dc3545; margin-bottom:5px;">Outgoing (-)</h3>
+                        </div>
+
+                        <div class="hisab-layout-wrapper" style="display:flex; gap:20px;">
+                            <div class="hisab-sub-column" style="flex:1;">
+                                <form class="hisab-entry-form incoming-form">
+                                    <input type="number" class="incoming-amount" placeholder="Amount" min="0" required>
+                                    <button type="submit">+</button>
+                                </form>
+                                <div class="entry-list incoming-list"></div>
+                            </div>
+                            <div class="hisab-sub-column" style="flex:1;">
+                                <form class="hisab-entry-form outgoing-form">
+                                    <input type="number" class="outgoing-amount" placeholder="Amount" min="0" required>
+                                    <button type="submit">-</button>
+                                </form>
+                                <div class="entry-list outgoing-list"></div>
+                            </div>
+                        </div>
+
+                        <div class="hisab-totals-grid"
+                            style="display:flex; gap:20px; margin-top:15px; border-top:2px solid #007bff; padding-top:15px;">
+                            <div class="hisab-totals-column" style="flex:1;">
+                                <div class="hisab-total-row"
+                                    style="display:flex; justify-content:space-between; padding:10px 5px; font-weight:bold;">
+                                    <span>Total Incoming:</span><span class="hisab-total-incoming">0.00</span>
+                                </div>
+                                <div class="hisab-total-row total-cash-in-row"
+                                    style="display:flex; justify-content:space-between; padding:12px 5px; background:#f1f8ff; font-weight:bold; border-radius:4px;">
+                                    <span>Op + Incoming:</span><span class="hisab-total-cash-in">0.00</span>
+                                </div>
+                            </div>
+                            <div class="hisab-totals-column" style="flex:1;">
+                                <div class="hisab-total-row"
+                                    style="display:flex; justify-content:space-between; padding:10px 5px; font-weight:bold; color:#dc3545;">
+                                    <span>Total Outgoing:</span><span class="hisab-total-outgoing">0.00</span>
+                                </div>
+                                <div class="hisab-expected-row"
+                                    style="display:flex; justify-content:space-between; padding:12px 5px; font-weight:bold; background:#e9f5ff; border:1px solid #bce0ff; border-radius:4px; font-size:16px;">
+                                    <span>Closing Bal:</span><span class="hisab-expected-balance"
+                                        style="color:#0056b3;">0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script type="module">
+        import { db, doc, getDoc, setDoc, auth, onAuthStateChanged } from './firebase-config.js';
+
+        // --- SECURITY CHECK (Login Verification) ---
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = "login.html";
+            } else {
+                document.body.style.display = "flex"; // Screen show karein
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const MAX_DAYS = 5;
+
+            // --- NAYA FIRESTORE DATABASE REFERENCE ---
+            const cashDocRef = doc(db, "erp", "cashCounter");
+            // --- END ---
+
+            const dayContainer = document.getElementById('day-container');
+            const dayTemplate = document.getElementById('day-template');
+
+            /* ----------------- Date Helpers ----------------- */
+            const pad2 = (n) => String(n).padStart(2, '0');
+            const formatDDMMYYYY = (d) => `${pad2(d.getDate())}-${pad2(d.getMonth() + 1)}-${d.getFullYear()}`;
+            function parseDDMMYYYY(str) {
+                const m = /^(\d{2})-(\d{2})-(\d{4})$/.exec(str || '');
+                if (!m) return null;
+                const dt = new Date(+m[3], +m[2] - 1, +m[1]);
+                return isNaN(dt) ? null : dt;
+            }
+            const ymdFromDate = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+            function dateFromYMD(ymd) {
+                const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd || '');
+                if (!m) return null;
+                const dt = new Date(+m[1], +m[2] - 1, +m[3]);
+                return isNaN(dt) ? null : dt;
+            }
+
+            /* ----------------- STORAGE (NAYA FIRESTORE LOGIC) ----------------- */
+
+            // YEH FUNCTION FIRESTORE SE DATA LOAD KAREGA
+            async function loadDays() {
+                try {
+                    const docSnap = await getDoc(cashDocRef);
+                    const arr = docSnap.exists() ? (docSnap.data().days || []) : [];
+
+                    // normalize to DD-MM-YYYY
+                    const normalized = (Array.isArray(arr) ? arr : []).map(d => {
+                        let dd = '';
+                        if (d?.date) {
+                            const asYMD = dateFromYMD(d.date);
+                            dd = asYMD ? formatDDMMYYYY(asYMD) : (parseDDMMYYYY(d.date) ? d.date : '');
+                        }
+                        return { ...d, date: dd };
+                    });
+                    return normalized.slice(0, MAX_DAYS);
+                } catch (e) {
+                    console.error("Firestore load failed:", e);
+                    return [];
+                }
+            }
+
+            // YEH FUNCTION FIRESTORE MEIN DATA SAVE KAREGA
+            async function saveDays(days) {
+                try {
+                    const trimmed = (days || []).slice(0, MAX_DAYS);
+                    await setDoc(cashDocRef, { days: trimmed }); // Data save
+                } catch (e) {
+                    console.error("Firestore save failed:", e);
+                }
+            }
+
+            const getAllDayComponents = () => Array.from(dayContainer.querySelectorAll('.day-component'));
+
+            /* ----------------- DATA <-> DOM ----------------- */
+            function serializeDay(dayComponent) {
+                const fake = dayComponent.querySelector('.fake-date').value.trim();
+                const date = /^\d{2}-\d{2}-\d{4}$/.test(fake) ? fake : '';
+
+                const openingInput = dayComponent.querySelector('.opening-balance');
+                const opening = parseFloat(openingInput.value) || 0;
+                const openingDisabled = openingInput.disabled;
+
+                const denomData = {};
+                dayComponent.querySelectorAll('.denom-row').forEach(row => {
+                    const v = parseFloat(row.dataset.value);
+                    denomData[v] = {
+                        packets: parseFloat(row.querySelector('.packet-input').value) || 0,
+                        loose1: parseFloat(row.querySelector('.loose-1-input').value) || 0,
+                        loose2: parseFloat(row.querySelector('.loose-2-input').value) || 0,
+                        loose3: parseFloat(row.querySelector('.loose-3-input').value) || 0,
+                        coins: parseFloat(row.querySelector('.coins-input').value) || 0,
+                    };
+                });
+
+                const incoming = Array.from(dayComponent.querySelectorAll('.incoming-list .editable-amount')).map(s => parseFloat(s.textContent) || 0);
+                const outgoing = Array.from(dayComponent.querySelectorAll('.outgoing-list .editable-amount')).map(s => parseFloat(s.textContent) || 0);
+
+                const extras = Array.from(dayComponent.querySelectorAll('.extra-list-body tr')).map(tr => {
+                    const narration = (tr.querySelector('.narration-text')?.textContent || '').trim();
+                    const amt = parseFloat(tr.querySelector('.editable-amount')?.textContent) || 0;
+                    return { narration, amount: amt };
+                });
+
+                return { date, opening, openingDisabled, denomData, incoming, outgoing, extras };
+            }
+
+            function saveFromDOM() {
+                let days = getAllDayComponents().map(serializeDay);
+                if (days.length > MAX_DAYS) days = days.slice(0, MAX_DAYS);
+                saveDays(days);
+                trimDOMToMaxDays();
+            }
+
+            /* ----------------- UI BUILDERS ----------------- */
+            const denominations = [
+                { value: 500, notes: true, coins: false },
+                { value: 200, notes: true, coins: false },
+                { value: 100, notes: true, coins: false },
+                { value: 50, notes: true, coins: false },
+                { value: 20, notes: true, coins: true },
+                { value: 10, notes: true, coins: true }
+            ];
+
+            function buildDenomRows(tableBody) {
+                denominations.forEach(denom => {
+                    const row = document.createElement('tr');
+                    row.classList.add('denom-row');
+                    row.dataset.value = denom.value;
+                    row.innerHTML = `
+                <td class="denom-value">${denom.value}</td>
+                <td><input type="number" class="count-input counter-input packet-input" min="0" ${denom.notes ? '' : 'disabled'} value="0"></td>
+                <td><input type="number" class="count-input counter-input loose-1-input" min="0" ${denom.notes ? '' : 'disabled'} value="0"></td>
+                <td><input type="number" class="count-input counter-input loose-2-input" min="0" ${denom.notes ? '' : 'disabled'} value="0"></td>
+                <td><input type="number" class="count-input counter-input loose-3-input" min="0" ${denom.notes ? '' : 'disabled'} value="0"></td>
+                <td><input type="number" class="count-input counter-input coins-input"   min="0" ${denom.coins ? '' : 'disabled'} value="0"></td>
+                <td class="total-count row-total-count">0</td>
+                <td class="total-value row-total-value">0.00</td>
+                `;
+                    tableBody.appendChild(row);
+                });
+            }
+
+            function addHisabEntry(dayComponent, type, amount) {
+                const list = dayComponent.querySelector(type === 'incoming' ? '.incoming-list' : '.outgoing-list');
+                const item = document.createElement('div');
+                item.className = 'entry-item';
+                item.innerHTML = `
+                <span class="editable-amount">${amount.toFixed(2)}</span>
+                <button type="button" class="remove-entry-btn">X</button>
+                `;
+                list.appendChild(item);
+                calculateAll(dayComponent);
+                saveFromDOM();
+            }
+
+            function addExtraEntry(dayComponent, narration, amount) {
+                const listBody = dayComponent.querySelector('.extra-list-body');
+                const newRow = document.createElement('tr');
+                newRow.className = 'entry-item extra-item';
+                newRow.innerHTML = `
+                <td class="remove-col"><button type="button" class="remove-entry-btn">X</button></td>
+                <td colspan="6" class="narration-text editable-text">${narration}</td>
+                <td class="total-value" style="text-align:right; padding-right:5px;">
+                <span class="editable-amount">${amount.toFixed(2)}</span>
+                </td>
+                `;
+                listBody.appendChild(newRow);
+                calculateAll(dayComponent);
+                saveFromDOM();
+            }
+
+            /* ----------------- CLEAR CURRENT DAY ----------------- */
+            function clearCurrentDay(dayComponent) {
+                if (!confirm('Are you sure you want to clear this day?')) return;
+
+                dayComponent.querySelectorAll('.counter-input').forEach(i => i.value = 0);
+                dayComponent.querySelectorAll('.incoming-list, .outgoing-list, .extra-list-body').forEach(list => list.innerHTML = '');
+                dayComponent.querySelectorAll('.opening-balance').forEach(inp => { if (!inp.disabled) inp.value = 0; });
+
+                calculateAll(dayComponent);
+                saveFromDOM();
+            }
+
+            /* ----------------- RECALCULATE ALL DAYS ----------------- */
+            function recalcAllDays() {
+                const comps = Array.from(dayContainer.querySelectorAll('.day-component'));
+                if (comps.length <= 1) { alert('Add at least 2 days to recalculate.'); return; }
+
+                comps.forEach(c => calculateAll(c));
+                const chrono = comps.slice().reverse();
+
+                for (let i = 1; i < chrono.length; i++) {
+                    const prev = chrono[i - 1];
+                    const curr = chrono[i];
+                    const prevClosing = parseFloat(prev.querySelector('.hisab-expected-balance').textContent) || 0;
+
+                    const opInput = curr.querySelector('.opening-balance');
+                    opInput.value = prevClosing.toFixed(2);
+                    opInput.disabled = true;
+
+                    calculateAll(curr);
+                }
+
+                saveFromDOM();
+                alert('Recalculated openings from previous closings ✅');
+            }
+
+            /* ----------------- LIST EVENTS ----------------- */
+            function handleListClick(e, dayComponent) {
+                if (e.target.classList.contains('remove-entry-btn')) {
+                    e.target.closest('.entry-item').remove();
+                    calculateAll(dayComponent); saveFromDOM(); return;
+                }
+                if (e.target.classList.contains('editable-amount')) {
+                    editNumberField(e.target, dayComponent); return;
+                }
+                if (e.target.classList.contains('narration-text')) {
+                    editNarrationCell(e.target); return;
+                }
+            }
+
+            function editNumberField(spanElement, dayComponent) {
+                const currentValue = parseFloat(spanElement.textContent);
+                const inputElement = document.createElement('input');
+                inputElement.type = 'number';
+                inputElement.value = isNaN(currentValue) ? '' : currentValue;
+                inputElement.className = 'edit-entry-input';
+                if (spanElement.closest('.extra-list-body')) inputElement.style.width = '100px';
+
+                spanElement.style.display = 'none';
+                spanElement.parentNode.insertBefore(inputElement, spanElement.nextSibling);
+                inputElement.focus();
+
+                const saveChanges = () => {
+                    const newValue = parseFloat(inputElement.value);
+                    if (!isNaN(newValue) && newValue > 0) {
+                        spanElement.textContent = newValue.toFixed(2);
+                        calculateAll(dayComponent); saveFromDOM();
+                    }
+                    inputElement.remove(); spanElement.style.display = '';
+                };
+                inputElement.addEventListener('blur', saveChanges);
+                inputElement.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') saveChanges();
+                    else if (e.key === 'Escape') { inputElement.remove(); spanElement.style.display = ''; }
+                });
+            }
+
+            function editNarrationCell(cell) {
+                const current = cell.textContent.trim();
+                const input = document.createElement('input');
+                input.type = 'text'; input.value = current; input.className = 'edit-entry-input';
+                cell.textContent = ''; cell.appendChild(input); input.focus();
+
+                const save = () => {
+                    const val = input.value.trim();
+                    cell.textContent = val || current;
+                    cell.classList.add('narration-text', 'editable-text');
+                    saveFromDOM();
+                };
+                input.addEventListener('blur', save);
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') save();
+                    else if (e.key === 'Escape') { cell.textContent = current; cell.classList.add('narration-text', 'editable-text'); }
+                });
+            }
+
+            /* ----------------- CALCULATIONS ----------------- */
+            function calculateAll(dayComponent) {
+                let physicalGrandTotal = 0;
+                dayComponent.querySelectorAll('.denom-row').forEach(row => {
+                    const value = parseFloat(row.dataset.value);
+                    const packetCount = parseFloat(row.querySelector('.packet-input').value) || 0;
+                    const loose1 = parseFloat(row.querySelector('.loose-1-input').value) || 0;
+                    const loose2 = parseFloat(row.querySelector('.loose-2-input').value) || 0;
+                    const loose3 = parseFloat(row.querySelector('.loose-3-input').value) || 0;
+                    const coinCount = parseFloat(row.querySelector('.coins-input').value) || 0;
+
+                    const totalNoteCount = (packetCount * 100) + loose1 + loose2 + loose3;
+                    row.querySelector('.row-total-count').textContent = totalNoteCount + coinCount;
+
+                    const rowTotalValue = (totalNoteCount * value) + (coinCount * value);
+                    row.querySelector('.row-total-value').textContent = `${rowTotalValue.toFixed(2)}`;
+
+                    physicalGrandTotal += rowTotalValue;
+                });
+
+                dayComponent.querySelectorAll('.extra-list-body .editable-amount').forEach(item => {
+                    physicalGrandTotal += parseFloat(item.textContent) || 0;
+                });
+                dayComponent.querySelector('.grand-total-value').textContent = `${physicalGrandTotal.toFixed(2)}`;
+
+                const opening = parseFloat(dayComponent.querySelector('.opening-balance').value) || 0;
+                let totalIncoming = 0, totalOutgoing = 0;
+                dayComponent.querySelectorAll('.incoming-list .editable-amount').forEach(i => totalIncoming += parseFloat(i.textContent) || 0);
+                dayComponent.querySelectorAll('.outgoing-list .editable-amount').forEach(i => totalOutgoing += parseFloat(i.textContent) || 0);
+
+                const totalCashIn = opening + totalIncoming;
+                const expectedBalance = totalCashIn - totalOutgoing;
+
+                dayComponent.querySelector('.hisab-total-incoming').textContent = `${totalIncoming.toFixed(2)}`;
+                dayComponent.querySelector('.hisab-total-cash-in').textContent = `${totalCashIn.toFixed(2)}`;
+                dayComponent.querySelector('.hisab-total-outgoing').textContent = `${totalOutgoing.toFixed(2)}`;
+                dayComponent.querySelector('.hisab-expected-balance').textContent = `${expectedBalance.toFixed(2)}`;
+
+                dayComponent.querySelector('.summary-expected').textContent = `${expectedBalance.toFixed(2)}`;
+                dayComponent.querySelector('.summary-physical').textContent = `${physicalGrandTotal.toFixed(2)}`;
+
+                const difference = physicalGrandTotal - expectedBalance;
+                const absDiff = Math.abs(difference);
+                const summaryDifferenceEl = dayComponent.querySelector('.summary-difference');
+                summaryDifferenceEl.classList.remove('match', 'short', 'extra');
+
+                if (absDiff < 0.01) {
+                    summaryDifferenceEl.textContent = `MATCHED: 0.00`; summaryDifferenceEl.classList.add('match');
+                } else if (difference < 0) {
+                    summaryDifferenceEl.textContent = `SHORT: ${absDiff.toFixed(2)}`; summaryDifferenceEl.classList.add('short');
+                } else {
+                    summaryDifferenceEl.textContent = `EXTRA: ${absDiff.toFixed(2)}`; summaryDifferenceEl.classList.add('extra');
+                }
+            }
+
+            /* ----------------- PICKER WIRING ----------------- */
+            function wireDatePicker(dayComponent) {
+                const real = dayComponent.querySelector('.real-date');
+                const fake = dayComponent.querySelector('.fake-date');
+
+                const syncFromReal = () => {
+                    const d = dateFromYMD(real.value);
+                    fake.value = d ? formatDDMMYYYY(d) : '';
+                };
+
+                real.addEventListener('change', () => { syncFromReal(); saveFromDOM(); });
+                real.addEventListener('input', syncFromReal);
+                syncFromReal();
+            }
+
+            /* ----------------- LIST WIRING ----------------- */
+            function handleListWiring(dayComponent) {
+                dayComponent.querySelector('.incoming-list').addEventListener('click', (e) => handleListClick(e, dayComponent));
+                dayComponent.querySelector('.outgoing-list').addEventListener('click', (e) => handleListClick(e, dayComponent));
+                dayComponent.querySelector('.extra-list-body').addEventListener('click', (e) => handleListClick(e, dayComponent));
+
+                const allInputs = dayComponent.querySelectorAll('.hisab-input, .counter-input');
+                allInputs.forEach(input => {
+                    input.addEventListener('input', () => { calculateAll(dayComponent); saveFromDOM(); });
+                    input.addEventListener('change', () => { calculateAll(dayComponent); saveFromDOM(); });
+                });
+
+                dayComponent.querySelector('.incoming-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const amountEl = e.target.querySelector('.incoming-amount');
+                    const amount = parseFloat(amountEl.value);
+                    if (amount > 0) { addHisabEntry(dayComponent, 'incoming', amount); amountEl.value = ''; }
+                });
+
+                dayComponent.querySelector('.outgoing-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const amountEl = e.target.querySelector('.outgoing-amount');
+                    const amount = parseFloat(amountEl.value);
+                    if (amount > 0) { addHisabEntry(dayComponent, 'outgoing', amount); amountEl.value = ''; }
+                });
+
+                dayComponent.querySelector('.extra-amount-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const narrationEl = e.target.querySelector('.extra-narration');
+                    const amountEl = e.target.querySelector('.extra-amount');
+                    const narration = narrationEl.value.trim();
+                    const amount = parseFloat(amountEl.value);
+                    if (amount > 0 && narration !== "") {
+                        addExtraEntry(dayComponent, narration, amount);
+                        narrationEl.value = ''; amountEl.value = '';
+                    }
+                });
+            }
+
+            /* ----------------- BUILD & RENDER ----------------- */
+            function createDayComponent() {
+                const frag = dayTemplate.content.cloneNode(true);
+                const comp = frag.querySelector('.day-component');
+
+                const tableBody = comp.querySelector('.table-body');
+                buildDenomRows(tableBody);
+
+                attachHeaderButtons(comp);
+                handleListWiring(comp);
+                wireDatePicker(comp);
+
+                return comp;
+            }
+
+            function trimDOMToMaxDays() {
+                const comps = getAllDayComponents();
+                if (comps.length > MAX_DAYS) {
+                    for (let i = MAX_DAYS; i < comps.length; i++) comps[i].remove();
+                }
+            }
+
+            function addNewDay() {
+                try {
+                    let lastClosingBalance = 0;
+                    let nextDate = new Date();
+
+                    const previousDay = dayContainer.querySelector('.day-component:first-of-type');
+                    if (previousDay) {
+                        const lastClosingText = previousDay.querySelector('.hisab-expected-balance').textContent;
+                        lastClosingBalance = parseFloat(lastClosingText) || 0;
+
+                        const prevFake = previousDay.querySelector('.fake-date')?.value || '';
+                        let lastDate = parseDDMMYYYY(prevFake) || new Date();
+                        lastDate.setDate(lastDate.getDate() + 1);
+                        nextDate = lastDate;
+                    }
+
+                    const comp = createDayComponent();
+
+                    comp.querySelector('.real-date').value = ymdFromDate(nextDate);
+                    comp.querySelector('.fake-date').value = formatDDMMYYYY(nextDate);
+
+                    const openingBalanceInput = comp.querySelector('.opening-balance');
+                    openingBalanceInput.value = lastClosingBalance.toFixed(2);
+                    if (!previousDay) openingBalanceInput.disabled = false;
+
+                    dayContainer.prepend(comp);
+                    calculateAll(comp);
+                    saveFromDOM();
+                } catch (e) {
+                    console.error('Error in addNewDay:', e);
+                }
+            }
+
+            async function renderFromStorage() {
+                dayContainer.innerHTML = '';
+                const days = await loadDays();
+
+                if (!days.length) { addNewDay(); return; }
+
+                days.forEach((d, idx) => {
+                    const comp = createDayComponent();
+
+                    const dd = d.date ? parseDDMMYYYY(d.date) : null;
+                    comp.querySelector('.real-date').value = dd ? ymdFromDate(dd) : '';
+                    comp.querySelector('.fake-date').value = dd ? formatDDMMYYYY(dd) : '';
+
+                    const opInput = comp.querySelector('.opening-balance');
+                    opInput.value = (d.opening || 0).toFixed(2);
+                    opInput.disabled = (d.openingDisabled !== undefined) ? d.openingDisabled : (idx !== days.length - 1);
+
+                    if (d.denomData) {
+                        comp.querySelectorAll('.denom-row').forEach(row => {
+                            const v = parseFloat(row.dataset.value);
+                            const data = d.denomData[v] || {};
+                            row.querySelector('.packet-input').value = data.packets || 0;
+                            row.querySelector('.loose-1-input').value = data.loose1 || 0;
+                            row.querySelector('.loose-2-input').value = data.loose2 || 0;
+                            row.querySelector('.loose-3-input').value = data.loose3 || 0;
+                            row.querySelector('.coins-input').value = data.coins || 0;
+                        });
+                    }
+
+                    (d.incoming || []).forEach(a => addHisabEntry(comp, 'incoming', a));
+                    (d.outgoing || []).forEach(a => addHisabEntry(comp, 'outgoing', a));
+                    (d.extras || []).forEach(ex => addExtraEntry(comp, ex.narration || '', ex.amount || 0));
+
+                    dayContainer.appendChild(comp);
+                    calculateAll(comp);
+                });
+
+                trimDOMToMaxDays();
+            }
+
+            /* ----------------- INIT ----------------- */
+            function attachHeaderButtons(dayComponent) {
+                const addBtn = dayComponent.querySelector('.add-new-day-btn');
+                const clearBtn = dayComponent.querySelector('.clear-day-btn');
+                const recalcBtn = dayComponent.querySelector('.recalc-all-btn');
+                if (addBtn) addBtn.addEventListener('click', addNewDay);
+                if (clearBtn) clearBtn.addEventListener('click', () => clearCurrentDay(dayComponent));
+                if (recalcBtn) recalcBtn.addEventListener('click', recalcAllDays);
+            }
+
+            await renderFromStorage();
+        });
+    </script>
+</body>
+
+</html>

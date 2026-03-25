@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dryfu - Smart Inventory Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1450px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Action Buttons */
+        .top-nav {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-main {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: 0.2s;
+        }
+
+        .btn-main:active {
+            transform: scale(0.98);
+        }
+
+        .btn-in-cold {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-out-cold {
+            background-color: #e67e22;
+            color: white;
+        }
+
+        .btn-out-shop {
+            background-color: #8e44ad;
+            color: white;
+        }
+
+        .btn-history {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-edit {
+            background-color: #d35400;
+            color: white;
+        }
+
+        .btn-empty {
+            background-color: #7f8c8d;
+            color: white;
+        }
+
+        /* Master Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #2c3e50;
+            color: white;
+            position: sticky;
+            top: 0;
+            user-select: none;
+        }
+
+        .col-cold {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .col-shop {
+            background-color: #f3e5f5;
+            color: #8e44ad;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .col-total {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            font-weight: bold;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        .clickable-row {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .clickable-row:hover {
+            background-color: #fffde7;
+            box-shadow: inset 2px 0 0 0 #f1c40f, inset -2px 0 0 0 #f1c40f;
+        }
+
+        .badge-lot {
+            background: #fff3e0;
+            color: #e67e22;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            border: 1px solid #ffe0b2;
+            font-size: 14px;
+        }
+
+        .badge-store {
+            background: #eeeeee;
+            color: #333;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .party-name {
+            color: #d35400;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* Modals & Forms */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+        }
+
+        .form-card {
+            background: white;
+            width: 95%;
+            max-width: 1250px;
+            margin: 30px auto;
+            padding: 25px;
+            border-radius: 8px;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .chalan-header {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            background: #f4f6f8;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #e1e4e8;
+        }
+
+        .in-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 0.8fr 0.8fr 1.2fr 1.2fr 0.8fr 1fr 1fr 1.2fr;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .out-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1.5fr 0.8fr 1fr 1fr 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .shop-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr 1.5fr 1fr 1fr 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .header-row {
+            font-size: 11px;
+            font-weight: bold;
+            color: #555;
+            text-transform: uppercase;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+        .in-row,
+        .out-row,
+        .shop-row {
+            margin-bottom: 8px;
+        }
+
+        input,
+        select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 13px;
+            outline: none;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+
+        input[readonly] {
+            background-color: #f8f9fa;
+            color: #555;
+            font-weight: bold;
+            cursor: not-allowed;
+            border: 1px solid #ddd;
+        }
+
+        input.totals-box {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            border-color: #90caf9;
+        }
+
+        label {
+            font-size: 11px;
+            font-weight: bold;
+            color: #555;
+            display: block;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .btn-save {
+            background: #27ae60;
+            color: white;
+            width: 100%;
+            margin-top: 20px;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-save:hover {
+            background: #219653;
+        }
+
+        .close-x {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .stock-info {
+            font-size: 12px;
+            color: #27ae60;
+            margin-top: 5px;
+            font-weight: bold;
+            height: 15px;
+            grid-column: span 6;
+        }
+
+        .totals-row {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 2px dashed #ccc;
+        }
+
+        .out-bal,
+        .shop-bal {
+            background-color: #e8f5e9 !important;
+            color: #2e7d32 !important;
+        }
+
+        .out-prev-bal,
+        .shop-prev-bal {
+            background-color: #e3f2fd !important;
+            color: #1565c0 !important;
+        }
+
+        .hist-in {
+            color: #2980b9;
+            font-weight: bold;
+        }
+
+        .hist-trans {
+            color: #e67e22;
+            font-weight: bold;
+        }
+
+        .hist-sale {
+            color: #8e44ad;
+            font-weight: bold;
+        }
+
+        .th-hist {
+            background: #27ae60;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+
+        .th-reg {
+            background: #607d8b;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+
+        .hist-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+        }
+
+        .h-tab-btn {
+            padding: 8px 15px;
+            border: none;
+            background: #eee;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+
+        .h-tab-btn.active {
+            background: #27ae60;
+            color: white;
+        }
+
+        .h-content {
+            display: none;
+        }
+
+        .h-content.active {
+            display: block;
+        }
+
+        .search-box-large {
+            font-size: 16px;
+            font-weight: bold;
+            border: 2px solid #607d8b;
+            padding: 10px;
+            background: #fff;
+            width: 50%;
+        }
+
+        #quickLedgerModal .form-card {
+            max-width: 800px;
+            border-top: 5px solid #f39c12;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+
+            .no-print,
+            .top-nav,
+            .action-bar,
+            .overlay,
+            .close-x {
+                display: none !important;
+            }
+
+            .container {
+                box-shadow: none;
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+                border: none;
+            }
+
+            table {
+                font-size: 12px;
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            th,
+            td {
+                border: 1px solid #ddd !important;
+            }
+
+            th {
+                position: static;
+                color: black !important;
+                background: #eee !important;
+            }
+
+            #printTitle {
+                display: block !important;
+                text-align: center;
+                font-size: 22px;
+                font-weight: bold;
+                margin-bottom: 20px;
+            }
+        }
+
+        #printTitle {
+            display: none;
+        }
+
+        /* =========================================
+   📱 MOBILE RESPONSIVE DESIGN (Inventory)
+   ========================================= */
+        @media (max-width: 850px) {
+            body {
+                padding: 10px;
+            }
+
+            /* Top Navigation Buttons ko stack karna */
+            .top-nav {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn-main {
+                width: 100%;
+                padding: 15px;
+                font-size: 16px;
+            }
+
+            /* Search & Print Action Bar */
+            .action-bar {
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+
+            #masterSearch {
+                width: 100% !important;
+                margin-bottom: 10px;
+            }
+
+            /* Master Table ko Scrollable Banana */
+            table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+                /* Table pichkegi nahi, scroll hogi */
+                border: 1px solid #ddd;
+            }
+
+            th,
+            td {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+
+            /* Modals (Popups) ko mobile screen par fit karna */
+            .form-card {
+                width: 100%;
+                margin: 0;
+                height: 100vh;
+                max-height: 100vh;
+                border-radius: 0;
+                padding: 15px;
+                box-sizing: border-box;
+            }
+
+            .close-x {
+                top: 15px;
+                right: 20px;
+                font-size: 35px;
+                background: #fff;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                text-align: center;
+                line-height: 35px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            }
+
+            /* Form Headers (Date, Party Name etc.) */
+            .chalan-header {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* -----------------------------------------
+       Entry Forms ko Left-Right Swipeable Banana
+       ----------------------------------------- */
+            #inRowsContainer,
+            #outRowsContainer,
+            #shopOutRowsContainer {
+                overflow-x: auto;
+                padding-bottom: 15px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                background: #fdfdfd;
+                margin-top: 10px;
+            }
+
+            /* In sabki width fix kar di hai taaki columns chote na hon */
+            .in-grid {
+                min-width: 1000px;
+                padding: 0 10px;
+            }
+
+            .out-grid,
+            .shop-grid {
+                min-width: 800px;
+                padding: 0 10px;
+            }
+
+            .header-row {
+                padding-top: 10px;
+            }
+
+            /* Edit Form */
+            #editFields {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* History & Registers */
+            .hist-tabs {
+                flex-direction: column;
+            }
+
+            .h-tab-btn {
+                width: 100%;
+                margin-bottom: 5px;
+                padding: 12px;
+            }
+
+            .search-box-large,
+            #histSearchLot {
+                width: 100% !important;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Dryfu - Master Inventory Dashboard</h2>
+        <div id="printTitle">Stock Report</div>
+
+        <div class="top-nav no-print">
+            <button class="btn-main btn-in-cold" onclick="showForm('inForm')">📥 Naya Maal Aamad (IN)</button>
+            <button class="btn-main btn-out-cold" onclick="showForm('outForm')">📤 Transfer to Shop</button>
+            <button class="btn-main btn-out-shop" onclick="showForm('shopOutForm')">🛒 Shop Se Sale Karein</button>
+            <button class="btn-main btn-edit" onclick="showForm('editForm')">🛠️ Edit / Adjust Lot</button>
+            <button class="btn-main btn-history" onclick="showForm('historyForm')">📊 Registers & History</button>
+            <button class="btn-main btn-empty" onclick="showForm('zeroStockModal')">🗑️ Zero Stock (Bik Chuka)</button>
+        </div>
+
+        <div class="action-bar no-print"
+            style="display: flex; justify-content: space-between; margin-bottom: 15px; gap: 10px; flex-wrap: wrap;">
+            <input type="text" id="masterSearch" onkeyup="searchMasterTable()"
+                placeholder="🔍 Search Party, Lot, Item ya Marka..."
+                style="flex: 1; min-width: 250px; padding: 10px; font-size: 16px; border: 2px solid #3498db; border-radius: 5px;">
+
+            <button class="btn-main" style="background: #1565c0; color: white;" onclick="printStock('cold')">🖨️ Print
+                Cold Stock</button>
+            <button class="btn-main" style="background: #8e44ad; color: white;" onclick="printStock('shop')">🖨️ Print
+                Shop Stock</button>
+            <button class="btn-main" style="background: #f39c12; color: white;" onclick="showForm('dailyReportForm')">📅
+                Daily Report</button>
+        </div>
+
+        <table id="masterTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)" style="cursor:pointer;" title="Click to Sort">Cold Store ↕️</th>
+                    <th onclick="sortTable(1)" style="cursor:pointer;" title="Click to Sort">Party Name ↕️</th>
+                    <th onclick="sortTable(2)" style="cursor:pointer;" title="Click to Sort">Lot No (Cold) ↕️</th>
+                    <th onclick="sortTable(3)" style="cursor:pointer;" title="Click to Sort">Item Name ↕️</th>
+                    <th onclick="sortTable(4)" style="cursor:pointer;" title="Click to Sort">Mark No (Shop) ↕️</th>
+                    <th>Bharti</th>
+                    <th>Rate (₹)</th>
+                    <th id="thColdQty" onclick="sortTable(7)"
+                        style="background:#2980b9; color:white; text-align:center; cursor:pointer;">🔵 Cold Qty ↕️</th>
+                    <th id="thShopQty" onclick="sortTable(8)"
+                        style="background:#8e44ad; color:white; text-align:center; cursor:pointer;">🟣 Shop Qty ↕️</th>
+                    <th id="thTotalQty" onclick="sortTable(9)"
+                        style="background:#27ae60; color:white; text-align:center; cursor:pointer;">🟢 Total Qty ↕️</th>
+                    <th id="thTotalWt">Total Weight</th>
+                    <th id="thTotalVal">Total Value (₹)</th>
+                </tr>
+            </thead>
+            <tbody id="masterStockBody"></tbody>
+        </table>
+    </div>
+
+    <div id="inForm" class="overlay no-print">
+        <div class="form-card" id="inFormContainer">
+            <span class="close-x" onclick="closeAll()">×</span>
+            <h3 style="color:#2980b9; border-bottom: 1px solid #eee; padding-bottom: 10px;">📥 Naya Maal Aamad (Inward
+                Receipt)</h3>
+            <div class="chalan-header" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+                <div style="background:#e3f2fd; padding:10px; border-radius:5px; border:1px solid #90caf9;">
+                    <label style="color:#1565c0; font-size:13px;">📍 Maal Kahan Aaya?</label>
+                    <select id="inDestination" style="font-weight:bold; font-size:15px; color:#2980b9;">
+                        <option value="cold">❄️ Cold Storage</option>
+                        <option value="shop">🏪 Shop Godown</option>
+                    </select>
+                </div>
+                <div><label>Cold Store Name</label><input type="text" id="inColdStore" list="coldStoreList"
+                        placeholder="(Shop ke liye optional)"></div>
+                <div><label>Date</label><input type="date" id="inDate"></div>
+                <div><label>Receipt Number</label><input type="text" id="inReceiptNo" list="receiptList"
+                        placeholder="Parchi No."></div>
+                <div><label>Party Name</label><input type="text" id="inParty" list="partyList"></div>
+            </div>
+
+            <div id="inRowsContainer">
+                <div class="in-grid header-row">
+                    <div>Item Name</div>
+                    <div>Unit</div>
+                    <div>Bharti</div>
+                    <div>Marka (Shop)</div>
+                    <div>Lot No (Cold)</div>
+                    <div>Quantity</div>
+                    <div>Rate</div>
+                    <div>Weight (Kg)</div>
+                    <div>Value (₹)</div>
+                </div>
+                <div id="inRows">
+                    <div class="in-grid in-row">
+                        <input type="text" class="in-item" list="itemNames">
+                        <select class="in-unit">
+                            <option>Box</option>
+                            <option>Bag</option>
+                        </select>
+                        <input type="number" class="in-bharti" oninput="calcInTotals(this)">
+                        <input type="text" class="in-mark" oninput="extractQtyFromMarka(this)">
+                        <input type="text" class="in-lot">
+                        <input type="number" class="in-qty" oninput="calcInTotals(this)">
+                        <input type="number" class="in-rate" oninput="calcInTotals(this)">
+                        <input type="text" class="in-wt" readonly tabindex="-1">
+                        <input type="text" class="in-val" readonly tabindex="-1">
+                    </div>
+                </div>
+                <div class="in-grid totals-row">
+                    <div
+                        style="grid-column: 1 / 6; text-align: right; padding-right: 10px; font-weight: bold; color: #d32f2f; font-size: 16px;">
+                        GRAND TOTAL :</div>
+                    <input type="text" id="inTotalQty" class="totals-box" readonly tabindex="-1">
+                    <div></div>
+                    <input type="text" id="inTotalWt" class="totals-box" readonly tabindex="-1">
+                    <input type="text" id="inTotalVal" class="totals-box" readonly tabindex="-1">
+                </div>
+            </div>
+            <button
+                style="background:#f1f3f5; border:1px solid #ccc; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold; color:#555; margin-top:15px;"
+                onclick="addInRow()">+ Ek aur Item jodein</button>
+            <button class="btn-save" style="background:#2980b9;" onclick="saveInwardReceipt()">Stock Mein Save Karein
+                ✅</button>
+        </div>
+    </div>
+
+    <div id="outForm" class="overlay no-print">
+        <div class="form-card" id="outFormContainer">
+            <span class="close-x" onclick="closeAll()">×</span>
+            <h3 style="color:#e67e22; border-bottom: 1px solid #eee; padding-bottom: 10px;">🚚 Dispatch Chalan (Cold Se
+                Shop Bhejein)</h3>
+            <div class="chalan-header" style="grid-template-columns: 1fr 1fr;">
+                <div><label>Date</label><input type="date" id="outDate"></div>
+                <div><label>Chalan / Parchi No.</label><input type="text" id="outChalanNo" list="chalanList"
+                        placeholder="Slip Number"></div>
+            </div>
+            <div id="outRowsContainer">
+                <div class="out-grid header-row">
+                    <div>Cold Marka (Lot No)</div>
+                    <div>Item Name</div>
+                    <div>Bharti</div>
+                    <div>Cold Prev Bal</div>
+                    <div>Qty Out (To Shop)</div>
+                    <div>Cold Balance</div>
+                </div>
+                <div id="outRows">
+                    <div class="out-grid out-row">
+                        <input type="text" class="out-lot" oninput="fetchLotDetails(this, 'cold')" list="lotList">
+                        <input type="text" class="out-name" readonly tabindex="-1">
+                        <input type="text" class="out-bharti" readonly tabindex="-1">
+                        <input type="text" class="out-prev-bal" readonly tabindex="-1">
+                        <input type="number" class="out-qty-input" oninput="calcOutBalance(this)">
+                        <input type="text" class="out-bal" readonly tabindex="-1">
+                        <div class="stock-info"></div>
+                    </div>
+                </div>
+            </div>
+            <button
+                style="background:#f1f3f5; border:1px solid #ccc; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold; color:#555; margin-top:5px;"
+                onclick="addDynamicRow('outRows', 'out-row')">+ Ek aur Item jodein</button>
+            <button class="btn-save" style="background:#e67e22;" onclick="saveColdOutChalan()">Chalan Confirm Karein
+                (Transfer to Shop) 📤</button>
+        </div>
+    </div>
+
+    <div id="shopOutForm" class="overlay no-print">
+        <div class="form-card" id="shopOutFormContainer" style="max-width: 1200px;">
+            <span class="close-x" onclick="closeAll()">×</span>
+            <h3 style="color:#8e44ad; border-bottom: 1px solid #eee; padding-bottom: 10px;">🛒 Shop Sale (Dukaan Se
+                Bika)</h3>
+            <div class="chalan-header" style="grid-template-columns: 1fr;">
+                <div style="max-width: 250px;"><label>Date</label><input type="date" id="shopOutDate"></div>
+            </div>
+            <div id="shopOutRowsContainer">
+                <div class="shop-grid header-row">
+                    <div>Bill Number</div>
+                    <div>Item Name</div>
+                    <div>Mark No (Shop)</div>
+                    <div>Shop Prev Bal</div>
+                    <div>Sale Qty (Boxes)</div>
+                    <div>Shop Balance</div>
+                </div>
+                <div id="shopOutRows">
+                    <div class="shop-grid shop-row">
+                        <input type="text" class="shop-bill" placeholder="Bill No">
+                        <input type="text" class="shop-item" readonly tabindex="-1" placeholder="Auto Fill">
+                        <input type="text" class="shop-mark" oninput="fetchShopLotByMark(this)"
+                            list="shopAvailableMarkList" placeholder="Mark No. Select Karein">
+                        <input type="text" class="shop-prev-bal" readonly tabindex="-1">
+                        <input type="number" class="shop-qty-input" oninput="calcShopBalance(this)">
+                        <input type="text" class="shop-bal" readonly tabindex="-1">
+                        <div class="stock-info" style="grid-column: span 6; height: 15px; margin-top: 5px;"></div>
+                    </div>
+                </div>
+            </div>
+            <button
+                style="background:#f1f3f5; border:1px solid #ccc; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold; color:#555; margin-top:15px;"
+                onclick="addDynamicRow('shopOutRows', 'shop-row')">+ Ek aur Item jodein</button>
+            <button class="btn-save" style="background:#8e44ad;" onclick="saveShopSaleNew()">Sale Confirm Karein & Shop
+                Stock Kam Karein 🛒</button>
+        </div>
+    </div>
+
+    <div id="editForm" class="overlay no-print">
+        <div class="form-card" style="max-width: 800px;">
+            <span class="close-x" onclick="closeAll()">×</span>
+            <h3 style="color:#d35400; border-bottom: 1px solid #eee; padding-bottom: 10px;">🛠️ Edit ya Adjust Lot</h3>
+            <div style="background:#fff3e0; padding:15px; border-radius:5px; margin-bottom:15px;">
+                <label style="color:#d35400;">Lot No. Search Karein (Jise theek karna hai)</label>
+                <input type="text" id="editSearchLot" oninput="fetchLotForEdit(this.value)" list="lotList"
+                    placeholder="Lot No type karein..." style="font-size:16px; font-weight:bold; border-color:#d35400;">
+                <p id="editErrorMsg" style="color:red; font-size:12px; margin-top:5px; display:none;">❌ Yeh Lot No nahi
+                    mila.</p>
+            </div>
+            <div id="editFields" style="display:none; grid-template-columns: 1fr 1fr; gap:15px;">
+                <div><label>Item Name</label><input type="text" id="editName" list="itemNames"></div>
+                <div><label>Party Name</label><input type="text" id="editParty" list="partyList"></div>
+                <div><label>Mark No (Shop)</label><input type="text" id="editMark"></div>
+                <div><label>Bharti (Kg)</label><input type="number" id="editBharti"></div>
+                <div><label>Rate (₹)</label><input type="number" id="editRate"></div>
+                <div><label>Unit</label><select id="editUnit">
+                        <option>Box</option>
+                        <option>Bag</option>
+                    </select></div>
+                <div style="background:#e3f2fd; padding:15px; border-radius:5px;">
+                    <label style="color:#1565c0;">🔵 Cold Qty (Bacha Hua)</label>
+                    <input type="number" id="editColdQty" style="font-weight:bold; font-size:16px;">
+                </div>
+                <div style="background:#f3e5f5; padding:15px; border-radius:5px;">
+                    <label style="color:#8e44ad;">🟣 Shop Qty (Dukaan Par)</label>
+                    <input type="number" id="editShopQty" style="font-weight:bold; font-size:16px;">
+                </div>
+                <button class="btn-save" style="grid-column: 1 / -1; background:#d35400; margin-top:10px;"
+                    onclick="saveLotEdit()">Update Details & Adjust Stock ✅</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="historyForm" class="overlay no-print">
+        <div class="form-card" style="max-width: 1000px;">
+            <span class="close-x" onclick="closeAll()">×</span>
+            <h3 style="color:#27ae60; border-bottom: 1px solid #eee; padding-bottom: 10px;">📊 Registers & Ledgers</h3>
+            <div class="hist-tabs">
+                <button class="h-tab-btn active" onclick="switchHistTab('lotHist')">📜 Lot Ledger</button>
+                <button class="h-tab-btn" onclick="switchHistTab('receiptHist')">📥 Receipt Register (IN)</button>
+                <button class="h-tab-btn" onclick="switchHistTab('chalanHist')">📤 Chalan Register (OUT)</button>
+            </div>
+            <div id="lotHist" class="h-content active">
+                <div style="background: #f4f6f8; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                    <label>Lot No (Marka) Search Karein</label>
+                    <input type="text" id="histSearchLot" oninput="renderLotHistory()" list="lotList"
+                        placeholder="Enter Lot No..."
+                        style="font-size: 16px; font-weight: bold; border-color: #27ae60; padding:10px;">
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="th-hist">Date</th>
+                            <th class="th-hist">Action Type</th>
+                            <th class="th-hist">Ref No (Parchi/Bill)</th>
+                            <th class="th-hist">Qty IN</th>
+                            <th class="th-hist">Qty OUT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align:center; color:#777;">Lot No. dalkar history dekhein</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="receiptHist" class="h-content">
+                <p style="padding:20px; text-align:center;">Receipt Register Data</p>
+            </div>
+            <div id="chalanHist" class="h-content">
+                <p style="padding:20px; text-align:center;">Chalan Register Data</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="zeroStockModal" class="overlay no-print">
+        <div class="form-card" style="max-width: 1000px;">
+            <span class="close-x" onclick="closeAll()">×</span>
+            <h3 style="color:#7f8c8d; border-bottom: 1px solid #eee; padding-bottom: 10px;">🗑️ Zero Stock (Jo Maal
+                Poora Bik Chuka Hai)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="background:#7f8c8d; color:white;">Party Name</th>
+                        <th style="background:#7f8c8d; color:white;">Lot No</th>
+                        <th style="background:#7f8c8d; color:white;">Item Name</th>
+                        <th style="background:#7f8c8d; color:white;">Mark No</th>
+                        <th style="background:#7f8c8d; color:white;">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="zeroStockBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="quickLedgerModal" class="overlay no-print" style="z-index: 1050; background: rgba(0,0,0,0.8);">
+        <div class="form-card">
+            <span class="close-x" onclick="document.getElementById('quickLedgerModal').style.display='none'">×</span>
+            <h3 id="qlTitle" style="color:#f39c12; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top:0;">
+                📜 Lot Ledger</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th class="th-hist">Date</th>
+                        <th class="th-hist">Action Type</th>
+                        <th class="th-hist">Ref No</th>
+                        <th class="th-hist">Qty IN</th>
+                        <th class="th-hist">Qty OUT</th>
+                    </tr>
+                </thead>
+                <tbody id="qlTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="dailyReportForm" class="overlay no-print">
+        <div class="form-card" style="max-width: 1000px;">
+            <span class="close-x" onclick="closeAll()">×</span>
+            <h3 style="color:#f39c12; border-bottom: 1px solid #eee; padding-bottom: 10px;">📅 Daily Activity Report
+            </h3>
+
+            <div
+                style="background: #fef9e7; padding: 15px; border-radius: 5px; margin-bottom: 15px; text-align: center;">
+                <label style="font-size: 16px; font-weight: bold; color: #d35400;">Date Select Karein: </label>
+                <input type="date" id="reportDate" onchange="generateDailyReport()"
+                    style="font-size: 16px; padding: 8px; width: auto; display: inline-block;">
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="background:#f39c12; color:white;">Time/Type</th>
+                        <th style="background:#f39c12; color:white;">Lot No</th>
+                        <th style="background:#f39c12; color:white;">Item Name</th>
+                        <th style="background:#f39c12; color:white;">Ref (Parchi/Bill)</th>
+                        <th style="background:#f39c12; color:white;">Qty IN</th>
+                        <th style="background:#f39c12; color:white;">Qty OUT</th>
+                    </tr>
+                </thead>
+                <tbody id="dailyReportBody">
+                    <tr>
+                        <td colspan="6" style="text-align:center; color:#777;">Date select karke report dekhein</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <datalist id="itemNames"></datalist>
+    <datalist id="lotList"></datalist>
+    <datalist id="shopLotList"></datalist>
+    <datalist id="coldStoreList"></datalist>
+    <datalist id="partyList"></datalist>
+    <datalist id="receiptList"></datalist>
+    <datalist id="chalanList"></datalist>
+    <datalist id="shopAvailableMarkList"></datalist>
+
+    <script type="module">
+        import { db, doc, setDoc, onSnapshot } from './firebase-config.js';
+
+        let coldStock = [];
+        let shopStock = [];
+        let lotHistory = [];
+        let savedNames = [];
+        let savedColdStores = [];
+        let savedParties = [];
+
+        const inventoryDoc = doc(db, "erp", "inventory");
+
+        // Firebase Live Listener
+        onSnapshot(inventoryDoc, (docSnap) => {
+            if (docSnap.exists()) {
+                let data = docSnap.data();
+                coldStock = data.coldStock || [];
+                shopStock = data.shopStock || [];
+                lotHistory = data.lotHistory || [];
+                savedNames = data.savedNames || [];
+                savedColdStores = data.savedColdStores || [];
+                savedParties = data.savedParties || [];
+            }
+            updateLists();
+            renderMasterTable();
+        });
+
+        async function saveAllData() {
+            await setDoc(inventoryDoc, { coldStock, shopStock, lotHistory, savedNames, savedColdStores, savedParties });
+        }
+
+        document.getElementById('inDate').valueAsDate = new Date();
+        document.getElementById('outDate').valueAsDate = new Date();
+        document.getElementById('shopOutDate').valueAsDate = new Date();
+        document.getElementById('reportDate').valueAsDate = new Date();
+
+        function switchHistTab(tabId) {
+            document.querySelectorAll('.h-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.h-tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+            // if (tabId === 'receiptHist') renderReceiptRegister();
+            // if (tabId === 'chalanHist') renderChalanRegister();
+        }
+
+        function showForm(id) {
+            document.getElementById(id).style.display = 'block';
+            updateLists();
+            setTimeout(() => {
+                const firstInput = document.getElementById(id).querySelector('input:not([readonly]), select:not([disabled])');
+                if (firstInput) firstInput.focus();
+            }, 100);
+
+            // Auto trigger daily report if opened
+            if (id === 'dailyReportForm') generateDailyReport();
+        }
+
+        function closeAll() {
+            document.querySelectorAll('.overlay').forEach(el => el.style.display = 'none');
+            resetForm('outRows'); resetForm('shopOutRows'); resetForm('inRows'); calcInTotals();
+            document.getElementById('editSearchLot').value = "";
+            document.getElementById('editFields').style.display = "none";
+            document.getElementById('editErrorMsg').style.display = "none";
+            document.getElementById('histSearchLot').value = "";
+            document.getElementById('historyTableBody').innerHTML = `<tr><td colspan="5" style="text-align:center; color:#777;">Lot No. dalkar history dekhein</td></tr>`;
+        }
+
+        function resetForm(containerId) {
+            let container = document.getElementById(containerId);
+            while (container.children.length > 1) { container.removeChild(container.lastChild); }
+            let firstRow = container.children[0];
+            firstRow.querySelectorAll('input').forEach(i => { i.value = ""; i.style.color = ""; i.style.backgroundColor = ""; });
+            let info = firstRow.querySelector('.stock-info');
+            if (info) info.innerText = "";
+        }
+
+        function extractQtyFromMarka(input) {
+            let val = input.value.trim(); let row = input.closest('.in-row');
+            if (val.includes('/')) {
+                let parts = val.split('/'); let parsedQty = parseFloat(parts[parts.length - 1]);
+                if (!isNaN(parsedQty)) {
+                    let qtyInput = row.querySelector('.in-qty');
+                    qtyInput.value = parsedQty; calcInTotals(qtyInput);
+                }
+            }
+        }
+
+        function setupFocusNavigation(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const allInputs = Array.from(container.querySelectorAll('input:not([readonly]), select:not([disabled])'));
+                    const index = allInputs.indexOf(e.target);
+                    if (e.shiftKey) { if (index > 0) allInputs[index - 1].focus(); }
+                    else {
+                        if (e.target.classList.contains('in-rate')) addInRow();
+                        else if (e.target.classList.contains('out-qty-input') || e.target.classList.contains('shop-qty-input')) {
+                            addDynamicRow(containerId.includes('shop') ? 'shopOutRows' : 'outRows', containerId.includes('shop') ? 'shop-row' : 'out-row');
+                        } else if (index > -1 && index < allInputs.length - 1) {
+                            allInputs[index + 1].focus();
+                        }
+                    }
+                }
+            });
+        }
+        setupFocusNavigation('inFormContainer'); setupFocusNavigation('outFormContainer'); setupFocusNavigation('shopOutFormContainer');
+
+        function calcInTotals(element) {
+            if (element) {
+                let row = element.closest('.in-row');
+                let bharti = parseFloat(row.querySelector('.in-bharti').value) || 0;
+                let qty = parseFloat(row.querySelector('.in-qty').value) || 0;
+                let rate = parseFloat(row.querySelector('.in-rate').value) || 0;
+                let weight = bharti * qty;
+                row.querySelector('.in-wt').value = weight > 0 ? weight.toFixed(2) : "";
+                row.querySelector('.in-val').value = (weight * rate) > 0 ? Math.round(weight * rate).toLocaleString('en-IN') : "";
+            }
+            let tQty = 0, tWt = 0, tVal = 0;
+            document.querySelectorAll('.in-row').forEach(r => {
+                tQty += parseFloat(r.querySelector('.in-qty').value) || 0;
+                tWt += parseFloat(r.querySelector('.in-wt').value) || 0;
+                tVal += parseFloat(r.querySelector('.in-val').value.replace(/,/g, '')) || 0;
+            });
+            document.getElementById('inTotalQty').value = tQty > 0 ? tQty : "";
+            document.getElementById('inTotalWt').value = tWt > 0 ? tWt.toFixed(2) : "";
+            document.getElementById('inTotalVal').value = tVal > 0 ? tVal.toLocaleString('en-IN') : "";
+        }
+
+        function addInRow() {
+            let container = document.getElementById('inRows');
+            let lastRow = container.children[container.children.length - 1];
+            let oldItem = lastRow.querySelector('.in-item').value;
+            let oldUnit = lastRow.querySelector('.in-unit').value;
+            let oldBharti = lastRow.querySelector('.in-bharti').value;
+            let oldLot = lastRow.querySelector('.in-lot').value;
+            let newLot = oldLot ? oldLot.replace(/(\d+)$/, match => String(parseInt(match) + 1).padStart(match.length, '0')) : "";
+            let newRow = lastRow.cloneNode(true);
+            newRow.querySelectorAll('input:not([readonly])').forEach(i => i.value = "");
+            newRow.querySelectorAll('input[readonly]').forEach(i => i.value = "");
+            newRow.querySelector('.in-item').value = oldItem;
+            newRow.querySelector('.in-unit').value = oldUnit;
+            newRow.querySelector('.in-bharti').value = oldBharti;
+            newRow.querySelector('.in-lot').value = newLot;
+            container.appendChild(newRow); calcInTotals();
+            setTimeout(() => newRow.querySelector('.in-item').focus(), 10);
+        }
+
+        function addDynamicRow(containerId, rowClass) {
+            let container = document.getElementById(containerId);
+            let lastRow = container.children[container.children.length - 1];
+            let newRow = lastRow.cloneNode(true);
+            newRow.querySelectorAll('input').forEach(i => { i.value = ""; i.style.color = ""; i.style.backgroundColor = ""; });
+            newRow.querySelector('.stock-info').innerText = "";
+            container.appendChild(newRow);
+            let focusSelector = containerId.includes('shop') ? '.shop-bill' : '.out-lot';
+            setTimeout(() => newRow.querySelector(focusSelector).focus(), 10);
+        }
+
+        function updateLists() {
+            let allLots = [...new Set([...coldStock.map(s => s.lot), ...shopStock.map(s => s.lot)])];
+            document.getElementById('lotList').innerHTML = allLots.map(s => `<option value="${s}">`).join('');
+            document.getElementById('shopLotList').innerHTML = shopStock.map(s => `<option value="${s.lot}">`).join('');
+            document.getElementById('itemNames').innerHTML = savedNames.map(n => `<option value="${n}">`).join('');
+            document.getElementById('coldStoreList').innerHTML = savedColdStores.map(c => `<option value="${c}">`).join('');
+            document.getElementById('partyList').innerHTML = savedParties.map(p => `<option value="${p}">`).join('');
+            let availableShopMarks = shopStock.filter(s => s.qty > 0 && s.mark).map(s => s.mark);
+            document.getElementById('shopAvailableMarkList').innerHTML = [...new Set(availableShopMarks)].map(m => `<option value="${m}">`).join('');
+        }
+
+        function saveInwardReceipt() {
+            let destination = document.getElementById('inDestination').value;
+            let coldStore = document.getElementById('inColdStore').value.trim();
+            let inDate = document.getElementById('inDate').value;
+            let receiptNo = document.getElementById('inReceiptNo').value.trim() || "No-Slip";
+            let party = document.getElementById('inParty').value.trim();
+            let rows = document.querySelectorAll('.in-row');
+            let successCount = 0;
+
+            rows.forEach(row => {
+                let lot = row.querySelector('.in-lot').value.trim();
+                let qty = parseFloat(row.querySelector('.in-qty').value);
+                let name = row.querySelector('.in-item').value.trim();
+                if (lot && qty > 0) {
+                    let newItem = {
+                        coldStore: destination === 'cold' ? (coldStore || "-") : "Direct to Shop",
+                        party: party || "-", name: name, lot: lot, unit: row.querySelector('.in-unit').value,
+                        bharti: parseFloat(row.querySelector('.in-bharti').value) || 0,
+                        rate: parseFloat(row.querySelector('.in-rate').value) || 0,
+                        mark: row.querySelector('.in-mark').value.trim() || "-", qty: qty
+                    };
+                    let targetStock = destination === 'cold' ? coldStock : shopStock;
+                    let existingIndex = targetStock.findIndex(s => s.lot.toLowerCase() === lot.toLowerCase());
+                    if (existingIndex > -1) targetStock[existingIndex].qty += qty;
+                    else targetStock.push(newItem);
+                    let typeLabel = destination === 'cold' ? 'Cold IN' : 'Shop IN';
+                    lotHistory.push({ date: inDate, lot: lot, name: name, type: typeLabel, ref: 'Receipt: ' + receiptNo, qtyIn: qty, qtyOut: '-' });
+                    if (!savedNames.includes(newItem.name)) savedNames.push(newItem.name);
+                    successCount++;
+                }
+            });
+            if (coldStore && destination === 'cold' && !savedColdStores.includes(coldStore)) savedColdStores.push(coldStore);
+            if (party && !savedParties.includes(party)) savedParties.push(party);
+
+            if (successCount > 0) {
+                saveAllData(); alert("✅ Naya Maal Successfully Add Ho Gaya!"); closeAll();
+            } else alert("Kripya sahi details bharein.");
+        }
+
+        function fetchLotDetails(input, location) {
+            let lotNo = input.value.trim(); let row = input.closest('.out-row');
+            if (lotNo === "") { clearOutRow(row); return; }
+            let targetStock = location === 'cold' ? coldStock : shopStock;
+            let found = targetStock.find(s => s.lot.toLowerCase() === lotNo.toLowerCase());
+            if (found) {
+                let allLotInputs = document.getElementById(location === 'cold' ? 'outRows' : 'shopOutRows').querySelectorAll('.out-lot');
+                let isDuplicate = Array.from(allLotInputs).filter(i => i.value.trim().toLowerCase() === lotNo.toLowerCase()).length > 1;
+                if (isDuplicate) { alert(`⚠️ Yeh Lot No pehle se add hai!`); clearOutRow(row); input.value = ""; return; }
+                row.querySelector('.out-name').value = found.name; row.querySelector('.out-bharti').value = found.bharti + " Kg";
+                row.querySelector('.out-prev-bal').value = found.qty; row.querySelector('.out-qty-input').max = found.qty;
+                row.dataset.party = found.party; row.dataset.unit = found.unit; row.dataset.name = found.name;
+                calcOutBalance(row.querySelector('.out-qty-input'));
+            } else {
+                clearOutRow(row); row.querySelector('.out-bal').value = "Not Found"; row.querySelector('.out-bal').style.color = "red";
+            }
+        }
+
+        function clearOutRow(row) {
+            row.querySelector('.out-name').value = ""; row.querySelector('.out-bharti').value = "";
+            row.querySelector('.out-prev-bal').value = ""; row.querySelector('.out-bal').value = "";
+            row.querySelector('.out-bal').style.backgroundColor = ""; row.querySelector('.stock-info').innerText = "";
+        }
+
+        function calcOutBalance(input) {
+            let row = input.closest('.out-row'); let balInput = row.querySelector('.out-bal');
+            let infoDiv = row.querySelector('.stock-info'); let availQty = parseFloat(row.querySelector('.out-prev-bal').value);
+            if (isNaN(availQty)) return;
+            let outQty = parseFloat(input.value) || 0; let balance = availQty - outQty;
+            balInput.value = balance;
+            if (outQty > availQty) {
+                balInput.style.color = "red"; balInput.style.backgroundColor = "#ffebee"; balInput.value = balance + " (Low!)";
+                infoDiv.innerHTML = `<span style="color:red;">❌ Stock kam hai!</span>`;
+            } else {
+                balInput.style.color = "#2e7d32"; balInput.style.backgroundColor = "#e8f5e9";
+                infoDiv.innerHTML = `Party: <span style="color:#8e44ad;">${row.dataset.party}</span>`;
+            }
+        }
+
+        function saveColdOutChalan() {
+            let outDate = document.getElementById('outDate').value;
+            let chalanNo = document.getElementById('outChalanNo').value.trim() || "No-Chalan";
+            let rows = document.querySelectorAll('#outRows .out-row');
+            let successCount = 0; let errors = [];
+
+            rows.forEach((row, i) => {
+                let lot = row.querySelector('.out-lot').value.trim();
+                let outQty = parseFloat(row.querySelector('.out-qty-input').value);
+                if (lot && outQty > 0) {
+                    let stockItem = coldStock.find(s => s.lot.toLowerCase() === lot.toLowerCase());
+                    if (!stockItem) errors.push(`Row ${i + 1}: Lot nahi mila.`);
+                    else if (outQty > stockItem.qty) errors.push(`Row ${i + 1}: Stock kam hai.`);
+                }
+            });
+            if (errors.length > 0) { alert("Errors:\n" + errors.join("\n")); return; }
+
+            rows.forEach(row => {
+                let lot = row.querySelector('.out-lot').value.trim();
+                let outQty = parseFloat(row.querySelector('.out-qty-input').value);
+                let name = row.dataset.name;
+                if (lot && outQty > 0) {
+                    let cIdx = coldStock.findIndex(s => s.lot.toLowerCase() === lot.toLowerCase());
+                    if (cIdx !== -1) {
+                        let transferItem = JSON.parse(JSON.stringify(coldStock[cIdx]));
+                        coldStock[cIdx].qty -= outQty; if (coldStock[cIdx].qty <= 0) coldStock[cIdx].qty = 0;
+                        let sIdx = shopStock.findIndex(s => s.lot.toLowerCase() === lot.toLowerCase());
+                        if (sIdx > -1) shopStock[sIdx].qty += outQty;
+                        else { transferItem.qty = outQty; shopStock.push(transferItem); }
+                        lotHistory.push({ date: outDate, lot: lot, name: name, type: 'Transfer to Shop', ref: 'Chalan: ' + chalanNo, qtyIn: '-', qtyOut: outQty });
+                        successCount++;
+                    }
+                }
+            });
+            if (successCount > 0) { saveAllData(); alert("✅ Transfer Successful!"); closeAll(); }
+        }
+
+        function fetchShopLotByMark(input) {
+            let markNo = input.value.trim(); let row = input.closest('.shop-row');
+            if (markNo === "") { clearShopRow(row); return; }
+            let found = shopStock.find(s => s.mark && s.mark.toLowerCase() === markNo.toLowerCase() && s.qty > 0);
+            if (found) {
+                let alreadyUsed = 0; let allRows = Array.from(document.querySelectorAll('.shop-row'));
+                let currentRowIndex = allRows.indexOf(row);
+                allRows.forEach((r, idx) => {
+                    if (idx < currentRowIndex) {
+                        let m = r.querySelector('.shop-mark').value.trim(); let q = parseFloat(r.querySelector('.shop-qty-input').value) || 0;
+                        if (m.toLowerCase() === markNo.toLowerCase()) alreadyUsed += q;
+                    }
+                });
+                let currentAvailable = found.qty - alreadyUsed;
+                row.querySelector('.shop-item').value = found.name; row.querySelector('.shop-prev-bal').value = currentAvailable;
+                row.querySelector('.shop-qty-input').max = currentAvailable;
+                row.dataset.lot = found.lot; row.dataset.name = found.name;
+                calcShopBalance(row.querySelector('.shop-qty-input'));
+            } else {
+                clearShopRow(row); row.querySelector('.shop-bal').value = "Zero"; row.querySelector('.shop-bal').style.color = "red";
+            }
+        }
+
+        function clearShopRow(row) {
+            row.querySelector('.shop-item').value = ""; row.querySelector('.shop-prev-bal').value = "";
+            row.querySelector('.shop-bal').value = ""; row.querySelector('.stock-info').innerText = "";
+        }
+
+        function calcShopBalance(input) {
+            let row = input.closest('.shop-row'); let balInput = row.querySelector('.shop-bal');
+            let infoDiv = row.querySelector('.stock-info'); let availQty = parseFloat(row.querySelector('.shop-prev-bal').value);
+            if (isNaN(availQty)) return;
+            let outQty = parseFloat(input.value) || 0; let balance = availQty - outQty;
+            balInput.value = balance;
+            if (outQty > availQty) {
+                balInput.style.color = "red"; balInput.value = balance + " (Low!)";
+                infoDiv.innerHTML = `<span style="color:red; font-weight:bold;">⚠️ Error: Stock mein sirf ${availQty} box bache hain!</span>`;
+            } else {
+                balInput.style.color = "#2e7d32"; infoDiv.innerHTML = `<span style="color:#27ae60;">Available: ${availQty} Box</span>`;
+            }
+        }
+
+        function saveShopSaleNew() {
+            let shopOutDate = document.getElementById('shopOutDate').value;
+            let rows = document.querySelectorAll('#shopOutRows .shop-row');
+            let successCount = 0; let errors = []; let aggregatedSales = {};
+
+            rows.forEach((row, i) => {
+                let mark = row.querySelector('.shop-mark').value.trim();
+                let outQty = parseFloat(row.querySelector('.shop-qty-input').value);
+                let lot = row.dataset.lot;
+                if (mark && outQty > 0) {
+                    let stockItem = shopStock.find(s => s.lot === lot);
+                    if (!stockItem) errors.push(`Row ${i + 1}: Item nahi mila.`);
+                    else {
+                        if (!aggregatedSales[lot]) aggregatedSales[lot] = 0;
+                        aggregatedSales[lot] += outQty;
+                        if (aggregatedSales[lot] > stockItem.qty) errors.push(`Row ${i + 1}: Stock kam hai.`);
+                    }
+                }
+            });
+            if (errors.length > 0) { alert("Errors:\n" + errors.join("\n")); return; }
+
+            rows.forEach(row => {
+                let mark = row.querySelector('.shop-mark').value.trim(); let outQty = parseFloat(row.querySelector('.shop-qty-input').value);
+                let lot = row.dataset.lot; let name = row.dataset.name;
+                let billNo = row.querySelector('.shop-bill').value.trim() || "Cash Sale";
+                if (mark && outQty > 0 && lot) {
+                    let sIdx = shopStock.findIndex(s => s.lot === lot);
+                    if (sIdx !== -1) {
+                        shopStock[sIdx].qty -= outQty; if (shopStock[sIdx].qty <= 0) shopStock[sIdx].qty = 0;
+                        lotHistory.push({ date: shopOutDate, lot: lot, name: name, type: 'Sale (Bika)', ref: 'Bill: ' + billNo, qtyIn: '-', qtyOut: outQty });
+                        successCount++;
+                    }
+                }
+            });
+            if (successCount > 0) { saveAllData(); alert("🛒 Sale confirm ho gayi!"); closeAll(); }
+        }
+
+        function fetchLotForEdit(lotNo) {
+            lotNo = lotNo.trim().toLowerCase();
+            if (lotNo === "") { document.getElementById('editFields').style.display = "none"; document.getElementById('editErrorMsg').style.display = "none"; return; }
+            let cItem = coldStock.find(s => s.lot.toLowerCase() === lotNo);
+            let sItem = shopStock.find(s => s.lot.toLowerCase() === lotNo);
+            let foundItem = cItem || sItem;
+
+            if (foundItem) {
+                document.getElementById('editErrorMsg').style.display = "none"; document.getElementById('editFields').style.display = "grid";
+                document.getElementById('editName').value = foundItem.name; document.getElementById('editParty').value = foundItem.party;
+                document.getElementById('editMark').value = foundItem.mark; document.getElementById('editBharti').value = foundItem.bharti;
+                document.getElementById('editRate').value = foundItem.rate; document.getElementById('editUnit').value = foundItem.unit;
+                document.getElementById('editColdQty').value = cItem ? cItem.qty : 0; document.getElementById('editShopQty').value = sItem ? sItem.qty : 0;
+            } else {
+                document.getElementById('editFields').style.display = "none"; document.getElementById('editErrorMsg').style.display = "block";
+            }
+        }
+
+        function saveLotEdit() {
+            let lotNo = document.getElementById('editSearchLot').value.trim(); if (!lotNo) return;
+            let nName = document.getElementById('editName').value.trim(); let nParty = document.getElementById('editParty').value.trim();
+            let nMark = document.getElementById('editMark').value.trim(); let nBharti = parseFloat(document.getElementById('editBharti').value) || 0;
+            let nRate = parseFloat(document.getElementById('editRate').value) || 0; let nUnit = document.getElementById('editUnit').value;
+            let nColdQty = parseFloat(document.getElementById('editColdQty').value) || 0; let nShopQty = parseFloat(document.getElementById('editShopQty').value) || 0;
+
+            let cIdx = coldStock.findIndex(s => s.lot.toLowerCase() === lotNo.toLowerCase());
+            let sIdx = shopStock.findIndex(s => s.lot.toLowerCase() === lotNo.toLowerCase());
+            let oldColdQty = cIdx > -1 ? coldStock[cIdx].qty : 0; let oldShopQty = sIdx > -1 ? shopStock[sIdx].qty : 0;
+            let cStore = cIdx > -1 ? coldStock[cIdx].coldStore : (sIdx > -1 ? shopStock[sIdx].coldStore : "-");
+
+            if (cIdx > -1) {
+                coldStock[cIdx].name = nName; coldStock[cIdx].party = nParty; coldStock[cIdx].mark = nMark;
+                coldStock[cIdx].bharti = nBharti; coldStock[cIdx].rate = nRate; coldStock[cIdx].unit = nUnit; coldStock[cIdx].qty = nColdQty;
+            } else if (nColdQty > 0 || (oldColdQty > 0 && nColdQty === 0)) {
+                coldStock.push({ coldStore: cStore, party: nParty, name: nName, lot: lotNo, unit: nUnit, bharti: nBharti, rate: nRate, mark: nMark, qty: nColdQty });
+            }
+
+            if (sIdx > -1) {
+                shopStock[sIdx].name = nName; shopStock[sIdx].party = nParty; shopStock[sIdx].mark = nMark;
+                shopStock[sIdx].bharti = nBharti; shopStock[sIdx].rate = nRate; shopStock[sIdx].unit = nUnit; shopStock[sIdx].qty = nShopQty;
+            } else if (nShopQty > 0 || (oldShopQty > 0 && nShopQty === 0)) {
+                shopStock.push({ coldStore: cStore, party: nParty, name: nName, lot: lotNo, unit: nUnit, bharti: nBharti, rate: nRate, mark: nMark, qty: nShopQty });
+            }
+
+            // Fallback for date matching - use YYYY-MM-DD
+            let today = document.getElementById('inDate').value;
+            if (oldColdQty !== nColdQty) lotHistory.push({ date: today, lot: lotNo, name: nName, type: 'Stock Adjust', ref: 'Manual', qtyIn: (nColdQty - oldColdQty > 0) ? (nColdQty - oldColdQty) : '-', qtyOut: (nColdQty - oldColdQty < 0) ? Math.abs(nColdQty - oldColdQty) : '-' });
+            if (oldShopQty !== nShopQty) lotHistory.push({ date: today, lot: lotNo, name: nName, type: 'Stock Adjust', ref: 'Manual', qtyIn: (nShopQty - oldShopQty > 0) ? (nShopQty - oldShopQty) : '-', qtyOut: (nShopQty - oldShopQty < 0) ? Math.abs(nShopQty - oldShopQty) : '-' });
+
+            saveAllData(); alert("✅ Update Successfully!"); closeAll();
+        }
+
+        function openQuickLedger(lotNo) {
+            let tbody = document.getElementById('qlTableBody'); tbody.innerHTML = "";
+            document.getElementById('qlTitle').innerText = "📜 Lot Ledger - Marka: " + lotNo;
+            let filtered = lotHistory.filter(h => h.lot.toLowerCase() === lotNo.toLowerCase());
+            if (filtered.length === 0) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">No History</td></tr>`;
+            else filtered.forEach(h => {
+                let typeClass = h.type.includes("IN") ? "hist-in" : (h.type.includes("Transfer") ? "hist-trans" : "hist-sale");
+                tbody.innerHTML += `<tr><td>${h.date}</td><td class="${typeClass}">${h.type}</td><td>${h.ref}</td><td style="color:#2980b9;">${h.qtyIn}</td><td style="color:#e74c3c;">${h.qtyOut}</td></tr>`;
+            });
+            document.getElementById('quickLedgerModal').style.display = 'block';
+        }
+
+        function renderLotHistory() {
+            let searchLot = document.getElementById('histSearchLot').value.trim().toLowerCase();
+            let tbody = document.getElementById('historyTableBody'); tbody.innerHTML = "";
+            if (searchLot === "") { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#777;">Lot No. dalkar history dekhein</td></tr>`; return; }
+            let filtered = lotHistory.filter(h => h.lot.toLowerCase() === searchLot);
+            if (filtered.length === 0) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">No History</td></tr>`;
+            else filtered.forEach(h => {
+                let typeClass = h.type.includes("IN") ? "hist-in" : (h.type.includes("Transfer") ? "hist-trans" : "hist-sale");
+                tbody.innerHTML += `<tr><td>${h.date}</td><td class="${typeClass}">${h.type}</td><td>${h.ref}</td><td style="color:#2980b9;">${h.qtyIn}</td><td style="color:#e74c3c;">${h.qtyOut}</td></tr>`;
+            });
+        }
+
+        function renderMasterTable() {
+            let mBody = document.getElementById('masterStockBody');
+            let zBody = document.getElementById('zeroStockBody');
+            mBody.innerHTML = ""; zBody.innerHTML = "";
+            let masterDict = {};
+
+            coldStock.forEach(item => {
+                if (!masterDict[item.lot]) masterDict[item.lot] = { ...item, coldQty: 0, shopQty: 0, totalQty: 0 };
+                masterDict[item.lot].coldQty += item.qty; masterDict[item.lot].totalQty += item.qty;
+            });
+            shopStock.forEach(item => {
+                if (!masterDict[item.lot]) masterDict[item.lot] = { ...item, coldQty: 0, shopQty: 0, totalQty: 0 };
+                masterDict[item.lot].shopQty += item.qty; masterDict[item.lot].totalQty += item.qty;
+            });
+
+            let gColdBox = 0, gShopBox = 0, gTotalBox = 0; let gTotalWt = 0, gTotalVal = 0;
+            Object.values(masterDict).forEach(item => {
+                if (item.totalQty <= 0) {
+                    zBody.innerHTML += `<tr class="clickable-row" onclick="openQuickLedger('${item.lot}')"><td class="party-name">${item.party}</td><td><span class="badge-lot">${item.lot}</span></td><td><b>${item.name}</b></td><td>${item.mark}</td><td style="color:#c0392b;">Bik Chuka 🔴</td></tr>`;
+                } else {
+                    let wt = item.totalQty * item.bharti; let val = wt * item.rate;
+                    gColdBox += item.coldQty; gShopBox += item.shopQty; gTotalBox += item.totalQty; gTotalWt += wt; gTotalVal += val;
+                    let storeBadge = item.coldStore !== "-" ? `<span class="badge-store">${item.coldStore}</span>` : '';
+                    mBody.innerHTML += `<tr class="clickable-row" onclick="openQuickLedger('${item.lot}')"><td>${storeBadge}</td><td class="party-name">${item.party}</td><td><span class="badge-lot">${item.lot}</span></td><td><b>${item.name}</b></td><td>${item.mark}</td><td>${item.bharti} Kg</td><td>₹${item.rate}</td><td class="col-cold">${item.coldQty || "-"}</td><td class="col-shop">${item.shopQty || "-"}</td><td class="col-total">${item.totalQty}</td><td>${wt.toFixed(2)}</td><td style="font-weight:bold;">₹${Math.round(val).toLocaleString('en-IN')}</td></tr>`;
+                }
+            });
+
+            document.getElementById('thColdQty').innerHTML = `🔵 Cold Qty ↕️<br><span style="font-size:11px; color:#ffd700;">Total: ${gColdBox}</span>`;
+            document.getElementById('thShopQty').innerHTML = `🟣 Shop Qty ↕️<br><span style="font-size:11px; color:#ffd700;">Total: ${gShopBox}</span>`;
+            document.getElementById('thTotalQty').innerHTML = `🟢 Total Qty ↕️<br><span style="font-size:12px; color:#ffd700;">Grand Total: ${gTotalBox}</span>`;
+            document.getElementById('thTotalWt').innerHTML = `Total Weight<br><span style="font-size:11px; color:#ffd700;">Total: ${gTotalWt.toFixed(2)} Kg</span>`;
+            document.getElementById('thTotalVal').innerHTML = `Total Value (₹)<br><span style="font-size:12px; color:#ffd700;">Total: ₹${Math.round(gTotalVal).toLocaleString('en-IN')}</span>`;
+            if (zBody.innerHTML === "") zBody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Koi zero stock item nahi hai.</td></tr>";
+        }
+
+        // ==========================================
+        // NEW FUNCTIONS (Search, Sort, Print, Report)
+        // ==========================================
+
+        function searchMasterTable() {
+            let input = document.getElementById("masterSearch");
+            let filter = input.value.toUpperCase();
+            let table = document.getElementById("masterTable");
+            let tr = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+
+            for (let i = 0; i < tr.length; i++) {
+                let rowContent = tr[i].textContent || tr[i].innerText;
+                if (rowContent.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+
+        function sortTable(n) {
+            let table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+            table = document.getElementById("masterTable");
+            switching = true;
+            dir = "asc";
+
+            while (switching) {
+                switching = false;
+                rows = table.getElementsByTagName("tbody")[0].rows;
+                for (i = 0; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+                    x = rows[i].getElementsByTagName("td")[n];
+                    y = rows[i + 1].getElementsByTagName("td")[n];
+
+                    let valX = x.innerText.toLowerCase();
+                    let valY = y.innerText.toLowerCase();
+
+                    let numX = parseFloat(valX.replace(/[^0-9.-]+/g, ""));
+                    let numY = parseFloat(valY.replace(/[^0-9.-]+/g, ""));
+
+                    if (!isNaN(numX) && !isNaN(numY)) { valX = numX; valY = numY; }
+
+                    if (dir == "asc") {
+                        if (valX > valY) { shouldSwitch = true; break; }
+                    } else if (dir == "desc") {
+                        if (valX < valY) { shouldSwitch = true; break; }
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount++;
+                } else {
+                    if (switchcount == 0 && dir == "asc") {
+                        dir = "desc";
+                        switching = true;
+                    }
+                }
+            }
+        }
+
+        function printStock(type) {
+            let title = document.getElementById("printTitle");
+            let tr = document.getElementById("masterStockBody").getElementsByTagName("tr");
+
+            title.innerText = type === 'cold' ? "Dryfu - Cold Storage Stock Report" : "Dryfu - Shop Godown Stock Report";
+
+            for (let i = 0; i < tr.length; i++) {
+                let coldQty = parseFloat(tr[i].getElementsByClassName("col-cold")[0].innerText) || 0;
+                let shopQty = parseFloat(tr[i].getElementsByClassName("col-shop")[0].innerText) || 0;
+
+                if (type === 'cold' && coldQty > 0) {
+                    tr[i].style.display = "";
+                } else if (type === 'shop' && shopQty > 0) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+
+            window.print();
+
+            for (let i = 0; i < tr.length; i++) { tr[i].style.display = ""; }
+            searchMasterTable();
+        }
+
+        function generateDailyReport() {
+            let dateInput = document.getElementById("reportDate").value;
+            if (!dateInput) return;
+
+            let tbody = document.getElementById("dailyReportBody");
+            tbody.innerHTML = "";
+
+            let todaysHistory = lotHistory.filter(h => h.date === dateInput);
+
+            if (todaysHistory.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red; font-weight:bold;">Is din ki koi entry nahi hai.</td></tr>`;
+                return;
+            }
+
+            todaysHistory.forEach(h => {
+                let typeColor = h.type.includes("IN") ? "#2980b9" : (h.type.includes("Sale") ? "#8e44ad" : "#e67e22");
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="color:${typeColor}; font-weight:bold;">${h.type}</td>
+                        <td><span class="badge-lot">${h.lot}</span></td>
+                        <td><b>${h.name}</b></td>
+                        <td>${h.ref}</td>
+                        <td style="color:#27ae60; font-weight:bold;">${h.qtyIn !== '-' ? h.qtyIn : ''}</td>
+                        <td style="color:#c0392b; font-weight:bold;">${h.qtyOut !== '-' ? h.qtyOut : ''}</td>
+                    </tr>`;
+            });
+        }
+
+        // Export All Functions to Window
+        window.switchHistTab = switchHistTab;
+        window.showForm = showForm;
+        window.closeAll = closeAll;
+        window.calcInTotals = calcInTotals;
+        window.addInRow = addInRow;
+        window.addDynamicRow = addDynamicRow;
+        window.saveInwardReceipt = saveInwardReceipt;
+        window.fetchLotDetails = fetchLotDetails;
+        window.calcOutBalance = calcOutBalance;
+        window.saveColdOutChalan = saveColdOutChalan;
+        window.fetchShopLotByMark = fetchShopLotByMark;
+        window.calcShopBalance = calcShopBalance;
+        window.saveShopSaleNew = saveShopSaleNew;
+        window.fetchLotForEdit = fetchLotForEdit;
+        window.saveLotEdit = saveLotEdit;
+        window.openQuickLedger = openQuickLedger;
+        window.renderLotHistory = renderLotHistory;
+        window.extractQtyFromMarka = extractQtyFromMarka;
+
+        // Export New Functions
+        window.searchMasterTable = searchMasterTable;
+        window.sortTable = sortTable;
+        window.printStock = printStock;
+        window.generateDailyReport = generateDailyReport;
+    </script>
+</body>
+
+</html>

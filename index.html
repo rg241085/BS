@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dryfu ERP - Executive Dashboard (Secure)</title>
+    <style>
+        /* --- BODY FLEXBOX LAYOUT (Perfect for Mobile & Desktop) --- */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            /* Taki iframe bachi hui jagah khud le le */
+        }
+
+        /* SECURITY: Jab tak login verify na ho, screen par kuch nahi dikhega */
+        body.hide-ui {
+            display: none !important;
+        }
+
+        /* --- Naya Compact Header Design --- */
+        .top-header {
+            background-color: #0f172a;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1e293b;
+            gap: 15px;
+            flex-shrink: 0;
+            /* Header chhota nahi hoga */
+        }
+
+        /* Left Side: Clickable Tab Cards */
+        .main-tabs {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* --- STAT TAB DESIGN --- */
+        .stat-tab {
+            background-color: #1e293b;
+            border: 2px solid transparent;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 135px;
+            height: 65px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .stat-tab:hover {
+            background-color: #273548;
+            transform: translateY(-2px);
+        }
+
+        .stat-tab.active {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+        }
+
+        .tab-title {
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-value {
+            font-size: 20px;
+            font-weight: 800;
+            margin-top: 4px;
+            transition: all 0.3s ease;
+        }
+
+        /* --- HIDDEN MODE STYLES (Jab F9 ya Double Tap se amount hide ho) --- */
+        body.hidden-mode .tab-title {
+            font-size: 14px;
+            justify-content: center;
+            color: #cbd5e1;
+        }
+
+        body.hidden-mode .net-worth-tab .tab-title {
+            font-size: 15px;
+            color: #e0e7ff;
+        }
+
+        body.hidden-mode .dropdown-select {
+            font-size: 14px;
+            color: #cbd5e1;
+        }
+
+        body.hidden-mode .tab-value {
+            display: none;
+        }
+
+        /* Value Colors */
+        .c-cash {
+            color: #4ade80;
+        }
+
+        .c-pay {
+            color: #fb7185;
+        }
+
+        .c-rec {
+            color: #38bdf8;
+        }
+
+        .c-stk {
+            color: #fbbf24;
+        }
+
+        .c-bnk {
+            color: #60a5fa;
+        }
+
+        /* Right Side: Net Worth, Actions */
+        .right-section {
+            display: flex;
+            gap: 12px;
+            align-items: stretch;
+        }
+
+        .bank-tab {
+            border: 1px dashed #3b82f6;
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .bank-tab:hover {
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        /* --- NET WORTH (Premium Design) --- */
+        .net-worth-tab {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            border: 2px solid #4f46e5;
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);
+            cursor: pointer;
+            /* Change to pointer for mobile interaction */
+            text-align: center;
+            min-width: 150px;
+            user-select: none;
+            /* Text select hone se roke double tap par */
+        }
+
+        .net-worth-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(79, 70, 229, 0.6);
+        }
+
+        .net-worth-tab .tab-title {
+            color: #c7d2fe;
+            justify-content: center;
+        }
+
+        .dropdown-select {
+            background: transparent;
+            color: #94a3b8;
+            border: none;
+            outline: none;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            padding: 0;
+            appearance: none;
+            -webkit-appearance: none;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-select option {
+            background: #1e293b;
+        }
+
+        .action-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            justify-content: space-between;
+        }
+
+        .icon-btn {
+            background: #1e293b;
+            color: #cbd5e1;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 4px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: 0.2s;
+            flex-grow: 1;
+        }
+
+        .icon-btn:hover {
+            background: #334155;
+            color: white;
+        }
+
+        .btn-logout {
+            color: #ef4444;
+            border-color: #7f1d1d;
+        }
+
+        .btn-logout:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* MAIN IFRAME */
+        iframe {
+            flex-grow: 1;
+            /* Automatically takes remaining height */
+            width: 100%;
+            border: none;
+            background-color: #f4f7f6;
+        }
+
+        /* =========================================
+           MOBILE RESPONSIVE DESIGN (Naya Code)
+           ========================================= */
+        @media (max-width: 768px) {
+            .top-header {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .main-tabs {
+                flex-wrap: nowrap;
+                /* Taki card niche na gire */
+                overflow-x: auto;
+                /* Daaye-baaye swipe karne ke liye */
+                padding-bottom: 5px;
+                gap: 10px;
+                -ms-overflow-style: none;
+                /* IE and Edge */
+                scrollbar-width: none;
+                /* Firefox */
+            }
+
+            .main-tabs::-webkit-scrollbar {
+                display: none;
+                /* Chrome, Safari and Opera scrollbar hide */
+            }
+
+            .stat-tab {
+                min-width: 130px;
+                /* Mobile par thoda chota */
+                height: 60px;
+            }
+
+            .right-section {
+                justify-content: space-between;
+                gap: 10px;
+            }
+
+            .net-worth-tab {
+                flex-grow: 1;
+                /* Net worth pheli hui dikhegi */
+                min-width: unset;
+            }
+
+            .action-btns {
+                flex-direction: row;
+                /* Mobile par refresh aur logout ek line me */
+                flex-grow: 1;
+            }
+
+            .icon-btn {
+                padding: 10px;
+            }
+        }
+
+        /* =========================================
+   📱 ADVANCED MOBILE UI (App Style Layout)
+   ========================================= */
+        @media (max-width: 768px) {
+            .top-header {
+                /* Jadoo: Net Worth upar aur Tabs niche karne ke liye */
+                flex-direction: column-reverse;
+                padding: 10px;
+                gap: 12px;
+                border-bottom: none;
+            }
+
+            /* --- Upar Wali Line (Net Worth + Buttons) --- */
+            .right-section {
+                width: 100%;
+                justify-content: space-between;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .net-worth-tab {
+                flex-grow: 1;
+                min-width: unset;
+                height: 55px;
+                /* Touch ke liye perfect height */
+                margin: 0;
+            }
+
+            .action-btns {
+                flex-direction: row;
+                /* Refresh aur Logout side-by-side */
+                gap: 8px;
+            }
+
+            .icon-btn {
+                padding: 0 15px;
+                height: 55px;
+                /* Net worth ke barabar height */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+            }
+
+            /* --- Niche Wali Line (Scrollable Menu Tabs) --- */
+            .main-tabs {
+                width: 100%;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                /* iPhone par smooth scroll */
+                padding-bottom: 5px;
+                gap: 10px;
+                scroll-snap-type: x mandatory;
+                /* Swipe karne par card apne aap fit hoga */
+            }
+
+            /* Scrollbar chhupana taaki clean dikhe */
+            .main-tabs::-webkit-scrollbar {
+                display: none;
+            }
+
+            .stat-tab {
+                flex: 0 0 auto;
+                /* Tabs ko pichakne se rokega */
+                width: 140px;
+                min-width: unset;
+                height: 65px;
+                scroll-snap-align: start;
+                /* Magnetic snap effect */
+            }
+
+            .dropdown-select {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body class="hide-ui">
+
+    <div class="top-header">
+        <div class="main-tabs">
+
+            <div class="stat-tab" onclick="loadPage('cash.html', this)">
+                <div class="tab-title">💵 Cash </div>
+                <div class="tab-value" id="stat-cash"></div>
+            </div>
+
+            <div class="stat-tab bank-tab" onclick="updateBankBalance()" title="Click karke Bank Balance Update karein">
+                <div class="tab-title" style="color: #60a5fa;">🏦 Bank Bal ✏️</div>
+                <div class="tab-value" id="stat-bank"></div>
+            </div>
+
+            <div class="stat-tab active" onclick="loadPage('payment.html', this)">
+                <div class="tab-title">📤 Payment</div>
+                <div class="tab-value" id="stat-payable"></div>
+            </div>
+
+            <div class="stat-tab" onclick="loadPage('ugai.html', this)">
+                <div class="tab-title">
+                    <select id="ugaiFilterType" class="dropdown-select"
+                        onchange="updateDashboardStats(); event.stopPropagation();">
+                        <option value="total">📥 Outstanding (Total) ▼</option>
+                        <option value="selected">📥 Outstanding (Sel) ▼</option>
+                    </select>
+                </div>
+                <div class="tab-value" id="stat-receivable"></div>
+            </div>
+
+            <div class="stat-tab" onclick="loadPage('stock.html', this)">
+                <div class="tab-title">📦 Stock Value</div>
+                <div class="tab-value" id="stat-stock-val"></div>
+            </div>
+
+        </div>
+
+        <div class="right-section">
+
+            <div class="stat-tab net-worth-tab" id="netWorthBox" title="Double tap/click to Show/Hide Amounts">
+                <div class="tab-title">💎 Net Worth</div>
+                <div class="tab-value" id="stat-net-worth"></div>
+            </div>
+
+            <div class="action-btns">
+                <button class="icon-btn" onclick="updateDashboardStats()">🔄</button>
+                <button class="icon-btn btn-logout" id="logoutBtn">🚪</button>
+            </div>
+
+        </div>
+    </div>
+
+    <iframe id="main-frame" src="payment.html"></iframe>
+
+    <script type="module">
+        import { db, doc, collection, onSnapshot, auth, onAuthStateChanged, signOut, setDoc } from './firebase-config.js';
+
+        // --- SECURITY CHECK ---
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = "login.html";
+            } else {
+                document.body.classList.remove('hide-ui'); // Login verified, show UI
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            if (confirm("Kya aap Logout karna chahte hain?")) {
+                signOut(auth).then(() => { window.location.href = "login.html"; });
+            }
+        });
+
+        // --- Dashboard Live Stats Logic ---
+        let cash = 0, bank = 0;
+        let totalPayable = 0;
+        let totalStockVal = 0;
+        let totalReceivable = 0;
+        window.selectedUgaiAmount = 0;
+
+        // --- Privacy & Shortcut Module ---
+        window.amountsVisible = false; // Defalt: Chhupa rahega (Hidden Mode)
+        let hideTimeoutId = null;
+        const AUTO_HIDE_TIME = 5 * 60 * 1000;
+        const TOGGLE_KEY = 'F9';
+
+        const balancesDoc = doc(db, "balances", "main");
+        const cashCounterDoc = doc(db, "erp", "cashCounter");
+        const paymentsCol = collection(db, "payments");
+        const inventoryDoc = doc(db, "erp", "inventory");
+        const outstandingDoc = doc(db, "erp", "outstanding");
+
+        function updateUI() {
+            let ugaiFilter = document.getElementById('ugaiFilterType');
+            const rawReceivable = (ugaiFilter && ugaiFilter.value === 'selected') ? (window.selectedUgaiAmount || 0) : totalReceivable;
+            const rawNetWorth = (cash + bank + rawReceivable + totalStockVal) - totalPayable;
+
+            const elCash = document.getElementById('stat-cash');
+            const elBank = document.getElementById('stat-bank');
+            const elPay = document.getElementById('stat-payable');
+            const elRec = document.getElementById('stat-receivable');
+            const elStk = document.getElementById('stat-stock-val');
+            const elNet = document.getElementById('stat-net-worth');
+
+            // --- Hide/Show Logic with Body Class ---
+            if (window.amountsVisible) {
+                document.body.classList.remove('hidden-mode');
+
+                elCash.className = "tab-value c-cash";
+                elBank.className = "tab-value c-bnk";
+                elPay.className = "tab-value c-pay";
+                elRec.className = "tab-value c-rec";
+                elStk.className = "tab-value c-stk";
+                elNet.className = "tab-value";
+                elNet.style.color = "#f8fafc";
+
+                elCash.innerText = "₹" + Math.round(cash).toLocaleString('en-IN');
+                elBank.innerText = "₹" + Math.round(bank).toLocaleString('en-IN');
+                elPay.innerText = "₹" + totalPayable.toLocaleString('en-IN');
+                elRec.innerText = "₹" + rawReceivable.toLocaleString('en-IN');
+                elStk.innerText = "₹" + Math.round(totalStockVal).toLocaleString('en-IN');
+                elNet.innerText = "₹" + Math.round(rawNetWorth).toLocaleString('en-IN');
+            } else {
+                document.body.classList.add('hidden-mode');
+
+                elCash.innerText = "";
+                elBank.innerText = "";
+                elPay.innerText = "";
+                elRec.innerText = "";
+                elStk.innerText = "";
+                elNet.innerText = "";
+            }
+        }
+
+        // --- 🔒 Privacy Setup (Keyboard + Mobile Touch) ---
+
+        // 1. Keyboard F9 Listener
+        window.addEventListener('keydown', (event) => {
+            if (event.key === TOGGLE_KEY) {
+                event.preventDefault();
+                togglePrivacyMode();
+            }
+        });
+
+        // 2. Mobile / Mouse Double Tap Listener on Net Worth
+        let lastTap = 0;
+        const netWorthBox = document.getElementById('netWorthBox');
+        netWorthBox.addEventListener('click', (e) => {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            // Agar 500ms (aadhe second) ke andar 2 baar click/tap kiya gaya ho
+            if (tapLength < 500 && tapLength > 0) {
+                togglePrivacyMode();
+                e.preventDefault();
+            }
+            lastTap = currentTime;
+        });
+
+        function togglePrivacyMode() {
+            window.amountsVisible = !window.amountsVisible;
+
+            if (hideTimeoutId) {
+                clearTimeout(hideTimeoutId);
+                hideTimeoutId = null;
+            }
+
+            if (window.amountsVisible) {
+                hideTimeoutId = setTimeout(() => {
+                    if (window.amountsVisible) {
+                        window.amountsVisible = false;
+                        updateUI();
+                    }
+                }, AUTO_HIDE_TIME);
+            }
+            updateUI();
+        }
+
+        // 1. Bank Data Listener
+        onSnapshot(balancesDoc, (snap) => {
+            if (snap.exists()) {
+                bank = Number(snap.data().bank) || 0;
+            } else { bank = 0; }
+            updateUI();
+        });
+
+        // 2. Cash Counter (Galla) Listener [PHYSICAL CASH LOGIC]
+        onSnapshot(cashCounterDoc, (snap) => {
+            cash = 0;
+            if (snap.exists() && snap.data().days && snap.data().days.length > 0) {
+                let latestDay = snap.data().days[0];
+                let physicalTotal = 0;
+
+                if (latestDay.denomData) {
+                    for (const [valStr, counts] of Object.entries(latestDay.denomData)) {
+                        const denomValue = Number(valStr);
+                        const p = Number(counts.packets) || 0;
+                        const l1 = Number(counts.loose1) || 0;
+                        const l2 = Number(counts.loose2) || 0;
+                        const l3 = Number(counts.loose3) || 0;
+                        const c = Number(counts.coins) || 0;
+
+                        const totalNoteCount = (p * 100) + l1 + l2 + l3;
+                        physicalTotal += (totalNoteCount * denomValue) + (c * denomValue);
+                    }
+                }
+
+                if (latestDay.extras && Array.isArray(latestDay.extras)) {
+                    latestDay.extras.forEach(ex => {
+                        physicalTotal += Number(ex.amount) || 0;
+                    });
+                }
+
+                cash = physicalTotal;
+            }
+            updateUI();
+        });
+
+        // 3. Payment Ledger Data
+        onSnapshot(paymentsCol, (snap) => {
+            totalPayable = 0;
+            snap.forEach(doc => { totalPayable += Number(doc.data().amount) || 0; });
+            updateUI();
+        });
+
+        // 4. Inventory Data
+        onSnapshot(inventoryDoc, (snap) => {
+            totalStockVal = 0;
+            if (snap.exists()) {
+                let data = snap.data();
+                let cStock = data.coldStock || [];
+                let sStock = data.shopStock || [];
+                [...cStock, ...sStock].forEach(item => {
+                    let weight = Number(item.qty) * Number(item.bharti || 0);
+                    totalStockVal += (weight * Number(item.rate || 0));
+                });
+            }
+            updateUI();
+        });
+
+        // 5. Outstanding Data
+        onSnapshot(outstandingDoc, (snap) => {
+            totalReceivable = 0;
+            if (snap.exists()) {
+                let data = snap.data().data || [];
+                data.forEach(row => {
+                    if (!row.hidden) totalReceivable += Number(row.amount || 0);
+                });
+            }
+            updateUI();
+        });
+
+        // --- Bank Update Function ---
+        window.updateBankBalance = async function () {
+            if (!window.amountsVisible) {
+                if (!confirm("Balance dekhne aur edit karne ke liye 'Show' mode active karna hoga.\n\nPC me F9 dabayein ya Mobile me 'Net Worth' par double-tap karein!")) {
+                    return;
+                }
+                // Agar user OK karta hai, to bhi privacy hat jayegi
+                togglePrivacyMode();
+            }
+
+            let newVal = prompt("🏦 Naya Bank Balance enter karein (₹):", bank);
+            if (newVal !== null && newVal.trim() !== "") {
+                let parsedVal = parseFloat(newVal);
+                if (!isNaN(parsedVal)) {
+                    await setDoc(balancesDoc, { bank: parsedVal }, { merge: true });
+                } else {
+                    alert("Kripya sahi number daalein.");
+                }
+            }
+        };
+
+        // --- Page Load & Tab Switching Logic ---
+        window.loadPage = function (pageUrl, btnElement) {
+            document.getElementById('main-frame').src = pageUrl;
+            document.querySelectorAll('.stat-tab').forEach(btn => btn.classList.remove('active'));
+            if (btnElement) {
+                btnElement.classList.add('active');
+            }
+        }
+
+        // Jab page load ho tab UI update karein
+        updateUI();
+
+        window.updateDashboardStats = function () {
+            updateUI();
+        }
+    </script>
+</body>
+
+</html>

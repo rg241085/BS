@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dryfu - Outstanding Dashboard</title>
+    <style>
+        /* --- Keyboard Focus Style --- */
+        tr.keyboard-row:focus {
+            outline: 2px solid #008CBA;
+            background-color: #e6f7ff;
+        }
+
+        /* --- Dashboard Design --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+
+        .upload-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            background-color: #e9f5e9;
+            border: 2px dashed #4CAF50;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .filter-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+            background: #fdfdfd;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .filter-section input,
+        .filter-section select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .filter-section label {
+            font-size: 12px;
+            color: #555;
+            font-weight: bold;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        button.clear-btn {
+            background-color: #d9534f;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 18px;
+        }
+
+        button.clear-btn:hover {
+            background-color: #c9302c;
+        }
+
+        #hidden-alert {
+            display: none;
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 14px;
+            border: 1px solid #ffeeba;
+            font-weight: bold;
+        }
+
+        #hidden-alert button {
+            background: none;
+            border: none;
+            color: #0056b3;
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        #hidden-alert button:hover {
+            color: #003d82;
+        }
+
+        .top-action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        button.print-stmt-btn {
+            background-color: #6f42c1;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        button.print-stmt-btn:hover {
+            background-color: #59339d;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background-color: #45a049;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .total-box {
+            text-align: right;
+            font-size: 20px;
+            font-weight: bold;
+            color: #d9534f;
+        }
+
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .sort-icon {
+            font-size: 12px;
+            margin-left: 5px;
+        }
+
+        .action-cell {
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        button.pay-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        button.pay-btn:hover {
+            background-color: #218838;
+        }
+
+        button.hide-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 6px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+
+        button.hide-btn:hover {
+            background-color: #5a6268;
+        }
+
+        /* --- Modal (Popup) Design --- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 480px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            color: black;
+        }
+
+        .modal h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        .modal label {
+            font-weight: bold;
+            font-size: 13px;
+            color: #555;
+            display: block;
+            margin-top: 12px;
+            margin-bottom: 5px;
+        }
+
+        .modal input,
+        .modal select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        .modal-info {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            border-left: 5px solid #4CAF50;
+            line-height: 1.6;
+        }
+
+        .modal-info span {
+            font-weight: bold;
+            color: #d9534f;
+        }
+
+        .bill-age-box {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #ccc;
+            font-size: 18px;
+            color: #e65100;
+            font-weight: bold;
+            text-align: center;
+            background: #fff8e1;
+            border-radius: 4px;
+            padding-bottom: 5px;
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .flex-row>div {
+            flex: 1;
+        }
+
+        .radio-group {
+            background: #eef2f5;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            gap: 5px;
+            margin-top: 15px;
+            border: 1px solid #d1d9e0;
+        }
+
+        .radio-group label {
+            margin: 0;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+
+        .radio-group input {
+            width: auto;
+            margin-right: 5px;
+            transform: scale(1.1);
+        }
+
+        .interest-box {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #ffeeba;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .interest-box label {
+            color: #856404;
+            margin-top: 0;
+        }
+
+        .auto-calc-text {
+            font-size: 12px;
+            color: #d9534f;
+            font-weight: bold;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .discount-box {
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #c3e6cb;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .discount-box label {
+            color: #155724;
+            margin-top: 0;
+        }
+
+        .final-payable {
+            font-size: 15px;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #333;
+            text-align: right;
+            border-top: 1px dashed #ccc;
+            padding-top: 10px;
+        }
+
+        button.print-receipt-btn {
+            width: 100%;
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        button.print-receipt-btn:hover {
+            background-color: #007399;
+        }
+
+        /* --- PRINT AREA SETUP --- */
+        .print-area {
+            display: none;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+                font-family: Arial, sans-serif;
+            }
+
+            #main-dashboard,
+            #paymentModal {
+                display: none !important;
+            }
+
+            .print-area {
+                display: none !important;
+            }
+
+            .print-area.active {
+                display: block !important;
+                width: 95%;
+                max-width: 900px;
+                margin: 10px auto;
+                position: relative;
+            }
+
+            /* RECEIPT VOUCHER */
+            #print-receipt-section.active .inner-border {
+                border: 2px solid #000;
+                padding: 20px;
+                min-height: 400px;
+            }
+
+            .receipt-header {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            .voucher-title {
+                display: inline-block;
+                border: 1px solid #000;
+                padding: 8px 20px;
+                font-weight: bold;
+                font-size: 20px;
+                background-color: #f0f0f0 !important;
+                -webkit-print-color-adjust: exact;
+            }
+
+            .top-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 30px;
+                font-size: 15px;
+                font-weight: bold;
+            }
+
+            .body-text {
+                line-height: 2.2;
+                font-size: 16px;
+            }
+
+            .fill-blank {
+                display: inline-block;
+                border-bottom: 1px dashed #000;
+                min-width: 200px;
+                padding-left: 10px;
+                font-weight: bold;
+                font-family: 'Times New Roman', Times, serif;
+                font-size: 18px;
+            }
+
+            .footer-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+                margin-top: 40px;
+            }
+
+            .amount-box {
+                border: 2px solid #000;
+                padding: 10px 20px;
+                font-size: 24px;
+                font-weight: bold;
+                min-width: 150px;
+                background: #f9f9f9 !important;
+                -webkit-print-color-adjust: exact;
+            }
+
+            .signatures {
+                display: flex;
+                gap: 50px;
+            }
+
+            .sig-line {
+                text-align: center;
+                border-top: 1px solid #000;
+                padding-top: 5px;
+                width: 150px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+
+            .account-summary {
+                margin-top: 30px;
+                border: 1px solid #aaa;
+                border-radius: 4px;
+                padding: 10px;
+                font-size: 13px;
+                background-color: #fcfcfc !important;
+                -webkit-print-color-adjust: exact;
+            }
+
+            .account-summary h4 {
+                margin: 0 0 10px 0;
+                text-decoration: underline;
+                color: #333;
+                text-align: center;
+                font-size: 15px;
+            }
+
+            .summary-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .summary-table th,
+            .summary-table td {
+                padding: 8px;
+                text-align: center;
+                border: 1px solid #ddd;
+            }
+
+            .summary-table th {
+                background: #eee !important;
+                -webkit-print-color-adjust: exact;
+            }
+
+            .highlight-bal {
+                color: #d9534f;
+                font-weight: bold;
+                font-size: 16px;
+            }
+
+            /* BROKER / PARTY STATEMENT */
+            .stmt-header {
+                text-align: center;
+                border-bottom: 2px solid #000;
+                padding-bottom: 10px;
+                margin-bottom: 20px;
+            }
+
+            .stmt-header h2 {
+                margin: 5px 0;
+                font-size: 24px;
+                text-decoration: underline;
+                color: #000;
+            }
+
+            .stmt-header h3 {
+                margin: 8px 0;
+                font-size: 18px;
+                color: #333;
+                font-weight: bold;
+            }
+
+            .stmt-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+                font-size: 14px;
+            }
+
+            .stmt-table th,
+            .stmt-table td {
+                border: 1px solid #000;
+                padding: 8px;
+                text-align: left;
+            }
+
+            .stmt-table th {
+                background-color: #f0f0f0 !important;
+                -webkit-print-color-adjust: exact;
+                color: #000;
+            }
+
+            .stmt-total-row {
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+                border-top: 2px solid #000;
+                padding-top: 10px;
+                margin-top: 10px;
+            }
+
+            .stmt-total-lbl {
+                font-size: 18px;
+                font-weight: bold;
+                margin-right: 20px;
+            }
+
+            .stmt-total-amt {
+                font-size: 22px;
+                font-weight: bold;
+                color: #d9534f;
+                border: 2px solid #000;
+                padding: 5px 15px;
+            }
+        }
+
+        /* --- Compact Dashboard Space Saving CSS --- */
+        body {
+            padding: 10px;
+            /* बॉडी की पैडिंग कम की */
+        }
+
+        .container {
+            padding: 15px;
+        }
+
+        /* नई टॉप कंट्रोल बार (Upload + Buttons) */
+        /* नई टॉप कंट्रोल बार (Upload + Totals + Buttons) */
+        .top-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #e9f5e9;
+            border: 1px solid #4CAF50;
+            border-radius: 6px;
+            padding: 8px 15px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .top-controls-center {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: #fff;
+            padding: 5px 15px;
+            border-radius: 4px;
+            border: 1px dashed #4CAF50;
+        }
+
+        .top-controls-right {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .stat-text {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .stat-selected {
+            color: #007bff;
+        }
+
+        .stat-filtered {
+            color: #d9534f;
+        }
+
+        /* फ़िल्टर सेक्शन को पतला किया */
+        .filter-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
+            background: #fdfdfd;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .filter-section label {
+            margin-bottom: 2px;
+        }
+
+        .filter-section input,
+        .filter-section select {
+            padding: 6px;
+            font-size: 13px;
+        }
+
+        /* बटन्स को छोटा और सेट किया */
+        button.clear-btn {
+            background-color: #d9534f;
+            color: white;
+            border: none;
+            padding: 7px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            margin-top: 0;
+            /* पुराना मार्जिन हटाया */
+        }
+
+        button.print-stmt-btn {
+            padding: 7px 12px;
+            font-size: 13px;
+        }
+
+        /* टोटल अमाउंट वाली बार को स्लिम किया */
+        .totals-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            padding: 8px 15px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        /* =========================================
+   📱 MOBILE RESPONSIVE DESIGN (Ugai Dashboard)
+   ========================================= */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            /* Top Controls (Upload, Stats, Buttons) ko ek ke niche ek lagana */
+            .top-controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .top-controls>div {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .top-controls-center {
+                flex-direction: row;
+                justify-content: space-between;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .top-controls-right {
+                flex-direction: row;
+                width: 100%;
+                gap: 10px;
+            }
+
+            .top-controls-right button {
+                flex: 1;
+                /* Clear aur Print buttons barabar jagah lenge */
+                margin-top: 0;
+            }
+
+            /* Table ko Scrollable Banana (Taaki design na bigde) */
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                border: 1px solid #ddd;
+            }
+
+            table {
+                min-width: 800px;
+                /* Table ko chota hone se rokega, scroll aayega */
+            }
+
+            /* Filters ko 2 columns me set karna */
+            .filter-section {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            /* -----------------------------------------
+       Payment Modal (Popup) Mobile Fixes
+       ----------------------------------------- */
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+                padding: 15px;
+                max-height: 90vh;
+                /* Agar popup lamba ho toh screen se bahar na jaye */
+                overflow-y: auto;
+            }
+
+            /* Input boxes jo side-by-side the, unhe stack karna */
+            .flex-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            /* Interest/Discount options ko ek ke niche ek karna */
+            .radio-group {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+
+        /* Extra chhoti screen ke liye Filters 1 column me */
+        @media (max-width: 480px) {
+            .filter-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+
+
+
+
+    <div class="container" id="main-dashboard">
+
+        <div class="container" id="main-dashboard">
+
+            <div class="top-controls">
+                <div>
+                    <label for="csvFileInput" style="font-weight: bold; margin-right: 5px; font-size: 13px;">Aaj ki
+                        Excel/CSV:</label>
+                    <input type="file" id="csvFileInput" accept=".csv" style="font-size: 12px; width: 180px;">
+                </div>
+
+                <div class="top-controls-center">
+                    <div class="stat-text stat-selected">Selected: ₹<span id="selectedOutstanding">0</span></div>
+                    <div class="stat-text stat-filtered">Filtered: ₹<span id="totalOutstanding">0</span></div>
+                </div>
+
+                <div class="top-controls-right">
+                    <button class="clear-btn" onclick="clearFilters()">🧹 Clear</button>
+                    <button class="print-stmt-btn" onclick="printStatement()">🖨️ Print</button>
+                </div>
+            </div>
+
+            <div id="hidden-alert" style="padding: 6px; margin-bottom: 10px; font-size: 13px;">
+                <span id="hidden-count">0</span> Bills Temporary Hidden.
+                <button onclick="restoreHidden()">Restore All</button>
+            </div>
+
+            <div class="filter-section" id="filters" style="display: none;">
+                <div><label>Party Name</label><input type="text" id="f-party" placeholder="Search Party..."
+                        oninput="applyFilters()"></div>
+                <div><label>Bill Number</label><input type="text" id="f-bill" placeholder="Search Bill No..."
+                        oninput="applyFilters()"></div>
+                <div><label>Broker Name</label><select id="f-broker" onchange="applyFilters()">
+                        <option value="">All Brokers</option>
+                    </select></div>
+                <div><label>Start Date</label><input type="date" id="f-start" onchange="applyFilters()"></div>
+                <div><label>End Date</label><input type="date" id="f-end" onchange="applyFilters()"></div>
+                <div><label>Min Amount (₹)</label><input type="number" id="f-min" placeholder="0"
+                        oninput="applyFilters()"></div>
+            </div>
+
+            <div class="table-container">
+
+                <div id="hidden-alert" style="padding: 6px; margin-bottom: 10px; font-size: 13px;">
+                    <span id="hidden-count">0</span> Bills Temporary Hidden.
+                    <button onclick="restoreHidden()">Restore All</button>
+                </div>
+
+                <div class="filter-section" id="filters" style="display: none;">
+                    <div><label>Party Name</label><input type="text" id="f-party" placeholder="Search Party..."
+                            oninput="applyFilters()"></div>
+                    <div><label>Bill Number</label><input type="text" id="f-bill" placeholder="Search Bill No..."
+                            oninput="applyFilters()"></div>
+                    <div><label>Broker Name</label><select id="f-broker" onchange="applyFilters()">
+                            <option value="">All Brokers</option>
+                        </select></div>
+                    <div><label>Start Date</label><input type="date" id="f-start" onchange="applyFilters()"></div>
+                    <div><label>End Date</label><input type="date" id="f-end" onchange="applyFilters()"></div>
+                    <div><label>Min Amount (₹)</label><input type="number" id="f-min" placeholder="0"
+                            oninput="applyFilters()">
+                    </div>
+                </div>
+
+                <!-- <div class="totals-bar">
+                    <div style="font-size: 15px; color: #007bff; font-weight: bold;">
+                        Selected Outstanding: ₹<span id="selectedOutstanding">0</span>
+                    </div>
+                    <div class="total-box" style="margin-top: 0; font-size: 16px;">
+                        Filtered Outstanding: ₹<span id="totalOutstanding">0</span>
+                    </div>
+                </div> -->
+
+                <div class="table-container">
+
+
+
+                    <table id="outstandingTable">
+
+
+
+                        <thead>
+                            <tr>
+                                <th style="width: 40px; text-align: center; cursor: pointer;">
+                                    <input type="checkbox" id="selectAllCheckbox" onclick="toggleSelectAll()"
+                                        style="transform: scale(1.2); cursor: pointer;">
+                                </th>
+                                <th onclick="sortData('dateVal')">Date <span class="sort-icon" id="sort-dateVal"></span>
+                                </th>
+                                <th onclick="sortData('billNo')">Bill No. (OS.ID) <span class="sort-icon"
+                                        id="sort-billNo"></span></th>
+                                <th onclick="sortData('name')">Account Name <span class="sort-icon"
+                                        id="sort-name"></span></th>
+                                <th onclick="sortData('broker')">Broker Name <span class="sort-icon"
+                                        id="sort-broker"></span>
+                                </th>
+                                <th onclick="sortData('amount')">Due Amount (₹) <span class="sort-icon"
+                                        id="sort-amount"></span>
+                                </th>
+                                <th style="cursor: default; text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+
+
+
+                        <tbody id="tableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #777;">Data dekhne ke liye file upload
+                                    karein
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="paymentModal" class="modal">
+                <div class="modal-content">
+                    <span class="close-btn" onclick="closeModal()">&times;</span>
+                    <h3>Receive Payment & Settlement</h3>
+
+                    <div class="modal-info">
+                        Party: <b id="m-party" style="font-size: 16px;"></b><br>
+                        Bill Date: <b id="m-bill-date"></b> | Bill No: <b id="m-bill"></b><br>
+                        Original Due: <span id="m-due" style="font-size: 16px;"></span>
+
+                        <div class="bill-age-box">
+                            ⏱️ Bill is <span id="m-bill-age" style="font-size: 22px; color: #d84315;">0</span> Days Old
+                        </div>
+                    </div>
+
+                    <div class="radio-group">
+                        <label><input type="radio" name="adj_type" value="none" checked onchange="toggleAdjustment()">
+                            Sirf Bill
+                            Amount</label>
+                        <label><input type="radio" name="adj_type" value="interest" onchange="toggleAdjustment()"> ➕
+                            Interest
+                            Lagayein</label>
+                        <label><input type="radio" name="adj_type" value="discount" onchange="toggleAdjustment()"> ➖
+                            Discount
+                            Dein</label>
+                    </div>
+
+                    <div class="interest-box" id="box-interest">
+                        <div class="flex-row">
+                            <div><label>Credit Days (Din):</label><input type="number" id="m-credit-days" value="0"
+                                    placeholder="e.g. 30" oninput="calculateInterest()"></div>
+                            <div><label>Rate (% Monthly):</label><input type="number" id="m-int-rate" value="0"
+                                    placeholder="e.g. 1.5" step="0.1" oninput="calculateInterest()"></div>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <label>➕ Calculated Interest (₹):</label>
+                            <input type="number" id="m-interest" placeholder="0" oninput="updateLiveTotal()">
+                            <span class="auto-calc-text" id="m-overdue-info">Interest for: 0 Days</span>
+                        </div>
+                    </div>
+
+                    <div class="discount-box" id="box-discount">
+                        <div class="flex-row">
+                            <div><label>Discount (%):</label><input type="number" id="m-disc-percent" value=""
+                                    placeholder="e.g. 2" step="0.1" oninput="calcDiscFromPercent()"></div>
+                            <div><label>Discount Amount (₹):</label><input type="number" id="m-discount" value="0"
+                                    placeholder="0" oninput="calcDiscFromAmount()"></div>
+                        </div>
+                    </div>
+
+                    <div class="final-payable">Total Payable Now: <span id="live-total"
+                            style="color: #d9534f; font-size: 24px;">0</span></div>
+
+                    <label style="margin-top: 15px;">Amount Received (₹):</label>
+                    <input type="number" id="m-received" placeholder="Kitne paise aaye?"
+                        style="border: 2px solid #008CBA; font-weight: bold; font-size: 16px;">
+
+                    <div class="flex-row">
+                        <div>
+                            <label>Payment Mode:</label>
+                            <select id="m-mode">
+                                <option value="Cash">Cash</option>
+                                <option value="Cheque">Cheque</option>
+                                <option value="DD">DD</option>
+                                <option value="UPI / Online">UPI / Online</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                            </select>
+                        </div>
+                        <div><label>Ref / Note:</label><input type="text" id="m-ref" placeholder="Cheque/UTR No."></div>
+                    </div>
+
+                    <button class="print-receipt-btn" onclick="generateReceipt()">🖨️ Print Receipt Voucher</button>
+                </div>
+            </div>
+
+            <div class="print-area" id="print-receipt-section">
+                <div class="inner-border">
+                    <div class="receipt-header">
+                        <div class="voucher-title">RECEIPT VOUCHER</div>
+                    </div>
+
+                    <div class="top-row">
+                        <div>No. : <span class="fill-blank" style="min-width: 100px;" id="r-voucherno"></span></div>
+                        <div>Dated : <span class="fill-blank" style="min-width: 150px;" id="r-date"></span></div>
+                    </div>
+
+                    <div class="body-text">
+                        Received with thanks from <span class="fill-blank" style="width: 70%;" id="r-party"></span><br>
+                        The sum of Indian Rupees <span class="fill-blank" style="width: 73%;" id="r-words"></span><br>
+                        By Cash / Cheque / DD No. <span class="fill-blank" style="width: 40%;" id="r-mode-ref"></span>
+                        Drawn on
+                        <span class="fill-blank" style="width: 26%;"></span><br>
+                        Towards Payment of <span class="fill-blank" style="width: 78%;" id="r-bill"></span>
+                    </div>
+
+                    <div class="footer-row">
+                        <div class="amount-box">₹ <span id="r-amount-paid"></span> /-</div>
+                        <div class="signatures">
+                            <div class="sig-line">Received By</div>
+                            <div class="sig-line">Authorised Signatory</div>
+                        </div>
+                    </div>
+
+                    <div class="account-summary">
+                        <h4>Account Settlement Summary</h4>
+                        <table class="summary-table" id="dynamic-summary-table"></table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="print-area" id="print-statement-section">
+                <div class="stmt-header">
+                    <h2 id="stmt-title">OUTSTANDING STATEMENT</h2>
+                    <h3 id="stmt-subtitle">All Records</h3>
+                </div>
+
+                <table class="stmt-table">
+                    <thead id="stmt-table-head">
+                    </thead>
+                    <tbody id="stmt-table-body">
+                    </tbody>
+                </table>
+
+                <div class="stmt-total-row">
+                    <div class="stmt-total-lbl">Total Outstanding Balance:</div>
+                    <div class="stmt-total-amt" id="stmt-total">0</div>
+                </div>
+            </div>
+
+
+
+
+
+
+
+
+
+            <script type="module">
+                import { db, doc, setDoc, onSnapshot } from './firebase-config.js';
+
+                let allData = [];
+                let currentFilteredData = [];
+                let currentSortCol = '';
+                let isAscending = true;
+                let receiptCounter = 1;
+
+                let currentPayParty = ""; let currentPayBill = ""; let currentPayDue = 0;
+                let currentPayBillDateStr = ""; let currentOverdueDays = 0;
+
+                const outstandingDoc = doc(db, "erp", "outstanding");
+
+                // 1. Firebase Live Listener
+                onSnapshot(outstandingDoc, (docSnap) => {
+                    if (docSnap.exists()) {
+                        allData = docSnap.data().data || [];
+                    } else {
+                        allData = [];
+                    }
+                    refreshUI();
+                });
+
+                function refreshUI() {
+                    let brokers = new Set();
+                    allData.forEach(row => {
+                        if (row.broker !== "" && row.broker !== "-") brokers.add(row.broker);
+                    });
+
+                    let brokerSelect = document.getElementById("f-broker");
+                    let currBroker = brokerSelect.value;
+                    brokerSelect.innerHTML = '<option value="">All Brokers</option>';
+                    Array.from(brokers).sort().forEach(broker => {
+                        brokerSelect.innerHTML += `<option value="${broker}">${broker}</option>`;
+                    });
+                    brokerSelect.value = currBroker;
+
+                    if (allData.length > 0) {
+                        document.getElementById("filters").style.display = "grid";
+                    }
+                    updateHiddenUI();
+                    applyFilters();
+                }
+
+                // 2. Save Data to Firebase
+                async function saveToStorage() {
+                    await setDoc(outstandingDoc, { data: allData });
+                }
+
+                document.getElementById('csvFileInput').addEventListener('change', function (e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = function (e) { processCSV(e.target.result); };
+                    reader.readAsText(file);
+                });
+
+                function formatToStandardDate(ddmmyy) {
+                    if (!ddmmyy) return "";
+                    let parts = ddmmyy.split('/');
+                    if (parts.length === 3) return `20${parts[2]}-${parts[1]}-${parts[0]}`;
+                    return ddmmyy;
+                }
+
+                function processCSV(csvText) {
+                    const lines = csvText.split('\n');
+                    let dataStarted = false;
+                    let tempAllData = [];
+
+                    for (let i = 0; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (!line) continue;
+                        if (line.includes('Account Name') && line.includes('Due Amount')) { dataStarted = true; continue; }
+
+                        if (dataStarted) {
+                            if (line.includes('---')) continue;
+                            const columns = line.split(',');
+                            if (columns.length >= 6) {
+                                const dateStr = columns[0].trim();
+                                const osId = columns[1].trim();
+                                const accountName = columns[2].trim();
+                                const dueAmountStr = columns[4].trim();
+                                let brokerName = columns.length >= 8 ? columns[7].trim() : "-";
+
+                                if (osId && !accountName.includes('GRAND TOTAL') && !accountName.includes('PageNo')) {
+                                    const dueAmount = parseFloat(dueAmountStr);
+                                    if (!isNaN(dueAmount)) {
+                                        tempAllData.push({
+                                            displayDate: dateStr, dateVal: formatToStandardDate(dateStr),
+                                            billNo: osId, name: accountName, broker: brokerName, amount: dueAmount, hidden: false
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    allData = tempAllData;
+                    saveToStorage(); // Save to Cloud
+                }
+
+                function applyFilters() {
+                    let fParty = document.getElementById("f-party").value.toLowerCase();
+                    let fBill = document.getElementById("f-bill").value.toLowerCase();
+                    let fBroker = document.getElementById("f-broker").value;
+                    let fStart = document.getElementById("f-start").value;
+                    let fEnd = document.getElementById("f-end").value;
+                    let fMin = document.getElementById("f-min").value;
+
+                    currentFilteredData = allData.filter(row => {
+                        if (row.hidden) return false;
+                        let matchParty = row.name.toLowerCase().includes(fParty);
+                        let matchBill = row.billNo.toLowerCase().includes(fBill);
+                        let matchBroker = fBroker === "" || row.broker === fBroker;
+                        let matchDate = true;
+                        if (fStart) matchDate = matchDate && (row.dateVal >= fStart);
+                        if (fEnd) matchDate = matchDate && (row.dateVal <= fEnd);
+                        let matchAmount = true;
+                        if (fMin !== "") matchAmount = matchAmount && (row.amount >= parseFloat(fMin));
+                        return matchParty && matchBill && matchBroker && matchDate && matchAmount;
+                    });
+                    applySorting();
+                }
+
+                function hideBill(billNo) {
+                    allData.forEach(row => { if (row.billNo === billNo) row.hidden = true; });
+                    saveToStorage();
+                }
+
+                function restoreHidden() {
+                    allData.forEach(row => row.hidden = false);
+                    saveToStorage();
+                }
+
+                function updateHiddenUI() {
+                    let hiddenCount = allData.filter(r => r.hidden).length;
+                    let alertBox = document.getElementById("hidden-alert");
+                    if (hiddenCount > 0) {
+                        alertBox.style.display = "block";
+                        document.getElementById("hidden-count").innerText = hiddenCount;
+                    } else {
+                        alertBox.style.display = "none";
+                    }
+                }
+
+                function sortData(columnKey) {
+                    if (currentSortCol === columnKey) { isAscending = !isAscending; }
+                    else { currentSortCol = columnKey; isAscending = true; }
+                    applySorting();
+                }
+
+                function applySorting() {
+                    if (currentSortCol) {
+                        currentFilteredData.sort((a, b) => {
+                            let valA = typeof a[currentSortCol] === 'string' ? a[currentSortCol].toLowerCase() : a[currentSortCol];
+                            let valB = typeof b[currentSortCol] === 'string' ? b[currentSortCol].toLowerCase() : b[currentSortCol];
+                            if (valA < valB) return isAscending ? -1 : 1;
+                            if (valA > valB) return isAscending ? 1 : -1;
+                            return 0;
+                        });
+                    }
+                    document.querySelectorAll('.sort-icon').forEach(el => el.innerHTML = '');
+                    if (currentSortCol) {
+                        let iconEl = document.getElementById('sort-' + currentSortCol);
+                        if (iconEl) iconEl.innerHTML = isAscending ? ' ▲' : ' ▼';
+                    }
+                    renderTable(currentFilteredData);
+                }
+
+
+
+
+                function renderTable(data) {
+                    let tableBody = document.getElementById("tableBody");
+                    tableBody.innerHTML = ""; let total = 0;
+
+                    // टेबल रीफ्रेश होने पर Selected Total को 0 कर दें
+                    document.getElementById("selectedOutstanding").innerText = "0";
+                    let selectAllCb = document.getElementById("selectAllCheckbox");
+                    if (selectAllCb) selectAllCb.checked = false;
+
+                    if (data.length === 0) {
+                        tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #777;">Data dekhne ke liye file upload karein</td></tr>`;
+                        document.getElementById("totalOutstanding").innerText = "0"; return;
+                    }
+
+
+
+                    data.forEach((entry) => {
+                        total += entry.amount;
+                        tableBody.innerHTML += `
+                <tr tabindex="0" class="keyboard-row" onclick="this.focus()">
+                    <td style="text-align: center;">
+                        <input type="checkbox" class="row-checkbox" tabindex="-1" data-amount="${entry.amount}" onchange="calculateSelectedTotal()" style="transform: scale(1.2); cursor: pointer;">
+                    </td>
+                    <td>${entry.displayDate}</td>
+                    <td style="color: #0056b3;">${entry.billNo}</td>
+                    <td><b>${entry.name}</b></td>
+                    <td>${entry.broker}</td>
+                    <td style="color: #d9534f; font-weight: bold;">₹${entry.amount.toLocaleString('en-IN')}</td>
+                    <td class="action-cell">
+                        <button class="pay-btn" tabindex="-1" onclick="openPaymentModal('${entry.name}', '${entry.billNo}', ${entry.amount}, '${entry.dateVal}', '${entry.displayDate}')">Receive Payment</button>
+                        <button class="hide-btn" tabindex="-1" title="Bill temporary hide karein" onclick="hideBill('${entry.billNo}')">👁️ Hide</button>
+                    </td>
+                </tr>
+            `;
+                    });
+
+
+
+                    document.getElementById("totalOutstanding").innerText = total.toLocaleString('en-IN');
+                }
+
+
+
+
+                function clearFilters() {
+                    document.getElementById("f-party").value = ""; document.getElementById("f-bill").value = "";
+                    document.getElementById("f-broker").value = ""; document.getElementById("f-start").value = "";
+                    document.getElementById("f-end").value = ""; document.getElementById("f-min").value = "";
+                    currentSortCol = ''; applyFilters();
+                }
+
+                function toggleAdjustment() {
+                    let adjType = document.querySelector('input[name="adj_type"]:checked').value;
+                    let intBox = document.getElementById("box-interest");
+                    let discBox = document.getElementById("box-discount");
+
+                    document.getElementById("m-interest").value = "0"; document.getElementById("m-discount").value = "0";
+                    document.getElementById("m-disc-percent").value = "";
+
+                    if (adjType === 'interest') { intBox.style.display = "block"; discBox.style.display = "none"; calculateInterest(); }
+                    else if (adjType === 'discount') { intBox.style.display = "none"; discBox.style.display = "block"; }
+                    else { intBox.style.display = "none"; discBox.style.display = "none"; }
+                    updateLiveTotal();
+                }
+
+                function calcDiscFromPercent() {
+                    let pct = parseFloat(document.getElementById("m-disc-percent").value) || 0;
+                    let amt = Math.round((currentPayDue * pct) / 100);
+                    document.getElementById("m-discount").value = amt; updateLiveTotal();
+                }
+
+                function calcDiscFromAmount() {
+                    let amt = parseFloat(document.getElementById("m-discount").value) || 0;
+                    let pct = (amt / currentPayDue) * 100;
+                    document.getElementById("m-disc-percent").value = pct.toFixed(2); updateLiveTotal();
+                }
+
+                function calculateInterest() {
+                    let creditDays = parseInt(document.getElementById("m-credit-days").value) || 0;
+                    let intRateMonthly = parseFloat(document.getElementById("m-int-rate").value) || 0;
+                    if (!currentPayBillDateStr) return;
+                    let billDate = new Date(currentPayBillDateStr); billDate.setDate(billDate.getDate() + creditDays);
+                    let today = new Date(); today.setHours(0, 0, 0, 0); billDate.setHours(0, 0, 0, 0);
+                    let overdueDays = 0; if (today > billDate) overdueDays = Math.floor((today - billDate) / (1000 * 60 * 60 * 24));
+                    currentOverdueDays = overdueDays;
+                    document.getElementById("m-overdue-info").innerText = "Interest for: " + overdueDays + " Days";
+                    let calculatedInterest = 0;
+                    if (overdueDays > 0 && intRateMonthly > 0) calculatedInterest = (currentPayDue * intRateMonthly * overdueDays) / (100 * 30);
+                    document.getElementById("m-interest").value = Math.round(calculatedInterest); updateLiveTotal();
+                }
+
+                function updateLiveTotal() {
+                    let adjType = document.querySelector('input[name="adj_type"]:checked').value;
+                    let interest = 0; let discount = 0;
+                    if (adjType === 'interest') interest = parseFloat(document.getElementById("m-interest").value) || 0;
+                    else if (adjType === 'discount') discount = parseFloat(document.getElementById("m-discount").value) || 0;
+                    let finalDue = currentPayDue + interest - discount;
+                    document.getElementById("live-total").innerText = "₹" + finalDue.toLocaleString('en-IN');
+                    document.getElementById("m-received").value = finalDue;
+                }
+
+                function openPaymentModal(name, billNo, dueAmount, dateVal, displayDate) {
+                    currentPayParty = name; currentPayBill = billNo; currentPayDue = dueAmount; currentPayBillDateStr = dateVal;
+                    let bDate = new Date(dateVal); let today = new Date(); bDate.setHours(0, 0, 0, 0); today.setHours(0, 0, 0, 0);
+                    let totalAgeDays = today > bDate ? Math.floor((today - bDate) / (1000 * 60 * 60 * 24)) : 0;
+
+                    document.getElementById("m-party").innerText = name; document.getElementById("m-bill").innerText = billNo;
+                    document.getElementById("m-bill-date").innerText = displayDate; document.getElementById("m-due").innerText = "₹" + dueAmount.toLocaleString('en-IN');
+                    document.getElementById("m-bill-age").innerText = totalAgeDays;
+
+                    document.querySelector('input[value="none"]').checked = true; document.getElementById("m-credit-days").value = "0";
+                    document.getElementById("m-int-rate").value = "0"; document.getElementById("m-interest").value = "0";
+                    document.getElementById("m-discount").value = "0"; document.getElementById("m-disc-percent").value = "";
+                    document.getElementById("m-overdue-info").innerText = "Interest for: 0 Days";
+                    document.getElementById("m-received").value = dueAmount; document.getElementById("m-ref").value = ""; document.getElementById("m-mode").value = "Cash";
+
+                    toggleAdjustment(); document.getElementById("paymentModal").style.display = "block";
+                }
+
+                function closeModal() { document.getElementById("paymentModal").style.display = "none"; }
+
+                function numberToWords(num) {
+                    if (num === 0) return "Zero";
+                    let a = ["", "One ", "Two ", "Three ", "Four ", "Five ", "Six ", "Seven ", "Eight ", "Nine ", "Ten ", "Eleven ", "Twelve ", "Thirteen ", "Fourteen ", "Fifteen ", "Sixteen ", "Seventeen ", "Eighteen ", "Nineteen "];
+                    let b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+                    let n = ('000000000' + Math.floor(num)).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+                    if (!n) return "";
+                    let str = '';
+                    str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
+                    str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
+                    str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
+                    str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
+                    str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
+                    return str.trim() + " Only";
+                }
+
+                function printStatement() {
+                    if (currentFilteredData.length === 0) {
+                        alert("Print karne ke liye koi list nahi hai. Pehle Party ya Broker search karein."); return;
+                    }
+                    let fParty = document.getElementById("f-party").value.trim();
+                    let fBroker = document.getElementById("f-broker").value;
+
+                    let uniqueParties = [...new Set(currentFilteredData.map(item => item.name))];
+                    let showPartyCol = uniqueParties.length > 1;
+                    let showBrokerCol = (fBroker === "" && fParty === "");
+
+                    let reportTitle = "OUTSTANDING STATEMENT";
+                    let subTitle = "All Records (Total Business)";
+
+                    if (fParty && !fBroker) {
+                        reportTitle = "STATEMENT OF ACCOUNT";
+                        subTitle = uniqueParties.length === 1 ? "M/S : " + uniqueParties[0].toUpperCase() : "Search : " + fParty.toUpperCase() + " (Multiple Parties)";
+                    } else if (fBroker && !fParty) {
+                        reportTitle = "BROKER OUTSTANDING REPORT";
+                        subTitle = "Broker Name : " + fBroker.toUpperCase();
+                    } else if (fParty && fBroker) {
+                        reportTitle = "OUTSTANDING STATEMENT";
+                        subTitle = "Broker : " + fBroker.toUpperCase() + " | Party : " + (uniqueParties.length === 1 ? uniqueParties[0].toUpperCase() : fParty.toUpperCase());
+                    }
+
+                    document.getElementById("stmt-title").innerText = reportTitle;
+                    document.getElementById("stmt-subtitle").innerText = subTitle;
+
+                    let theadHTML = `
+            <tr>
+                <th>S.No.</th>
+                <th>Bill Date</th>
+                <th>Bill No. (OS.ID)</th>
+                ${showPartyCol ? '<th>Party Name</th>' : ''}
+                ${showBrokerCol ? '<th>Broker Name</th>' : ''}
+                <th style="color: #e65100;">Age (Days)</th>
+                <th style="text-align: right;">Pending Amount (₹)</th>
+            </tr>`;
+                    document.getElementById("stmt-table-head").innerHTML = theadHTML;
+
+                    let tbody = document.getElementById("stmt-table-body");
+                    tbody.innerHTML = ""; let total = 0;
+
+                    currentFilteredData.forEach((row, index) => {
+                        total += row.amount;
+                        let bDate = new Date(row.dateVal); let t = new Date();
+                        bDate.setHours(0, 0, 0, 0); t.setHours(0, 0, 0, 0);
+                        let ageDays = t > bDate ? Math.floor((t - bDate) / (1000 * 60 * 60 * 24)) : 0;
+
+                        tbody.innerHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${row.displayDate}</td>
+                    <td>${row.billNo}</td>
+                    ${showPartyCol ? `<td><b>${row.name}</b></td>` : ''}
+                    ${showBrokerCol ? `<td>${row.broker}</td>` : ''}
+                    <td style="color: #e65100; font-weight: bold;">${ageDays}</td>
+                    <td style="text-align: right; font-weight: bold;">₹ ${row.amount.toLocaleString('en-IN')}</td>
+                </tr>`;
+                    });
+
+                    document.getElementById("stmt-total").innerText = "₹ " + total.toLocaleString('en-IN');
+                    document.getElementById("print-receipt-section").classList.remove("active");
+                    document.getElementById("print-statement-section").classList.add("active");
+                    window.print();
+                }
+
+                function generateReceipt() {
+                    let receivedAmount = parseFloat(document.getElementById("m-received").value);
+                    let adjType = document.querySelector('input[name="adj_type"]:checked').value;
+                    let interestAmount = adjType === 'interest' ? (parseFloat(document.getElementById("m-interest").value) || 0) : 0;
+                    let discountAmount = adjType === 'discount' ? (parseFloat(document.getElementById("m-discount").value) || 0) : 0;
+                    let mode = document.getElementById("m-mode").value; let ref = document.getElementById("m-ref").value;
+
+                    if (isNaN(receivedAmount) || receivedAmount <= 0) { alert("Kripya sahi receive amount daalein."); return; }
+
+                    let finalDue = currentPayDue + interestAmount - discountAmount;
+                    let newBalance = finalDue - receivedAmount;
+                    let today = new Date(); let dateOnly = today.getDate() + "/" + (today.getMonth() + 1) + "/" + today.getFullYear();
+
+                    document.getElementById("r-voucherno").innerText = receiptCounter;
+                    document.getElementById("r-date").innerText = dateOnly;
+                    document.getElementById("r-party").innerText = " " + currentPayParty.toUpperCase();
+                    document.getElementById("r-words").innerText = " " + numberToWords(receivedAmount);
+
+                    let modeRefText = " " + mode; if (ref.trim() !== "") modeRefText += " (Ref: " + ref + ")";
+                    document.getElementById("r-mode-ref").innerText = modeRefText;
+
+                    let billText = " Bill No: " + currentPayBill;
+                    if (interestAmount > 0) billText += " (With Late Fee)";
+                    if (discountAmount > 0) billText += " (With Cash Discount)";
+                    document.getElementById("r-bill").innerText = billText;
+                    document.getElementById("r-amount-paid").innerText = receivedAmount.toLocaleString('en-IN');
+
+                    let summaryTable = document.getElementById("dynamic-summary-table");
+                    let tableHTML = `
+            <tr>
+                <th>Original Due</th>
+                ${adjType === 'interest' && interestAmount > 0 ? '<th>Late Fee (+)</th>' : ''}
+                ${adjType === 'discount' && discountAmount > 0 ? '<th>Discount (-)</th>' : ''}
+                <th>Total Payable</th>
+                <th>Amount Paid Now</th>
+                <th>Balance Left</th>
+            </tr>
+            <tr>
+                <td>₹ ${currentPayDue.toLocaleString('en-IN')}</td>
+                ${adjType === 'interest' && interestAmount > 0 ? `<td style="color: #d9534f; font-weight: bold;">+ ₹ ${interestAmount.toLocaleString('en-IN')}<br><span style="font-size: 11px; font-weight: normal; color: #555;">(for ${currentOverdueDays} Days)</span></td>` : ''}
+                ${adjType === 'discount' && discountAmount > 0 ? `<td style="color: #28a745; font-weight: bold;">- ₹ ${discountAmount.toLocaleString('en-IN')}</td>` : ''}
+                <td style="font-weight: bold; background-color: #fcfcfc;">₹ ${finalDue.toLocaleString('en-IN')}</td>
+                <td style="color: #28a745; font-weight: bold;">- ₹ ${receivedAmount.toLocaleString('en-IN')}</td>
+                <td class="highlight-bal">₹ ${newBalance.toLocaleString('en-IN')}</td>
+            </tr>`;
+                    summaryTable.innerHTML = tableHTML;
+
+                    document.getElementById("print-statement-section").classList.remove("active");
+                    document.getElementById("print-receipt-section").classList.add("active");
+
+                    receiptCounter++; closeModal(); window.print();
+                }
+
+                // सेलेक्ट किए हुए चेकबॉक्स का टोटल निकालने का फंक्शन
+
+
+
+
+
+                // सेलेक्ट किए हुए चेकबॉक्स का टोटल निकालने का फंक्शन
+                function calculateSelectedTotal() {
+                    let checkboxes = document.querySelectorAll('.row-checkbox:checked');
+                    let total = 0;
+                    checkboxes.forEach(cb => {
+                        total += parseFloat(cb.getAttribute('data-amount')) || 0;
+                    });
+                    document.getElementById('selectedOutstanding').innerText = total.toLocaleString('en-IN');
+
+                    // --- NAYA CODE: index.html (Main Header) ko Selected Amount bhejne ke liye ---
+                    if (window.parent && typeof window.parent.selectedUgaiAmount !== 'undefined') {
+                        window.parent.selectedUgaiAmount = total;
+                        if (typeof window.parent.updateDashboardStats === 'function') {
+                            window.parent.updateDashboardStats(); // Header ko turant refresh karein
+                        }
+                    }
+
+                    // अगर सारे चेकबॉक्स टिक हैं, तो 'Select All' को भी टिक कर दो
+                    let allCheckboxes = document.querySelectorAll('.row-checkbox');
+                    let selectAllCb = document.getElementById("selectAllCheckbox");
+                    if (selectAllCb && allCheckboxes.length > 0) {
+                        selectAllCb.checked = (checkboxes.length === allCheckboxes.length);
+                    }
+                }
+
+
+
+                // एक साथ सारे चेकबॉक्स सेलेक्ट करने का फंक्शन
+                function toggleSelectAll() {
+                    let selectAllCb = document.getElementById('selectAllCheckbox');
+                    let isChecked = selectAllCb.checked;
+                    let checkboxes = document.querySelectorAll('.row-checkbox');
+                    checkboxes.forEach(cb => {
+                        cb.checked = isChecked;
+                    });
+                    calculateSelectedTotal();
+                }
+
+                // कीबोर्ड (Up/Down/Space) से रो कंट्रोल करने का कोड
+                document.addEventListener('keydown', function (event) {
+                    // चेक करें कि अभी फोकस कहाँ है
+                    let activeRow = document.activeElement;
+
+                    // अगर फोकस हमारी टेबल की रो पर है
+                    if (activeRow && activeRow.classList.contains('keyboard-row')) {
+
+                        if (event.key === 'ArrowDown') {
+                            event.preventDefault(); // पेज को स्क्रॉल होने से रोकें
+                            let nextRow = activeRow.nextElementSibling;
+                            if (nextRow && nextRow.classList.contains('keyboard-row')) {
+                                nextRow.focus();
+                            }
+                        }
+                        else if (event.key === 'ArrowUp') {
+                            event.preventDefault(); // पेज को स्क्रॉल होने से रोकें
+                            let prevRow = activeRow.previousElementSibling;
+                            if (prevRow && prevRow.classList.contains('keyboard-row')) {
+                                prevRow.focus();
+                            }
+                        }
+                        else if (event.key === ' ') {
+                            // स्पेस बार (Space bar) दबाने पर
+                            event.preventDefault();
+                            let checkbox = activeRow.querySelector('.row-checkbox');
+                            if (checkbox) {
+                                checkbox.checked = !checkbox.checked; // टिक को उल्टा करें
+                                calculateSelectedTotal(); // टोटल अमाउंट अपडेट करें
+                            }
+                        }
+                    }
+                });
+
+                // HTML को इन फंक्शन्स का एक्सेस देने के लिए (इन्हें बिल्कुल नीचे की लिस्ट में जोड़ें)
+                window.calculateSelectedTotal = calculateSelectedTotal;
+                window.toggleSelectAll = toggleSelectAll;
+
+                // Export functions to Window so HTML can access them
+                window.applyFilters = applyFilters;
+                window.clearFilters = clearFilters;
+                window.hideBill = hideBill;
+                window.restoreHidden = restoreHidden;
+                window.sortData = sortData;
+                window.openPaymentModal = openPaymentModal;
+                window.closeModal = closeModal;
+                window.toggleAdjustment = toggleAdjustment;
+                window.calculateInterest = calculateInterest;
+                window.calcDiscFromPercent = calcDiscFromPercent;
+                window.calcDiscFromAmount = calcDiscFromAmount;
+                window.updateLiveTotal = updateLiveTotal;
+                window.printStatement = printStatement;
+                window.generateReceipt = generateReceipt;
+
+            </script>
+
+
+
+</body>
+
+</html>
