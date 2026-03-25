@@ -608,10 +608,15 @@
                 placeholder="🔍 Search Party, Lot, Item ya Marka..."
                 style="flex: 1; min-width: 250px; padding: 10px; font-size: 16px; border: 2px solid #3498db; border-radius: 5px;">
 
-            <button class="btn-main" style="background: #1565c0; color: white;" onclick="printStock('cold')">🖨️ Print
-                Cold Stock</button>
-            <button class="btn-main" style="background: #8e44ad; color: white;" onclick="printStock('shop')">🖨️ Print
-                Shop Stock</button>
+            <button class="btn-main" style="background: #27ae60; color: white;" onclick="filterStock('all')">🟢 All
+                Stock</button>
+            <button class="btn-main" style="background: #1565c0; color: white;" onclick="filterStock('cold')">❄️ Cold
+                Stock</button>
+            <button class="btn-main" style="background: #8e44ad; color: white;" onclick="filterStock('shop')">🏪 Shop
+                Stock</button>
+
+            <button class="btn-main" style="background: #34495e; color: white;" onclick="window.print()">🖨️ Print
+                Report</button>
             <button class="btn-main" style="background: #f39c12; color: white;" onclick="showForm('dailyReportForm')">📅
                 Daily Report</button>
         </div>
@@ -1480,12 +1485,16 @@
             }
         }
 
-        function printStock(type) {
+        function filterStock(type) {
             let title = document.getElementById("printTitle");
             let tr = document.getElementById("masterStockBody").getElementsByTagName("tr");
 
-            title.innerText = type === 'cold' ? "Dryfu - Cold Storage Stock Report" : "Dryfu - Shop Godown Stock Report";
+            // Print title update karna
+            if (type === 'cold') title.innerText = "Dryfu - Cold Storage Stock Report";
+            else if (type === 'shop') title.innerText = "Dryfu - Shop Godown Stock Report";
+            else title.innerText = "Dryfu - Complete Stock Report";
 
+            // Rows ko hide/show karna
             for (let i = 0; i < tr.length; i++) {
                 let coldQty = parseFloat(tr[i].getElementsByClassName("col-cold")[0].innerText) || 0;
                 let shopQty = parseFloat(tr[i].getElementsByClassName("col-shop")[0].innerText) || 0;
@@ -1494,15 +1503,12 @@
                     tr[i].style.display = "";
                 } else if (type === 'shop' && shopQty > 0) {
                     tr[i].style.display = "";
+                } else if (type === 'all') {
+                    tr[i].style.display = "";
                 } else {
                     tr[i].style.display = "none";
                 }
             }
-
-            window.print();
-
-            for (let i = 0; i < tr.length; i++) { tr[i].style.display = ""; }
-            searchMasterTable();
         }
 
         function generateDailyReport() {
@@ -1556,7 +1562,7 @@
         // Export New Functions
         window.searchMasterTable = searchMasterTable;
         window.sortTable = sortTable;
-        window.printStock = printStock;
+        window.filterStock = filterStock;
         window.generateDailyReport = generateDailyReport;
     </script>
 </body>
