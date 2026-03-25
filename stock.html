@@ -859,10 +859,35 @@
                 </table>
             </div>
             <div id="receiptHist" class="h-content">
-                <p style="padding:20px; text-align:center;">Receipt Register Data</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="th-reg">Date</th>
+                            <th class="th-reg">Action Type</th>
+                            <th class="th-reg">Receipt / Parchi No.</th>
+                            <th class="th-reg">Item Name</th>
+                            <th class="th-reg">Lot No</th>
+                            <th class="th-reg" style="text-align:center;">Qty IN</th>
+                        </tr>
+                    </thead>
+                    <tbody id="receiptHistBody"></tbody>
+                </table>
             </div>
+
             <div id="chalanHist" class="h-content">
-                <p style="padding:20px; text-align:center;">Chalan Register Data</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="th-reg">Date</th>
+                            <th class="th-reg">Action Type</th>
+                            <th class="th-reg">Chalan / Bill No.</th>
+                            <th class="th-reg">Item Name</th>
+                            <th class="th-reg">Lot No</th>
+                            <th class="th-reg" style="text-align:center;">Qty OUT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="chalanHistBody"></tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -991,8 +1016,8 @@
             document.querySelectorAll('.h-tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             event.target.classList.add('active');
-            // if (tabId === 'receiptHist') renderReceiptRegister();
-            // if (tabId === 'chalanHist') renderChalanRegister();
+            if (tabId === 'receiptHist') renderReceiptRegister();
+            if (tabId === 'chalanHist') renderChalanRegister();
         }
 
         function showForm(id) {
@@ -1119,22 +1144,22 @@
             document.getElementById('partyList').innerHTML = savedParties.map(p => `<option value="${p}">`).join('');
             let availableShopMarks = shopStock.filter(s => s.qty > 0 && s.mark).map(s => s.mark);
             document.getElementById('shopAvailableMarkList').innerHTML = [...new Set(availableShopMarks)].map(m => `<option value="${m}">`).join('');
-        // Naya code: Edit form ke liye Smart Search List banana
+            // Naya code: Edit form ke liye Smart Search List banana
             let uniqueLotsForEdit = {};
             // Cold aur Shop dono ke items ko ek jagah ikattha karna
             coldStock.forEach(s => uniqueLotsForEdit[s.lot] = s);
             shopStock.forEach(s => uniqueLotsForEdit[s.lot] = s);
-            
+
             let smartListHtml = "";
             Object.values(uniqueLotsForEdit).forEach(item => {
                 let markText = item.mark !== "-" ? item.mark : "No Marka";
                 // List mein Lot ke saath Item, Party aur Marka bhi dikhega
                 smartListHtml += `<option value="${item.lot}">Item: ${item.name} | Party: ${item.party} | Marka: ${markText}</option>`;
             });
-            
+
             let editSmartListEl = document.getElementById('editSmartList');
             if (editSmartListEl) editSmartListEl.innerHTML = smartListHtml;
-            }
+        }
 
         function saveInwardReceipt() {
             let destination = document.getElementById('inDestination').value;
@@ -1406,6 +1431,55 @@
             });
         }
 
+        function renderReceiptRegister() {
+            let tbody = document.getElementById('receiptHistBody');
+            tbody.innerHTML = "";
+            // Sirf wahi history nikaalo jisme Qty IN hui hai
+            let receipts = lotHistory.filter(h => h.qtyIn !== '-' && parseFloat(h.qtyIn) > 0);
+
+            if (receipts.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#777;">Koi aamad (Receipt) nahi hai.</td></tr>`;
+                return;
+            }
+
+            // Reverse kiya hai taaki naya data sabse upar dikhe
+            [...receipts].reverse().forEach(h => {
+                tbody.innerHTML += `<tr>
+                    <td>${h.date}</td>
+                    <td style="color:#2980b9; font-weight:bold;">${h.type}</td>
+                    <td>${h.ref}</td>
+                    <td><b>${h.name}</b></td>
+                    <td><span class="badge-lot">${h.lot}</span></td>
+                    <td style="color:#27ae60; font-weight:bold; text-align:center;">${h.qtyIn}</td>
+                </tr>`;
+            });
+        }
+
+        function renderChalanRegister() {
+            let tbody = document.getElementById('chalanHistBody');
+            tbody.innerHTML = "";
+            // Sirf wahi history nikaalo jisme Qty OUT hui hai
+            let chalans = lotHistory.filter(h => h.qtyOut !== '-' && parseFloat(h.qtyOut) > 0);
+
+            if (chalans.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#777;">Koi dispatch (Chalan/Sale) nahi hai.</td></tr>`;
+                return;
+            }
+
+            // Reverse kiya hai taaki naya data sabse upar dikhe
+            [...chalans].reverse().forEach(h => {
+                let typeColor = h.type.includes("Sale") ? "#8e44ad" : "#e67e22";
+                tbody.innerHTML += `<tr>
+                    <td>${h.date}</td>
+                    <td style="color:${typeColor}; font-weight:bold;">${h.type}</td>
+                    <td>${h.ref}</td>
+                    <td><b>${h.name}</b></td>
+                    <td><span class="badge-lot">${h.lot}</span></td>
+                    <td style="color:#c0392b; font-weight:bold; text-align:center;">${h.qtyOut}</td>
+                </tr>`;
+            });
+        }
+
         function renderMasterTable() {
             let mBody = document.getElementById('masterStockBody');
             let zBody = document.getElementById('zeroStockBody');
@@ -1628,6 +1702,8 @@
         window.openQuickLedger = openQuickLedger;
         window.renderLotHistory = renderLotHistory;
         window.extractQtyFromMarka = extractQtyFromMarka;
+        window.renderReceiptRegister = renderReceiptRegister;
+        window.renderChalanRegister = renderChalanRegister;
 
         // Export New Functions
         window.searchMasterTable = searchMasterTable;
