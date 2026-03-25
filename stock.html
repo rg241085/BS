@@ -903,6 +903,7 @@
                     <tr>
                         <th style="background:#34495e; color:white;">Item Name</th>
                         <th style="background:#34495e; color:white;">Lot No</th>
+                        <th style="background:#34495e; color:white;">Marka (Shop)</th>
                         <th style="background:#34495e; color:white;">Qty</th>
                     </tr>
                 </thead>
@@ -1533,10 +1534,16 @@
             filtered.forEach(h => {
                 let qty = typeFlag === 'IN' ? h.qtyIn : h.qtyOut;
                 let color = typeFlag === 'IN' ? '#27ae60' : '#c0392b';
+
+                // NAYA CODE: Master stock se Lot ka Marka dhoondhna
+                let foundItem = coldStock.find(s => s.lot.toLowerCase() === h.lot.toLowerCase()) ||
+                    shopStock.find(s => s.lot.toLowerCase() === h.lot.toLowerCase());
+                let marka = (foundItem && foundItem.mark && foundItem.mark !== "-") ? foundItem.mark : "-";
+
                 tbody.innerHTML += `<tr>
                     <td><b>${h.name}</b></td>
                     <td><span class="badge-lot">${h.lot}</span></td>
-                    <td style="color:${color}; font-weight:bold; font-size:15px;">${qty}</td>
+                    <td style="font-weight:bold; color:#8e44ad;">${marka}</td> <td style="color:${color}; font-weight:bold; font-size:15px;">${qty}</td>
                 </tr>`;
             });
 
