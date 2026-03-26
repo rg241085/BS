@@ -186,6 +186,7 @@
             position: relative;
             max-height: 90vh;
             overflow-y: auto;
+            transition: all 0.3s ease;
         }
 
         .chalan-header {
@@ -304,6 +305,56 @@
             font-weight: bold;
         }
 
+        /* Minimize Button Styling */
+        .min-btn {
+            position: absolute;
+            top: 0px;
+            right: 50px;
+            font-size: 30px;
+            cursor: pointer;
+            color: #f39c12;
+            font-weight: bold;
+            user-select: none;
+        }
+
+        /* Minimized State Styles */
+        .overlay.minimized-overlay {
+            background: transparent !important;
+            pointer-events: none !important;
+        }
+
+        .form-card.minimized-card {
+            position: fixed !important;
+            right: 20px !important;
+            width: 250px !important;
+            height: 50px !important;
+            min-height: 50px !important;
+            margin: 0 !important;
+            padding: 10px !important;
+            overflow: hidden !important;
+            background: #2c3e50 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.3) !important;
+            pointer-events: auto !important;
+            cursor: pointer !important;
+            z-index: 9999 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .form-card.minimized-card>* {
+            display: none !important;
+        }
+
+        .form-card.minimized-card::after {
+            content: '📌 Form Minimized (Click to Open)';
+            display: block !important;
+            color: #fff;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
         .stock-info {
             font-size: 12px;
             color: #27ae60;
@@ -415,7 +466,8 @@
             .top-nav,
             .action-bar,
             .overlay,
-            .close-x {
+            .close-x,
+            .min-btn {
                 display: none !important;
             }
 
@@ -457,9 +509,7 @@
             display: none;
         }
 
-        /* =========================================
-   📱 MOBILE RESPONSIVE DESIGN (Inventory)
-   ========================================= */
+        /* MOBILE RESPONSIVE DESIGN */
         @media (max-width: 850px) {
             body {
                 padding: 10px;
@@ -519,6 +569,19 @@
                 height: 40px;
                 text-align: center;
                 line-height: 35px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            }
+
+            .min-btn {
+                top: 15px;
+                right: 70px;
+                font-size: 35px;
+                background: #fff;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                text-align: center;
+                line-height: 25px;
                 box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             }
 
@@ -635,6 +698,7 @@
 
     <div id="inForm" class="overlay no-print">
         <div class="form-card" id="inFormContainer">
+            <span class="min-btn" onclick="toggleMinimize(this)" title="Minimize">_</span>
             <span class="close-x" onclick="closeAll()">×</span>
             <h3 style="color:#2980b9; border-bottom: 1px solid #eee; padding-bottom: 10px;">📥 Naya Maal Aamad (Inward
                 Receipt)</h3>
@@ -702,6 +766,7 @@
 
     <div id="outForm" class="overlay no-print">
         <div class="form-card" id="outFormContainer">
+            <span class="min-btn" onclick="toggleMinimize(this)" title="Minimize">_</span>
             <span class="close-x" onclick="closeAll()">×</span>
             <h3 style="color:#e67e22; border-bottom: 1px solid #eee; padding-bottom: 10px;">🚚 Dispatch Chalan (Cold Se
                 Shop Bhejein)</h3>
@@ -741,14 +806,17 @@
 
     <div id="shopOutForm" class="overlay no-print">
         <div class="form-card" id="shopOutFormContainer" style="max-width: 1200px;">
+            <span class="min-btn" onclick="toggleMinimize(this)" title="Minimize">_</span>
             <span class="close-x" onclick="closeAll()">×</span>
             <h3 style="color:#8e44ad; border-bottom: 1px solid #eee; padding-bottom: 10px;">🛒 Shop Sale (Dukaan Se
                 Bika)</h3>
+
             <div class="chalan-header" style="grid-template-columns: 1fr 1fr;">
                 <div><label>Date</label><input type="date" id="shopOutDate" onchange="generateSaleFormNumber()"></div>
                 <div><label>Form Number (Auto)</label><input type="text" id="shopOutFormNo" readonly
                         style="background:#e8f5e9; font-weight:bold; color:#2e7d32; border: 1px solid #a5d6a7;"></div>
             </div>
+
             <div id="shopOutRowsContainer">
                 <div class="shop-grid header-row">
                     <div>Bill Number</div>
@@ -767,10 +835,23 @@
                         <input type="text" class="shop-prev-bal" readonly tabindex="-1">
                         <input type="number" class="shop-qty-input" oninput="calcShopBalance(this)">
                         <input type="text" class="shop-bal" readonly tabindex="-1">
-                        <div class="stock-info" style="grid-column: span 6; height: 15px; margin-top: 5px;"></div>
+                        <div class="stock-info"
+                            style="grid-column: span 6; height: 15px; margin-top: 5px; margin-bottom: 10px;"></div>
                     </div>
                 </div>
+
+                <div class="shop-grid totals-row"
+                    style="border-top: 2px dashed #8e44ad; padding-top: 10px; margin-top: 10px;">
+                    <div
+                        style="grid-column: 1 / 5; text-align: right; padding-right: 10px; font-weight: bold; color: #8e44ad; font-size: 16px;">
+                        TOTAL SALE BOXES :</div>
+                    <input type="text" id="shopTotalQty" class="totals-box"
+                        style="background-color: #f3e5f5; border-color: #ce93d8; color: #8e44ad; font-weight:bold; font-size:16px;"
+                        readonly tabindex="-1">
+                    <div></div>
+                </div>
             </div>
+
             <button
                 style="background:#f1f3f5; border:1px solid #ccc; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold; color:#555; margin-top:15px;"
                 onclick="addDynamicRow('shopOutRows', 'shop-row')">+ Ek aur Item jodein</button>
@@ -781,6 +862,7 @@
 
     <div id="editForm" class="overlay no-print">
         <div class="form-card" style="max-width: 800px;">
+            <span class="min-btn" onclick="toggleMinimize(this)" title="Minimize">_</span>
             <span class="close-x" onclick="closeAll()">×</span>
             <h3 style="color:#d35400; border-bottom: 1px solid #eee; padding-bottom: 10px;">🛠️ Edit ya Adjust Lot</h3>
             <div style="background:#fff3e0; padding:15px; border-radius:5px; margin-bottom:15px;">
@@ -817,6 +899,7 @@
 
     <div id="historyForm" class="overlay no-print">
         <div class="form-card" style="max-width: 1000px;">
+            <span class="min-btn" onclick="toggleMinimize(this)" title="Minimize">_</span>
             <span class="close-x" onclick="closeAll()">×</span>
             <h3 style="color:#27ae60; border-bottom: 1px solid #eee; padding-bottom: 10px;">📊 Registers & Ledgers</h3>
             <div class="hist-tabs">
@@ -863,7 +946,6 @@
                     <tbody id="receiptHistBody"></tbody>
                 </table>
             </div>
-
             <div id="chalanHist" class="h-content">
                 <table>
                     <thead>
@@ -879,7 +961,6 @@
                     <tbody id="chalanHistBody"></tbody>
                 </table>
             </div>
-
             <div id="saleHist" class="h-content">
                 <table>
                     <thead>
@@ -899,11 +980,11 @@
 
     <div id="docDetailsModal" class="overlay no-print" style="z-index: 1060; background: rgba(0,0,0,0.8);">
         <div class="form-card" style="max-width: 800px; border-top: 5px solid #3498db;">
+            <span class="min-btn" onclick="toggleMinimize(this)" title="Minimize">_</span>
             <span class="close-x" onclick="document.getElementById('docDetailsModal').style.display='none'">×</span>
             <h3 id="docDetailsTitle"
-                style="color:#2980b9; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top:0;">
-                📄 Document Details
-            </h3>
+                style="color:#2980b9; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top:0;">📄 Document
+                Details</h3>
             <table>
                 <thead>
                     <tr>
@@ -920,6 +1001,7 @@
 
     <div id="zeroStockModal" class="overlay no-print">
         <div class="form-card" style="max-width: 1000px;">
+            <span class="min-btn" onclick="toggleMinimize(this)" title="Minimize">_</span>
             <span class="close-x" onclick="closeAll()">×</span>
             <h3 style="color:#7f8c8d; border-bottom: 1px solid #eee; padding-bottom: 10px;">🗑️ Zero Stock (Jo Maal
                 Poora Bik Chuka Hai)</h3>
@@ -940,6 +1022,7 @@
 
     <div id="quickLedgerModal" class="overlay no-print" style="z-index: 1050; background: rgba(0,0,0,0.8);">
         <div class="form-card">
+            <span class="min-btn" onclick="toggleMinimize(this)" title="Minimize">_</span>
             <span class="close-x" onclick="document.getElementById('quickLedgerModal').style.display='none'">×</span>
             <h3 id="qlTitle" style="color:#f39c12; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top:0;">
                 📜 Lot Ledger</h3>
@@ -960,10 +1043,10 @@
 
     <div id="dailyReportForm" class="overlay no-print">
         <div class="form-card" style="max-width: 1000px;">
+            <span class="min-btn" onclick="toggleMinimize(this)" title="Minimize">_</span>
             <span class="close-x" onclick="closeAll()">×</span>
             <h3 style="color:#f39c12; border-bottom: 1px solid #eee; padding-bottom: 10px;">📅 Daily Activity Report
             </h3>
-
             <div
                 style="background: #fef9e7; padding: 15px; border-radius: 5px; margin-bottom: 15px; text-align: center;">
                 <label style="font-size: 16px; font-weight: bold; color: #d35400;">Date Select Karein: </label>
@@ -981,17 +1064,13 @@
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;"><span>b. Total IN
                             Qty:</span> <b id="sumColdIn">0</b></div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #2e7d32;">
-                        <span>c. Total (a+b):</span> <b id="sumColdTotal">0</b>
-                    </div>
+                        <span>c. Total (a+b):</span> <b id="sumColdTotal">0</b></div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #c0392b;">
-                        <span>d. Total OUT Qty:</span> <b id="sumColdOut">0</b>
-                    </div>
+                        <span>d. Total OUT Qty:</span> <b id="sumColdOut">0</b></div>
                     <div
                         style="display: flex; justify-content: space-between; font-size: 16px; margin-top: 10px; border-top: 1px dashed #90caf9; padding-top: 5px;">
-                        <span>e. Balance Qty (c-d):</span> <b style="color: #1565c0;" id="sumColdBal">0</b>
-                    </div>
+                        <span>e. Balance Qty (c-d):</span> <b style="color: #1565c0;" id="sumColdBal">0</b></div>
                 </div>
-
                 <div
                     style="flex: 1; min-width: 300px; background: #f3e5f5; border: 2px solid #ce93d8; border-radius: 8px; padding: 15px;">
                     <h4 style="color: #8e44ad; margin-top: 0; border-bottom: 1px solid #ce93d8; padding-bottom: 5px;">🏪
@@ -1001,15 +1080,12 @@
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;"><span>b. Total IN
                             Qty:</span> <b id="sumShopIn">0</b></div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #2e7d32;">
-                        <span>c. Total (a+b):</span> <b id="sumShopTotal">0</b>
-                    </div>
+                        <span>c. Total (a+b):</span> <b id="sumShopTotal">0</b></div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #c0392b;">
-                        <span>d. Total OUT Qty:</span> <b id="sumShopOut">0</b>
-                    </div>
+                        <span>d. Total OUT Qty:</span> <b id="sumShopOut">0</b></div>
                     <div
                         style="display: flex; justify-content: space-between; font-size: 16px; margin-top: 10px; border-top: 1px dashed #ce93d8; padding-top: 5px;">
-                        <span>e. Balance Qty (c-d):</span> <b style="color: #8e44ad;" id="sumShopBal">0</b>
-                    </div>
+                        <span>e. Balance Qty (c-d):</span> <b style="color: #8e44ad;" id="sumShopBal">0</b></div>
                 </div>
             </div>
 
@@ -1034,14 +1110,10 @@
         </div>
     </div>
 
-    <datalist id="itemNames"></datalist>
-    <datalist id="lotList"></datalist>
-    <datalist id="shopLotList"></datalist>
-    <datalist id="coldStoreList"></datalist>
-    <datalist id="partyList"></datalist>
-    <datalist id="receiptList"></datalist>
-    <datalist id="chalanList"></datalist>
-    <datalist id="shopAvailableMarkList"></datalist>
+    <datalist id="itemNames"></datalist><datalist id="lotList"></datalist><datalist
+        id="shopLotList"></datalist><datalist id="coldStoreList"></datalist>
+    <datalist id="partyList"></datalist><datalist id="receiptList"></datalist><datalist
+        id="chalanList"></datalist><datalist id="shopAvailableMarkList"></datalist>
     <datalist id="editSmartList"></datalist>
 
     <script type="module">
@@ -1056,7 +1128,6 @@
 
         const inventoryDoc = doc(db, "erp", "inventory");
 
-        // Firebase Live Listener
         onSnapshot(inventoryDoc, (docSnap) => {
             if (docSnap.exists()) {
                 let data = docSnap.data();
@@ -1087,7 +1158,7 @@
             event.target.classList.add('active');
             if (tabId === 'receiptHist') renderReceiptRegister();
             if (tabId === 'chalanHist') renderChalanRegister();
-            if (tabId === 'saleHist') renderSaleRegister(); // NAYA TAB
+            if (tabId === 'saleHist') renderSaleRegister();
         }
 
         function showForm(id) {
@@ -1099,12 +1170,54 @@
             }, 100);
 
             if (id === 'dailyReportForm') generateDailyReport();
-            if (id === 'shopOutForm') generateSaleFormNumber(); // NAYA: Shop sale form par generate kare
+            if (id === 'shopOutForm') generateSaleFormNumber();
+        }
+
+        // NAYA: Minimize Function
+        function toggleMinimize(element) {
+            let card = element.closest('.form-card');
+            let overlay = element.closest('.overlay');
+
+            if (!card.classList.contains('minimized-card')) {
+                // Form ko minimize karna
+                card.classList.add('minimized-card');
+                overlay.classList.add('minimized-overlay');
+
+                // Ek se zyada form minimize ho toh unhe upar-neeche stack karna
+                let minCount = document.querySelectorAll('.minimized-card').length - 1;
+                card.style.bottom = (20 + (minCount * 60)) + "px";
+
+                // Form par click karne se wapas bada karna
+                card.onclick = function (e) {
+                    if (card.classList.contains('minimized-card')) {
+                        card.classList.remove('minimized-card');
+                        overlay.classList.remove('minimized-overlay');
+                        card.style.bottom = ""; // bottom margin reset karein
+                        card.onclick = null; // Click event hata dein
+
+                        // Baaki minimized forms ki jagah set karein
+                        let allMin = document.querySelectorAll('.minimized-card');
+                        allMin.forEach((mCard, idx) => {
+                            mCard.style.bottom = (20 + (idx * 60)) + "px";
+                        });
+                    }
+                };
+            }
         }
 
         function closeAll() {
-            document.querySelectorAll('.overlay').forEach(el => el.style.display = 'none');
-            resetForm('outRows'); resetForm('shopOutRows'); resetForm('inRows'); calcInTotals();
+            // Minimize huye forms ko bhi theek karke band karein
+            document.querySelectorAll('.overlay').forEach(el => {
+                el.style.display = 'none';
+                el.classList.remove('minimized-overlay');
+            });
+            document.querySelectorAll('.form-card').forEach(el => {
+                el.classList.remove('minimized-card');
+                el.style.bottom = "";
+                el.onclick = null;
+            });
+
+            resetForm('outRows'); resetForm('shopOutRows'); resetForm('inRows'); calcInTotals(); calcShopTotals();
             document.getElementById('editSearchLot').value = "";
             document.getElementById('editFields').style.display = "none";
             document.getElementById('editErrorMsg').style.display = "none";
@@ -1197,12 +1310,40 @@
         function addDynamicRow(containerId, rowClass) {
             let container = document.getElementById(containerId);
             let lastRow = container.children[container.children.length - 1];
+
+            // NAYA: Auto-increment Bill Number check
+            let lastBill = "";
+            if (containerId === 'shopOutRows') {
+                lastBill = lastRow.querySelector('.shop-bill').value.trim();
+            }
+
             let newRow = lastRow.cloneNode(true);
             newRow.querySelectorAll('input').forEach(i => { i.value = ""; i.style.color = ""; i.style.backgroundColor = ""; });
             newRow.querySelector('.stock-info').innerText = "";
+
+            // Agar shop sale form hai toh agla bill no daal do
+            if (containerId === 'shopOutRows' && lastBill !== "") {
+                let match = lastBill.match(/(\d+)$/); // String ke aakhiri number ko dhoondhega
+                if (match) {
+                    let nextNum = String(parseInt(match[0]) + 1).padStart(match[0].length, '0');
+                    newRow.querySelector('.shop-bill').value = lastBill.replace(/(\d+)$/, nextNum);
+                } else {
+                    newRow.querySelector('.shop-bill').value = lastBill; // Agar koi number nahi hai toh wahi rakh dega
+                }
+            }
+
             container.appendChild(newRow);
+
             let focusSelector = containerId.includes('shop') ? '.shop-bill' : '.out-lot';
-            setTimeout(() => newRow.querySelector(focusSelector).focus(), 10);
+
+            // Agar bill number khud set ho gaya hai toh direct marka par focus le jao
+            if (containerId === 'shopOutRows' && lastBill !== "") {
+                setTimeout(() => newRow.querySelector('.shop-mark').focus(), 10);
+            } else {
+                setTimeout(() => newRow.querySelector(focusSelector).focus(), 10);
+            }
+
+            if (containerId === 'shopOutRows') calcShopTotals();
         }
 
         function updateLists() {
@@ -1344,9 +1485,19 @@
             if (successCount > 0) { saveAllData(); alert("✅ Transfer Successful!"); closeAll(); }
         }
 
+        // NAYA: Shop Sale Total calc karna
+        function calcShopTotals() {
+            let total = 0;
+            document.querySelectorAll('#shopOutRows .shop-qty-input').forEach(input => {
+                total += parseFloat(input.value) || 0;
+            });
+            let totEl = document.getElementById('shopTotalQty');
+            if (totEl) totEl.value = total > 0 ? total : "";
+        }
+
         function fetchShopLotByMark(input) {
             let markNo = input.value.trim(); let row = input.closest('.shop-row');
-            if (markNo === "") { clearShopRow(row); return; }
+            if (markNo === "") { clearShopRow(row); calcShopTotals(); return; }
             let found = shopStock.find(s => s.mark && s.mark.toLowerCase() === markNo.toLowerCase() && s.qty > 0);
             if (found) {
                 let alreadyUsed = 0; let allRows = Array.from(document.querySelectorAll('.shop-row'));
@@ -1358,12 +1509,21 @@
                     }
                 });
                 let currentAvailable = found.qty - alreadyUsed;
-                row.querySelector('.shop-item').value = found.name; row.querySelector('.shop-prev-bal').value = currentAvailable;
+                row.querySelector('.shop-item').value = found.name;
+                row.querySelector('.shop-prev-bal').value = currentAvailable;
                 row.querySelector('.shop-qty-input').max = currentAvailable;
-                row.dataset.lot = found.lot; row.dataset.name = found.name;
+
+                // NAYA: Marka ki details save karna 
+                row.dataset.lot = found.lot;
+                row.dataset.name = found.name;
+                row.dataset.party = found.party;
+                row.dataset.bharti = found.bharti;
+                row.dataset.rate = found.rate;
+
                 calcShopBalance(row.querySelector('.shop-qty-input'));
             } else {
                 clearShopRow(row); row.querySelector('.shop-bal').value = "Zero"; row.querySelector('.shop-bal').style.color = "red";
+                calcShopTotals();
             }
         }
 
@@ -1378,15 +1538,24 @@
             if (isNaN(availQty)) return;
             let outQty = parseFloat(input.value) || 0; let balance = availQty - outQty;
             balInput.value = balance;
+
+            // NAYA: Marka Details ka display text
+            let detailsStr = "";
+            if (row.dataset.lot) {
+                detailsStr = `Lot: <b style="color:#d35400;">${row.dataset.lot}</b> | Party: <b style="color:#2c3e50;">${row.dataset.party || "-"}</b> | Bharti: <b style="color:#2c3e50;">${row.dataset.bharti || "-"}Kg</b> | Rate: <b style="color:#2c3e50;">₹${row.dataset.rate || "-"}</b>`;
+            }
+
             if (outQty > availQty) {
                 balInput.style.color = "red"; balInput.value = balance + " (Low!)";
-                infoDiv.innerHTML = `<span style="color:red; font-weight:bold;">⚠️ Error: Stock mein sirf ${availQty} box bache hain!</span>`;
+                infoDiv.innerHTML = `<span style="color:#2980b9;">${detailsStr}</span> <span style="color:red; font-weight:bold; margin-left:15px;">⚠️ Error: Sirf ${availQty} box bache hain!</span>`;
             } else {
-                balInput.style.color = "#2e7d32"; infoDiv.innerHTML = `<span style="color:#27ae60;">Available: ${availQty} Box</span>`;
+                balInput.style.color = "#2e7d32";
+                infoDiv.innerHTML = `<span style="color:#2980b9;">${detailsStr}</span> <span style="color:#27ae60; font-weight:bold; margin-left:15px;">Available: ${availQty} Box</span>`;
             }
+
+            calcShopTotals(); // Jab bhi quantity change hogi total update hoga
         }
 
-        // NAYA: Form Number Generator
         function generateSaleFormNumber() {
             let dateStr = document.getElementById('shopOutDate').value;
             if (!dateStr) return;
@@ -1401,7 +1570,7 @@
 
         function saveShopSaleNew() {
             let shopOutDate = document.getElementById('shopOutDate').value;
-            let formNo = document.getElementById('shopOutFormNo').value; // NAYA: Form Number liya
+            let formNo = document.getElementById('shopOutFormNo').value;
             let rows = document.querySelectorAll('#shopOutRows .shop-row');
             let successCount = 0; let errors = []; let aggregatedSales = {};
 
@@ -1431,7 +1600,6 @@
                     let sIdx = shopStock.findIndex(s => s.lot === lot);
                     if (sIdx !== -1) {
                         shopStock[sIdx].qty -= outQty; if (shopStock[sIdx].qty <= 0) shopStock[sIdx].qty = 0;
-                        // NAYA: ref mein formNo save kiya aur billNo alag se
                         lotHistory.push({ date: shopOutDate, lot: lot, name: name, type: 'Sale (Bika)', ref: formNo, billNo: billNo, qtyIn: '-', qtyOut: outQty });
                         successCount++;
                     }
@@ -1548,7 +1716,6 @@
             });
         }
 
-        // UPDATE: Chalan register filter 
         function renderChalanRegister() {
             let tbody = document.getElementById('chalanHistBody');
             tbody.innerHTML = "";
@@ -1584,7 +1751,6 @@
             });
         }
 
-        // NAYA: Sale Register
         function renderSaleRegister() {
             let tbody = document.getElementById('saleHistBody');
             tbody.innerHTML = "";
@@ -1618,7 +1784,6 @@
             });
         }
 
-        // UPDATE: Naya View function (Sale ke liye Bill No Dikhayega)
         function showDocDetails(date, ref, typeFlag) {
             let thead = document.querySelector('#docDetailsModal thead');
             let tbody = document.getElementById('docDetailsBody');
@@ -1711,7 +1876,7 @@
         }
 
         // ==========================================
-        // NEW FUNCTIONS (Search, Sort, Print, Report)
+        // SEARCH, SORT, FILTER & REPORT FUNCTIONS
         // ==========================================
 
         function searchMasterTable() {
@@ -1854,7 +2019,6 @@
             todaysHistory.forEach(h => {
                 let typeColor = h.type.includes("IN") ? "#2980b9" : (h.type.includes("Sale") ? "#8e44ad" : "#e67e22");
 
-                // NAYA CODE: Marka dhoondhna
                 let foundItem = coldStock.find(s => s.lot.toLowerCase() === h.lot.toLowerCase()) ||
                     shopStock.find(s => s.lot.toLowerCase() === h.lot.toLowerCase());
                 let marka = (foundItem && foundItem.mark && foundItem.mark !== "-") ? foundItem.mark : "-";
@@ -1863,13 +2027,15 @@
                     <tr>
                         <td style="color:${typeColor}; font-weight:bold;">${h.type}</td>
                         <td><span class="badge-lot">${h.lot}</span></td>
-                        <td style="font-weight:bold; color:#8e44ad;">${marka}</td> <td><b>${h.name}</b></td>
+                        <td style="font-weight:bold; color:#8e44ad;">${marka}</td>
+                        <td><b>${h.name}</b></td>
                         <td>${h.ref}</td>
                         <td style="color:#27ae60; font-weight:bold;">${h.qtyIn !== '-' ? h.qtyIn : ''}</td>
                         <td style="color:#c0392b; font-weight:bold;">${h.qtyOut !== '-' ? h.qtyOut : ''}</td>
                     </tr>`;
             });
         }
+
         function printCustomReport() {
             let style = document.createElement('style');
             style.id = 'print-columns-style';
@@ -1921,6 +2087,7 @@
         window.saveColdOutChalan = saveColdOutChalan;
         window.fetchShopLotByMark = fetchShopLotByMark;
         window.calcShopBalance = calcShopBalance;
+        window.calcShopTotals = calcShopTotals;
         window.saveShopSaleNew = saveShopSaleNew;
         window.fetchLotForEdit = fetchLotForEdit;
         window.saveLotEdit = saveLotEdit;
@@ -1936,6 +2103,7 @@
         window.filterStock = filterStock;
         window.generateDailyReport = generateDailyReport;
         window.generateSaleFormNumber = generateSaleFormNumber;
+        window.toggleMinimize = toggleMinimize;
     </script>
 </body>
 
