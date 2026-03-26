@@ -1064,12 +1064,15 @@
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;"><span>b. Total IN
                             Qty:</span> <b id="sumColdIn">0</b></div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #2e7d32;">
-                        <span>c. Total (a+b):</span> <b id="sumColdTotal">0</b></div>
+                        <span>c. Total (a+b):</span> <b id="sumColdTotal">0</b>
+                    </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #c0392b;">
-                        <span>d. Total OUT Qty:</span> <b id="sumColdOut">0</b></div>
+                        <span>d. Total OUT Qty:</span> <b id="sumColdOut">0</b>
+                    </div>
                     <div
                         style="display: flex; justify-content: space-between; font-size: 16px; margin-top: 10px; border-top: 1px dashed #90caf9; padding-top: 5px;">
-                        <span>e. Balance Qty (c-d):</span> <b style="color: #1565c0;" id="sumColdBal">0</b></div>
+                        <span>e. Balance Qty (c-d):</span> <b style="color: #1565c0;" id="sumColdBal">0</b>
+                    </div>
                 </div>
                 <div
                     style="flex: 1; min-width: 300px; background: #f3e5f5; border: 2px solid #ce93d8; border-radius: 8px; padding: 15px;">
@@ -1080,12 +1083,15 @@
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;"><span>b. Total IN
                             Qty:</span> <b id="sumShopIn">0</b></div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #2e7d32;">
-                        <span>c. Total (a+b):</span> <b id="sumShopTotal">0</b></div>
+                        <span>c. Total (a+b):</span> <b id="sumShopTotal">0</b>
+                    </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #c0392b;">
-                        <span>d. Total OUT Qty:</span> <b id="sumShopOut">0</b></div>
+                        <span>d. Total OUT Qty:</span> <b id="sumShopOut">0</b>
+                    </div>
                     <div
                         style="display: flex; justify-content: space-between; font-size: 16px; margin-top: 10px; border-top: 1px dashed #ce93d8; padding-top: 5px;">
-                        <span>e. Balance Qty (c-d):</span> <b style="color: #8e44ad;" id="sumShopBal">0</b></div>
+                        <span>e. Balance Qty (c-d):</span> <b style="color: #8e44ad;" id="sumShopBal">0</b>
+                    </div>
                 </div>
             </div>
 
@@ -1162,10 +1168,21 @@
         }
 
         function showForm(id) {
-            document.getElementById(id).style.display = 'block';
+            let formOverlay = document.getElementById(id);
+            formOverlay.style.display = 'block';
+
+            // NAYA FIX: Agar form pehle se minimize tha, toh upar wala button dabane se wapas bada ho jayega
+            let card = formOverlay.querySelector('.form-card');
+            if (card && card.classList.contains('minimized-card')) {
+                card.classList.remove('minimized-card');
+                formOverlay.classList.remove('minimized-overlay');
+                card.style.bottom = "";
+                card.onclick = null;
+            }
+
             updateLists();
             setTimeout(() => {
-                const firstInput = document.getElementById(id).querySelector('input:not([readonly]), select:not([disabled])');
+                const firstInput = formOverlay.querySelector('input:not([readonly]), select:not([disabled])');
                 if (firstInput) firstInput.focus();
             }, 100);
 
@@ -1178,6 +1195,9 @@
             let card = element.closest('.form-card');
             let overlay = element.closest('.overlay');
 
+            // NAYA FIX: Click ko turant aage badhne se rokna taaki form wapas bada na ho
+            if (window.event) { window.event.stopPropagation(); }
+
             if (!card.classList.contains('minimized-card')) {
                 // Form ko minimize karna
                 card.classList.add('minimized-card');
@@ -1187,21 +1207,23 @@
                 let minCount = document.querySelectorAll('.minimized-card').length - 1;
                 card.style.bottom = (20 + (minCount * 60)) + "px";
 
-                // Form par click karne se wapas bada karna
-                card.onclick = function (e) {
-                    if (card.classList.contains('minimized-card')) {
-                        card.classList.remove('minimized-card');
-                        overlay.classList.remove('minimized-overlay');
-                        card.style.bottom = ""; // bottom margin reset karein
-                        card.onclick = null; // Click event hata dein
+                // Thoda delay dekar click event lagayen taaki turant open na ho
+                setTimeout(() => {
+                    card.onclick = function (e) {
+                        if (card.classList.contains('minimized-card')) {
+                            card.classList.remove('minimized-card');
+                            overlay.classList.remove('minimized-overlay');
+                            card.style.bottom = ""; // bottom margin reset karein
+                            card.onclick = null; // Click event hata dein
 
-                        // Baaki minimized forms ki jagah set karein
-                        let allMin = document.querySelectorAll('.minimized-card');
-                        allMin.forEach((mCard, idx) => {
-                            mCard.style.bottom = (20 + (idx * 60)) + "px";
-                        });
-                    }
-                };
+                            // Baaki minimized forms ki jagah set karein
+                            let allMin = document.querySelectorAll('.minimized-card');
+                            allMin.forEach((mCard, idx) => {
+                                mCard.style.bottom = (20 + (idx * 60)) + "px";
+                            });
+                        }
+                    };
+                }, 100);
             }
         }
 
