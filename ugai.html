@@ -230,6 +230,17 @@
             background-color: #5a6268;
         }
 
+        /* --- Clickable Party Name --- */
+        .party-name-link {
+            color: #0056b3;
+            cursor: pointer;
+        }
+
+        .party-name-link:hover {
+            color: #003d82;
+            text-decoration: underline;
+        }
+
         /* --- Modal (Popup) Design --- */
         .modal {
             display: none;
@@ -249,6 +260,32 @@
             border-radius: 8px;
             width: 480px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Party Details Modal specific width */
+        #partyDetailsModal .modal-content {
+            width: 650px;
+            max-width: 95%;
+        }
+
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        .details-table th,
+        .details-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .details-table th {
+            background-color: #f4f7f6;
+            color: #333;
+            position: static;
         }
 
         .close-btn {
@@ -431,7 +468,8 @@
             }
 
             #main-dashboard,
-            #paymentModal {
+            #paymentModal,
+            #partyDetailsModal {
                 display: none !important;
             }
 
@@ -959,7 +997,35 @@
             </div>
         </div>
 
+        <div id="partyDetailsModal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closePartyDetailsModal()">&times;</span>
+                <h3 id="pd-title" style="color: #0056b3;">Party Details</h3>
+                <div class="table-container"
+                    style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; margin-top: 10px;">
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>S.No.</th>
+                                <th>Date</th>
+                                <th>Bill No.</th>
+                                <th style="text-align: right;">Amount (₹)</th>
+                                <th style="text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pd-table-body">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="final-payable"
+                    style="margin-top: 15px; background: #fdfdfd; padding: 10px; border-radius: 4px;">
+                    Total Outstanding Balance: <span id="pd-total" style="color: #d9534f; font-size: 22px;">0</span>
+                </div>
+            </div>
+        </div>
+
     </div>
+
     <div class="print-area" id="print-receipt-section">
         <div class="inner-border">
             <div class="receipt-header">
@@ -1196,6 +1262,10 @@
 
             data.forEach((entry) => {
                 total += entry.amount;
+
+                let safeNameHTML = entry.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                let jsSafeName = entry.name.replace(/'/g, "\\'");
+
                 tableBody.innerHTML += `
                 <tr tabindex="0" class="keyboard-row" onclick="this.focus()">
                     <td style="text-align: center;">
@@ -1203,11 +1273,11 @@
                     </td>
                     <td>${entry.displayDate}</td>
                     <td style="color: #0056b3;">${entry.billNo}</td>
-                    <td><b>${entry.name}</b></td>
+                    <td class="party-name-link" data-name="${safeNameHTML}" title="Sari outstanding dekhne ke liye click karein" onclick="showPartyDetails(this.getAttribute('data-name'))"><b>${entry.name}</b></td>
                     <td>${entry.broker}</td>
                     <td style="color: #d9534f; font-weight: bold;">₹${entry.amount.toLocaleString('en-IN')}</td>
                     <td class="action-cell">
-                        <button class="pay-btn" tabindex="-1" onclick="openPaymentModal('${entry.name}', '${entry.billNo}', ${entry.amount}, '${entry.dateVal}', '${entry.displayDate}')">Receive Payment</button>
+                        <button class="pay-btn" tabindex="-1" onclick="openPaymentModal('${jsSafeName}', '${entry.billNo}', ${entry.amount}, '${entry.dateVal}', '${entry.displayDate}')">Receive Payment</button>
                         <button class="hide-btn" tabindex="-1" title="Bill temporary hide karein" onclick="hideBill('${entry.billNo}')">👁️ Hide</button>
                     </td>
                 </tr>
@@ -1215,6 +1285,44 @@
             });
 
             document.getElementById("totalOutstanding").innerText = total.toLocaleString('en-IN');
+        }
+
+        function showPartyDetails(partyName) {
+            document.getElementById("pd-title").innerText = partyName + " - All Outstanding Bills";
+            let tbody = document.getElementById("pd-table-body");
+            tbody.innerHTML = "";
+            let total = 0;
+
+            let partyBills = allData.filter(row => row.name === partyName && !row.hidden);
+
+            partyBills.sort((a, b) => (a.dateVal > b.dateVal) ? 1 : -1);
+
+            if (partyBills.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Koi bill pending nahi hai.</td></tr>`;
+            } else {
+                partyBills.forEach((bill, index) => {
+                    total += bill.amount;
+                    let jsSafeName = bill.name.replace(/'/g, "\\'");
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${bill.displayDate}</td>
+                            <td>${bill.billNo}</td>
+                            <td style="color: #d9534f; font-weight: bold; text-align: right;">₹${bill.amount.toLocaleString('en-IN')}</td>
+                            <td style="text-align: center;">
+                                <button class="pay-btn" onclick="closePartyDetailsModal(); openPaymentModal('${jsSafeName}', '${bill.billNo}', ${bill.amount}, '${bill.dateVal}', '${bill.displayDate}')">Pay</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            document.getElementById("pd-total").innerText = "₹" + total.toLocaleString('en-IN');
+            document.getElementById("partyDetailsModal").style.display = "block";
+        }
+
+        function closePartyDetailsModal() {
+            document.getElementById("partyDetailsModal").style.display = "none";
         }
 
         function clearFilters() {
@@ -1462,6 +1570,21 @@
         }
 
         document.addEventListener('keydown', function (event) {
+
+            // --- NAYA CODE: Esc button se popup band karne ke liye ---
+            if (event.key === 'Escape' || event.key === 'Esc') {
+                let paymentModal = document.getElementById("paymentModal");
+                let partyDetailsModal = document.getElementById("partyDetailsModal");
+
+                if (paymentModal && paymentModal.style.display === "block") {
+                    closeModal();
+                }
+                if (partyDetailsModal && partyDetailsModal.style.display === "block") {
+                    closePartyDetailsModal();
+                }
+            }
+            // ---------------------------------------------------------
+
             let activeRow = document.activeElement;
 
             if (activeRow && activeRow.classList.contains('keyboard-row')) {
@@ -1487,6 +1610,14 @@
                         calculateSelectedTotal();
                     }
                 }
+                else if (event.key === 'Enter') {
+                    event.preventDefault();
+                    let partyCell = activeRow.querySelector('.party-name-link');
+                    if (partyCell) {
+                        let pName = partyCell.getAttribute('data-name');
+                        if (pName) showPartyDetails(pName);
+                    }
+                }
             }
         });
 
@@ -1506,6 +1637,9 @@
         window.updateLiveTotal = updateLiveTotal;
         window.printStatement = printStatement;
         window.generateReceipt = generateReceipt;
+
+        window.showPartyDetails = showPartyDetails;
+        window.closePartyDetailsModal = closePartyDetailsModal;
 
     </script>
 </body>
