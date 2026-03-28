@@ -472,20 +472,10 @@
                 display: none !important;
             }
 
-            .print-area.active {
-                display: block !important;
-                width: 95%;
-                max-width: 900px;
-                margin: 10px auto;
-                position: relative;
-            }
-
             /* --- NAYA RECEIPT VOUCHER DESIGN (PERFECT A6 FIX) --- */
             @page {
                 size: A6 portrait;
-                /* A6 Portrait fix */
                 margin: 4mm;
-                /* Paper ke kinare se margin */
             }
 
             #print-receipt-section.active {
@@ -499,24 +489,10 @@
             #print-receipt-section.active .inner-border {
                 border: 1px solid #000;
                 padding: 5px;
-                /* Jagah bachane ke liye padding kam ki */
                 font-family: Arial, sans-serif;
                 box-sizing: border-box;
                 width: 100%;
-            }
-
-            .rcpt-header {
-                text-align: center;
-                margin-bottom: 8px;
-            }
-
-            .rcpt-title {
-                display: inline-block;
-                border: 1px solid #000;
-                padding: 4px 10px;
-                font-weight: bold;
-                font-size: 14px;
-                color: #000 !important;
+                min-height: 100px;
             }
 
             .rcpt-row-top {
@@ -533,26 +509,20 @@
                 margin-bottom: 6px;
             }
 
-            /* Fix 1: Item Table fitting for A6 */
             .rcpt-item-table {
                 width: 100%;
                 border-collapse: collapse;
                 font-size: 10px;
-                /* A6 ke liye perfect font size */
                 font-family: Arial, sans-serif;
                 table-layout: fixed;
-                /* Table ko bahar jane se rokega */
             }
 
-            /* Fix 2: Headings show karne ke liye */
             .rcpt-item-table th {
                 border: 1px solid #000;
                 border-bottom: 2px solid #000 !important;
-                /* Headings ke niche dark line */
                 padding: 4px 2px;
                 text-align: center;
                 color: #000 !important;
-                /* Text color black fix kiya */
                 font-weight: bold;
                 background-color: #f0f0f0 !important;
                 -webkit-print-color-adjust: exact;
@@ -562,97 +532,62 @@
             .rcpt-item-table td {
                 border: 1px solid #000;
                 padding: 4px 2px;
-                text-align: left;
+                text-align: center;
+                /* Sabko center me kar diya */
                 word-wrap: break-word;
-                /* Bada naam hone par agli line me bhej dega */
+                overflow-wrap: break-word;
+                box-sizing: border-box;
             }
 
-            /* Fix 3: Columns ki width set ki taaki page se bahar na jaye */
+            /* Sabhi columns ka alignment center set kiya gaya hai */
             .rcpt-item-table th:nth-child(1),
             .rcpt-item-table td:nth-child(1) {
                 width: 8%;
                 text-align: center;
             }
 
-            /* S.No */
             .rcpt-item-table th:nth-child(2),
             .rcpt-item-table td:nth-child(2) {
-                width: 38%;
-            }
-
-            /* Item Name */
-            .rcpt-item-table th:nth-child(3),
-            .rcpt-item-table td:nth-child(3) {
-                width: 10%;
+                width: 32%;
                 text-align: center;
             }
 
-            /* Nag */
+            .rcpt-item-table th:nth-child(3),
+            .rcpt-item-table td:nth-child(3) {
+                width: 12%;
+                text-align: center;
+            }
+
             .rcpt-item-table th:nth-child(4),
             .rcpt-item-table td:nth-child(4) {
                 width: 13%;
                 text-align: center;
             }
 
-            /* Qty */
             .rcpt-item-table th:nth-child(5),
             .rcpt-item-table td:nth-child(5) {
-                width: 13%;
-                text-align: right;
+                width: 15%;
+                text-align: center;
             }
 
-            /* Rate */
             .rcpt-item-table th:nth-child(6),
             .rcpt-item-table td:nth-child(6) {
-                width: 18%;
-                text-align: right;
-            }
-
-            /* Amount */
-
-            .rcpt-footer {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-end;
-                margin-top: 10px;
-            }
-
-            .rcpt-amt-box {
-                border: 1px solid #000;
-                padding: 4px 10px;
-                font-size: 13px;
-                font-weight: bold;
-            }
-
-            .rcpt-sign {
-                text-align: right;
-                font-weight: bold;
-                font-size: 10px;
-            }
-
-            /* Receipt Voucher Item Table */
-            .rcpt-item-table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 20px;
-                font-size: 15px;
-                font-family: Arial, sans-serif;
-            }
-
-            .rcpt-item-table th,
-            .rcpt-item-table td {
-                border: 1px solid #000;
-                padding: 6px 10px;
-                text-align: left;
-            }
-
-            .rcpt-item-table th {
-                background-color: #f0f0f0 !important;
-                -webkit-print-color-adjust: exact;
-                font-weight: bold;
+                width: 20%;
+                text-align: center;
             }
 
             /* BROKER / PARTY STATEMENT */
+            .print-area.active {
+                display: block !important;
+            }
+
+            #print-statement-section.active {
+                width: 95%;
+                max-width: 900px;
+                margin: 10px auto;
+                position: relative;
+            }
+
             .stmt-header {
                 text-align: center;
                 border-bottom: 2px solid #000;
@@ -922,7 +857,6 @@
                                 <th>Nag</th>
                                 <th>Qty</th>
                                 <th>Rate</th>
-                                <!-- <th>Oth.Chg</th> -->
                                 <th>Amount</th>
                             </tr>
                         </thead>
@@ -1020,10 +954,6 @@
     <div class="print-area" id="print-receipt-section">
         <div class="inner-border">
 
-            <div class="rcpt-header">
-                <div class="rcpt-title">RECEIPT VOUCHER</div>
-            </div>
-
             <div class="rcpt-row-top">
                 <div>Bill No. : <span id="r-bill-no"></span></div>
                 <div>Date : <span id="r-date"></span></div>
@@ -1036,7 +966,7 @@
             <table class="rcpt-item-table" id="r-item-table">
                 <thead>
                     <tr>
-                        <th style="width: 30px; text-align: center;">S.no</th>
+                        <th>S.no</th>
                         <th>Item Name</th>
                         <th>Nag</th>
                         <th>Qty</th>
@@ -1048,16 +978,9 @@
                 </tbody>
             </table>
 
-            <div class="rcpt-footer">
-                <div class="rcpt-amt-box">₹ <span id="r-amount-paid"></span> /-</div>
-                <div class="rcpt-sign">
-                    <br><br>
-                    Authorised Signatory
-                </div>
-            </div>
-
         </div>
     </div>
+
     <div class="print-area" id="print-statement-section">
         <div class="stmt-header">
             <h2 id="stmt-title">OUTSTANDING STATEMENT</h2>
@@ -1234,10 +1157,9 @@
                     }
                 }
             }
-            // File padhne wale loop ke baad ka code
-            if (tempAllData.length > 0) {
-                // --- OPTION 2: SMART MERGE LOGIC FOR OUTSTANDING ---
 
+            if (tempAllData.length > 0) {
+                // --- SMART MERGE LOGIC FOR OUTSTANDING ---
                 let newOsBillNumbers = new Set(tempAllData.map(row => row.billNo));
                 let filteredOldOsData = allData.filter(row => !newOsBillNumbers.has(row.billNo));
 
@@ -1246,7 +1168,6 @@
 
                 alert("✅ Outstanding data successfully UPDATE ho gaya!\n\nNaye/Updated Bills: " + tempAllData.length + "\nTotal Outstanding Bills: " + allData.length);
             }
-        }
         }
 
         // ==========================================
@@ -1271,7 +1192,6 @@
                     headerFound = true;
                     columns.forEach((col, index) => {
                         let colName = col.trim().toLowerCase();
-
                         if (colName.includes("bill")) colIndex.billNo = index;
                         else if (colName.includes("item")) colIndex.itemName = index;
                         else if (colName.includes("nag")) colIndex.nag = index;
@@ -1279,11 +1199,10 @@
                         else if (colName.includes("rate") || colName.includes("price")) colIndex.rate = index;
 
                         // NAYA: Sirf aur sirf 'Oth.Chg.BT Amount' (Column I) ko target karega
-                        else if (colName.includes("oth.chg.bt") || colName.includes("bt amount")) {
+                        else if (colName.includes("oth.chg.bt") || colName.includes("bt amount") || colName === "oth.chg.bt amount") {
                             colIndex.other = index;
                         }
-
-                        // Main Amount ke liye (Baaki 'Oth.Chg' wale columns ko ignore karega)
+                        // Main Amount
                         else if (colName.includes("amount") || colName.includes("exempt")) {
                             if (!colName.includes("bt") && !colName.includes("oth.chg") && colIndex.amount === undefined) {
                                 colIndex.amount = index;
@@ -1315,23 +1234,16 @@
             }
 
             if (tempItems.length > 0) {
-                // --- OPTION 2: SMART MERGE LOGIC (No Duplicates) ---
-
-                // 1. Nayi file me aaye hue saare Bill Numbers ki ek list bana lo
+                // --- SMART MERGE LOGIC FOR ITEMS ---
                 let newBillNumbers = new Set(tempItems.map(item => item.billNo));
-
-                // 2. Purane data me se wo bills nikal do jo nayi file me dobara aaye hain
                 let filteredOldData = allItemData.filter(item => !newBillNumbers.has(item.billNo));
 
-                // 3. Ab bache hue purane data me naya data jod do
                 allItemData = [...filteredOldData, ...tempItems];
-
                 saveItemsToStorage();
                 alert("✅ Sales Items successfully UPDATE ho gaye!\n\nNaye jode gaye Items: " + tempItems.length + "\nTotal Items in System: " + allItemData.length);
             } else {
                 alert("❌ ERROR: 0 Items mile!\n\nKripya Check Karein:\n1. Kahin galti se Outstanding wali file toh nahi chun li?\n2. Kya file me 'Bill' aur 'Item' ki heading maujood hai?");
             }
-        }
         }
 
 
@@ -1464,22 +1376,18 @@
             document.getElementById("m-due").innerText = "₹" + dueAmount.toLocaleString('en-IN');
             document.getElementById("m-bill-age").innerText = totalAgeDays;
 
-            // --- SMART ITEM MATCHING (UPDATED FOR @SI-SL/002310 & DRY-150) ---
+            // --- SMART ITEM MATCHING ---
             let origBillFull = String(billNo).trim().toUpperCase();
             let cleanOrigBill = origBillFull;
 
-            // Logic: Agar '/' hai toh last wala hissa lo, agar '-' hai toh beech wala hissa lo
             if (origBillFull.includes('/')) {
-                // @SI-SL/002310 me se 002310 nikalega aur fir aage ke 0 hatayega
                 cleanOrigBill = origBillFull.split('/').pop().replace(/^0+/, '');
             } else if (origBillFull.includes('-')) {
-                // DRY-150-25-26 me se 150 nikalega
                 let parts = origBillFull.split('-');
                 if (parts.length > 1) {
                     cleanOrigBill = parts[1].replace(/^0+/, '');
                 }
             } else {
-                // Agar normal number hai (jaise 002310) toh sirf aage ke 0 hatayega
                 cleanOrigBill = origBillFull.replace(/^0+/, '');
             }
 
@@ -1496,17 +1404,14 @@
             let itemDiv = document.getElementById("m-item-details");
             let itemTbody = document.getElementById("m-item-tbody");
             itemTbody.innerHTML = "";
-
             itemDiv.style.display = "block";
 
             if (matchedItems.length > 0) {
                 let totalOther = 0;
-                let totalItemAmount = 0; // Sirf items ka total
+                let totalItemAmount = 0;
 
                 matchedItems.forEach(item => {
                     totalOther += parseFloat(item.other) || 0;
-
-                    // Amount me se comma hatakar number me badalna
                     let amtVal = String(item.amount).replace(/,/g, '');
                     totalItemAmount += parseFloat(amtVal) || 0;
 
@@ -1520,24 +1425,23 @@
                         </tr>`;
                 });
 
-                // Final Net Amount calculation
                 let netAmount = totalItemAmount + totalOther;
 
-                // 1. Item Total Row (Sirf Amount ka total dikhega)
+                // Item Total Row
                 itemTbody.innerHTML += `
                     <tr style="border-top: 2px solid #ccc; background-color: #fdfdfd;">
                         <td colspan="4" style="padding: 6px; text-align: right; font-weight: bold; color: #555;">Total:</td>
                         <td style="padding: 6px; font-weight: bold; color: #333;">₹${totalItemAmount.toLocaleString('en-IN')}</td>
                     </tr>`;
 
-                // 2. Other Charges Row
+                // Other Charges Row
                 itemTbody.innerHTML += `
                     <tr>
                         <td colspan="4" style="padding: 4px 6px; text-align: right; font-weight: bold; color: #d84315;">Other Charges (+):</td>
                         <td style="padding: 4px 6px; font-weight: bold; color: #d84315;">₹${totalOther.toLocaleString('en-IN')}</td>
                     </tr>`;
 
-                // 3. Net Amount Row (Grand Total)
+                // Net Amount Row 
                 itemTbody.innerHTML += `
                     <tr style="background-color: #e9f5e9; border-top: 2px solid #4CAF50;">
                         <td colspan="4" style="padding: 8px 6px; text-align: right; font-weight: bold; color: #28a745; font-size: 13px;">NET AMOUNT:</td>
@@ -1547,7 +1451,6 @@
             } else {
                 itemTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#d9534f; padding:10px;">Is bill ki details nahi mili. Kripya check karein ki kya ye bill 'Item Detail CSV' file mein maujood hai?</td></tr>`;
             }
-            // --- MATCHING CODE END ---
 
             // Reset Fields
             document.querySelector('input[value="none"]').checked = true; document.getElementById("m-credit-days").value = "0";
@@ -1655,21 +1558,6 @@
             document.getElementById("m-received").value = finalDue;
         }
 
-        function numberToWords(num) {
-            if (num === 0) return "Zero";
-            let a = ["", "One ", "Two ", "Three ", "Four ", "Five ", "Six ", "Seven ", "Eight ", "Nine ", "Ten ", "Eleven ", "Twelve ", "Thirteen ", "Fourteen ", "Fifteen ", "Sixteen ", "Seventeen ", "Eighteen ", "Nineteen "];
-            let b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
-            let n = ('000000000' + Math.floor(num)).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
-            if (!n) return "";
-            let str = '';
-            str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
-            str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
-            str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
-            str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
-            str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
-            return str.trim() + " Only";
-        }
-
         function printStatement() {
             if (currentFilteredData.length === 0) {
                 alert("Print karne ke liye koi list nahi hai. Pehle Party ya Broker search karein."); return;
@@ -1737,6 +1625,7 @@
             window.print();
         }
 
+        // --- NAYA AUR CLEAN GENERATE RECEIPT LOGIC ---
         function generateReceipt() {
             let receivedAmount = parseFloat(document.getElementById("m-received").value);
             let adjType = document.querySelector('input[name="adj_type"]:checked').value;
@@ -1747,13 +1636,12 @@
 
             let today = new Date(); let dateOnly = today.getDate() + "/" + (today.getMonth() + 1) + "/" + today.getFullYear();
 
-            // Values set karna (Faltu details hata di gayi hain)
+            // Set Top Details
             document.getElementById("r-bill-no").innerText = currentPayBill;
             document.getElementById("r-date").innerText = dateOnly;
             document.getElementById("r-party").innerText = "M/S: " + currentPayParty.toUpperCase();
-            document.getElementById("r-amount-paid").innerText = receivedAmount.toLocaleString('en-IN');
 
-            // --- SMART ITEM MATCHING FOR RECEIPT ---
+            // SMART MATCHING
             let origBillFull = String(currentPayBill).trim().toUpperCase();
             let cleanOrigBill = origBillFull;
             if (origBillFull.includes('/')) cleanOrigBill = origBillFull.split('/').pop().replace(/^0+/, '');
@@ -1768,7 +1656,7 @@
                     origBillFull.includes("/" + itemCleanBill) || origBillFull.includes("-" + itemCleanBill + "-") || origBillFull.endsWith(itemCleanBill);
             });
 
-            // TABLE MEIN DATA BHARNA
+            // FILL TABLE
             let rTbody = document.getElementById("r-item-tbody");
             rTbody.innerHTML = "";
 
@@ -1780,31 +1668,32 @@
                     let amtVal = String(item.amount).replace(/,/g, '');
                     totalItemAmount += parseFloat(amtVal) || 0;
 
+                    // Yahan sabhi <td> ko theek se center kar diya gaya hai
                     rTbody.innerHTML += `
                         <tr>
                             <td style="text-align: center;">${index + 1}</td>
-                            <td><b>${item.itemName}</b></td>
-                            <td>${item.nag}</td>
-                            <td>${item.qty}</td>
-                            <td>₹${item.rate}</td>
-                            <td style="font-weight: bold;">₹${item.amount}</td>
+                            <td style="text-align: center;"><b>${item.itemName}</b></td>
+                            <td style="text-align: center;">${item.nag}</td>
+                            <td style="text-align: center;">${item.qty}</td>
+                            <td style="text-align: center;">₹${item.rate}</td>
+                            <td style="text-align: center; font-weight: bold;">₹${item.amount}</td>
                         </tr>`;
                 });
 
                 let netAmount = totalItemAmount + totalOther;
 
-                // Totals Row
+                // Niche ke saare totals ka Amount wala column bhi center kar diya gaya hai
                 rTbody.innerHTML += `
                     <tr>
-                        <td colspan="5" style="text-align: right; font-weight: bold;">Total:</td>
-                        <td style="font-weight: bold;">₹${totalItemAmount.toLocaleString('en-IN')}</td>
+                        <td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px;">Total:</td>
+                        <td style="text-align: center; font-weight: bold;">₹${totalItemAmount.toLocaleString('en-IN')}</td>
                     </tr>`;
 
                 if (totalOther > 0) {
                     rTbody.innerHTML += `
                         <tr>
-                            <td colspan="5" style="text-align: right; font-weight: bold; color: #d84315 !important;-webkit-print-color-adjust: exact;">Other Charges (+):</td>
-                            <td style="font-weight: bold; color: #d84315 !important;-webkit-print-color-adjust: exact;">₹${totalOther.toLocaleString('en-IN')}</td>
+                            <td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px; color: #d84315 !important;-webkit-print-color-adjust: exact;">Other Charges (+):</td>
+                            <td style="text-align: center; font-weight: bold; color: #d84315 !important;-webkit-print-color-adjust: exact;">₹${totalOther.toLocaleString('en-IN')}</td>
                         </tr>`;
                 }
 
@@ -1812,26 +1701,26 @@
                     netAmount += interestAmount;
                     rTbody.innerHTML += `
                         <tr>
-                            <td colspan="5" style="text-align: right; font-weight: bold;">Late Fee Interest (+):</td>
-                            <td style="font-weight: bold;">₹${interestAmount.toLocaleString('en-IN')}</td>
+                            <td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px;">Late Fee Interest (+):</td>
+                            <td style="text-align: center; font-weight: bold;">₹${interestAmount.toLocaleString('en-IN')}</td>
                         </tr>`;
                 }
                 if (discountAmount > 0) {
                     netAmount -= discountAmount;
                     rTbody.innerHTML += `
                         <tr>
-                            <td colspan="5" style="text-align: right; font-weight: bold;">Discount (-):</td>
-                            <td style="font-weight: bold;">- ₹${discountAmount.toLocaleString('en-IN')}</td>
+                            <td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px;">Discount (-):</td>
+                            <td style="text-align: center; font-weight: bold;">- ₹${discountAmount.toLocaleString('en-IN')}</td>
                         </tr>`;
                 }
 
                 rTbody.innerHTML += `
                     <tr style="background-color: #f4f7f6 !important; -webkit-print-color-adjust: exact;">
-                        <td colspan="5" style="text-align: right; font-weight: bold; font-size: 12px;">NET AMOUNT:</td>
-                        <td style="font-weight: bold; font-size: 16px;">₹${netAmount.toLocaleString('en-IN')}</td>
+                        <td colspan="5" style="text-align: right; font-weight: bold; font-size: 12px; padding-right: 10px;">NET AMOUNT:</td>
+                        <td style="text-align: center; font-weight: bold; font-size: 12px;">₹${netAmount.toLocaleString('en-IN')}</td>
                     </tr>`;
             } else {
-                rTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 10px;">Item details are not available for this bill.</td></tr>`;
+                rTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 5px;">Item details are not available.</td></tr>`;
             }
 
             document.getElementById("print-statement-section").classList.remove("active");
@@ -1839,6 +1728,7 @@
 
             receiptCounter++; closeModal(); window.print();
         }
+
         function calculateSelectedTotal() {
             let checkboxes = document.querySelectorAll('.row-checkbox:checked');
             let total = 0;
