@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dryfu - Outstanding Dashboard</title>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <style>
         /* --- Keyboard Focus Style --- */
         tr.keyboard-row:focus {
@@ -17,14 +18,14 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f7f6;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
         }
 
         .container {
             max-width: 1100px;
             margin: auto;
             background: white;
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
@@ -36,42 +37,74 @@
             padding-bottom: 10px;
         }
 
-        .upload-section {
+        .top-controls {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            padding: 15px;
             background-color: #e9f5e9;
-            border: 2px dashed #4CAF50;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            border: 1px solid #4CAF50;
+            border-radius: 6px;
+            padding: 8px 15px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .top-controls-center {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: #fff;
+            padding: 5px 15px;
+            border-radius: 4px;
+            border: 1px dashed #4CAF50;
+        }
+
+        .top-controls-right {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .stat-text {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .stat-selected {
+            color: #007bff;
+        }
+
+        .stat-filtered {
+            color: #d9534f;
         }
 
         .filter-section {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-bottom: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
             background: #fdfdfd;
-            padding: 15px;
+            padding: 10px;
             border: 1px solid #ddd;
-            border-radius: 8px;
+            border-radius: 6px;
         }
 
         .filter-section input,
         .filter-section select {
-            padding: 8px;
+            padding: 6px;
             border: 1px solid #ccc;
             border-radius: 4px;
             width: 100%;
             box-sizing: border-box;
+            font-size: 13px;
         }
 
         .filter-section label {
             font-size: 12px;
             color: #555;
             font-weight: bold;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
             display: block;
         }
 
@@ -79,11 +112,11 @@
             background-color: #d9534f;
             color: white;
             border: none;
-            padding: 8px;
+            padding: 7px 12px;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
-            margin-top: 18px;
+            font-size: 13px;
         }
 
         button.clear-btn:hover {
@@ -94,11 +127,11 @@
             display: none;
             background-color: #fff3cd;
             color: #856404;
-            padding: 10px 15px;
+            padding: 6px;
             border-radius: 4px;
             margin-bottom: 10px;
             text-align: center;
-            font-size: 14px;
+            font-size: 13px;
             border: 1px solid #ffeeba;
             font-weight: bold;
         }
@@ -110,7 +143,7 @@
             text-decoration: underline;
             cursor: pointer;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
             margin-left: 10px;
         }
 
@@ -118,27 +151,15 @@
             color: #003d82;
         }
 
-        .top-action-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 10px;
-            margin-bottom: 10px;
-            background: #f8f9fa;
-            padding: 10px 15px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-        }
-
         button.print-stmt-btn {
             background-color: #6f42c1;
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 7px 12px;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         button.print-stmt-btn:hover {
@@ -175,13 +196,6 @@
 
         tr:hover {
             background-color: #f1f1f1;
-        }
-
-        .total-box {
-            text-align: right;
-            font-size: 20px;
-            font-weight: bold;
-            color: #d9534f;
         }
 
         .table-container {
@@ -230,7 +244,6 @@
             background-color: #5a6268;
         }
 
-        /* --- Clickable Party Name --- */
         .party-name-link {
             color: #0056b3;
             cursor: pointer;
@@ -260,9 +273,10 @@
             border-radius: 8px;
             width: 480px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
-        /* Party Details Modal specific width */
         #partyDetailsModal .modal-content {
             width: 650px;
             max-width: 95%;
@@ -324,21 +338,6 @@
             border-radius: 4px;
             box-sizing: border-box;
             font-size: 14px;
-        }
-
-        .modal-info {
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 4px;
-            font-size: 14px;
-            margin-bottom: 10px;
-            border-left: 5px solid #4CAF50;
-            line-height: 1.6;
-        }
-
-        .modal-info span {
-            font-weight: bold;
-            color: #d9534f;
         }
 
         .bill-age-box {
@@ -473,10 +472,6 @@
                 display: none !important;
             }
 
-            .print-area {
-                display: none !important;
-            }
-
             .print-area.active {
                 display: block !important;
                 width: 95%;
@@ -485,121 +480,176 @@
                 position: relative;
             }
 
-            /* RECEIPT VOUCHER */
+            /* --- NAYA RECEIPT VOUCHER DESIGN (PERFECT A6 FIX) --- */
+            @page {
+                size: A6 portrait;
+                /* A6 Portrait fix */
+                margin: 4mm;
+                /* Paper ke kinare se margin */
+            }
+
+            #print-receipt-section.active {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                display: block !important;
+            }
+
             #print-receipt-section.active .inner-border {
-                border: 2px solid #000;
-                padding: 20px;
-                min-height: 400px;
+                border: 1px solid #000;
+                padding: 5px;
+                /* Jagah bachane ke liye padding kam ki */
+                font-family: Arial, sans-serif;
+                box-sizing: border-box;
+                width: 100%;
             }
 
-            .receipt-header {
+            .rcpt-header {
                 text-align: center;
-                margin-bottom: 20px;
+                margin-bottom: 8px;
             }
 
-            .voucher-title {
+            .rcpt-title {
                 display: inline-block;
                 border: 1px solid #000;
-                padding: 8px 20px;
+                padding: 4px 10px;
                 font-weight: bold;
-                font-size: 20px;
-                background-color: #f0f0f0 !important;
-                -webkit-print-color-adjust: exact;
+                font-size: 14px;
+                color: #000 !important;
             }
 
-            .top-row {
+            .rcpt-row-top {
                 display: flex;
                 justify-content: space-between;
-                margin-bottom: 30px;
-                font-size: 15px;
+                font-size: 11px;
                 font-weight: bold;
+                margin-bottom: 6px;
+                border-bottom: 1px solid #000;
+                padding-bottom: 4px;
             }
 
-            .body-text {
-                line-height: 2.2;
-                font-size: 16px;
+            .rcpt-body {
+                margin-bottom: 6px;
             }
 
-            .fill-blank {
-                display: inline-block;
-                border-bottom: 1px dashed #000;
-                min-width: 200px;
-                padding-left: 10px;
+            /* Fix 1: Item Table fitting for A6 */
+            .rcpt-item-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 10px;
+                /* A6 ke liye perfect font size */
+                font-family: Arial, sans-serif;
+                table-layout: fixed;
+                /* Table ko bahar jane se rokega */
+            }
+
+            /* Fix 2: Headings show karne ke liye */
+            .rcpt-item-table th {
+                border: 1px solid #000;
+                border-bottom: 2px solid #000 !important;
+                /* Headings ke niche dark line */
+                padding: 4px 2px;
+                text-align: center;
+                color: #000 !important;
+                /* Text color black fix kiya */
                 font-weight: bold;
-                font-family: 'Times New Roman', Times, serif;
-                font-size: 18px;
+                background-color: #f0f0f0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
 
-            .footer-row {
+            .rcpt-item-table td {
+                border: 1px solid #000;
+                padding: 4px 2px;
+                text-align: left;
+                word-wrap: break-word;
+                /* Bada naam hone par agli line me bhej dega */
+            }
+
+            /* Fix 3: Columns ki width set ki taaki page se bahar na jaye */
+            .rcpt-item-table th:nth-child(1),
+            .rcpt-item-table td:nth-child(1) {
+                width: 8%;
+                text-align: center;
+            }
+
+            /* S.No */
+            .rcpt-item-table th:nth-child(2),
+            .rcpt-item-table td:nth-child(2) {
+                width: 38%;
+            }
+
+            /* Item Name */
+            .rcpt-item-table th:nth-child(3),
+            .rcpt-item-table td:nth-child(3) {
+                width: 10%;
+                text-align: center;
+            }
+
+            /* Nag */
+            .rcpt-item-table th:nth-child(4),
+            .rcpt-item-table td:nth-child(4) {
+                width: 13%;
+                text-align: center;
+            }
+
+            /* Qty */
+            .rcpt-item-table th:nth-child(5),
+            .rcpt-item-table td:nth-child(5) {
+                width: 13%;
+                text-align: right;
+            }
+
+            /* Rate */
+            .rcpt-item-table th:nth-child(6),
+            .rcpt-item-table td:nth-child(6) {
+                width: 18%;
+                text-align: right;
+            }
+
+            /* Amount */
+
+            .rcpt-footer {
                 display: flex;
                 justify-content: space-between;
                 align-items: flex-end;
-                margin-top: 40px;
+                margin-top: 10px;
             }
 
-            .amount-box {
-                border: 2px solid #000;
-                padding: 10px 20px;
-                font-size: 24px;
-                font-weight: bold;
-                min-width: 150px;
-                background: #f9f9f9 !important;
-                -webkit-print-color-adjust: exact;
-            }
-
-            .signatures {
-                display: flex;
-                gap: 50px;
-            }
-
-            .sig-line {
-                text-align: center;
-                border-top: 1px solid #000;
-                padding-top: 5px;
-                width: 150px;
-                font-weight: bold;
-                font-size: 14px;
-            }
-
-            .account-summary {
-                margin-top: 30px;
-                border: 1px solid #aaa;
-                border-radius: 4px;
-                padding: 10px;
+            .rcpt-amt-box {
+                border: 1px solid #000;
+                padding: 4px 10px;
                 font-size: 13px;
-                background-color: #fcfcfc !important;
-                -webkit-print-color-adjust: exact;
+                font-weight: bold;
             }
 
-            .account-summary h4 {
-                margin: 0 0 10px 0;
-                text-decoration: underline;
-                color: #333;
-                text-align: center;
-                font-size: 15px;
+            .rcpt-sign {
+                text-align: right;
+                font-weight: bold;
+                font-size: 10px;
             }
 
-            .summary-table {
+            /* Receipt Voucher Item Table */
+            .rcpt-item-table {
                 width: 100%;
                 border-collapse: collapse;
+                margin-top: 20px;
+                font-size: 15px;
+                font-family: Arial, sans-serif;
             }
 
-            .summary-table th,
-            .summary-table td {
-                padding: 8px;
-                text-align: center;
-                border: 1px solid #ddd;
+            .rcpt-item-table th,
+            .rcpt-item-table td {
+                border: 1px solid #000;
+                padding: 6px 10px;
+                text-align: left;
             }
 
-            .summary-table th {
-                background: #eee !important;
+            .rcpt-item-table th {
+                background-color: #f0f0f0 !important;
                 -webkit-print-color-adjust: exact;
-            }
-
-            .highlight-bal {
-                color: #d9534f;
                 font-weight: bold;
-                font-size: 16px;
             }
 
             /* BROKER / PARTY STATEMENT */
@@ -668,110 +718,7 @@
             }
         }
 
-        /* --- Compact Dashboard Space Saving CSS --- */
-        body {
-            padding: 10px;
-        }
-
-        .container {
-            padding: 15px;
-        }
-
-        .top-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #e9f5e9;
-            border: 1px solid #4CAF50;
-            border-radius: 6px;
-            padding: 8px 15px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .top-controls-center {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            background: #fff;
-            padding: 5px 15px;
-            border-radius: 4px;
-            border: 1px dashed #4CAF50;
-        }
-
-        .top-controls-right {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .stat-text {
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        .stat-selected {
-            color: #007bff;
-        }
-
-        .stat-filtered {
-            color: #d9534f;
-        }
-
-        .filter-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 8px;
-            margin-bottom: 10px;
-            background: #fdfdfd;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-        }
-
-        .filter-section label {
-            margin-bottom: 2px;
-        }
-
-        .filter-section input,
-        .filter-section select {
-            padding: 6px;
-            font-size: 13px;
-        }
-
-        button.clear-btn {
-            background-color: #d9534f;
-            color: white;
-            border: none;
-            padding: 7px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-            margin-top: 0;
-        }
-
-        button.print-stmt-btn {
-            padding: 7px 12px;
-            font-size: 13px;
-        }
-
-        .totals-bar {
-            display: flex;
-            justify-content: flex-end;
-            gap: 20px;
-            align-items: center;
-            margin-bottom: 8px;
-            background: #f8f9fa;
-            padding: 8px 15px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-        }
-
-        /* =========================================
-           MOBILE RESPONSIVE DESIGN (Ugai Dashboard)
-           ========================================= */
+        /* --- MOBILE RESPONSIVE DESIGN --- */
         @media (max-width: 768px) {
             body {
                 padding: 5px;
@@ -827,7 +774,6 @@
                 grid-template-columns: 1fr 1fr;
             }
 
-            /* Payment Modal (Popup) Mobile Fixes */
             .modal-content {
                 width: 95%;
                 margin: 5% auto;
@@ -862,9 +808,17 @@
 
         <div class="top-controls">
             <div>
-                <label for="csvFileInput" style="font-weight: bold; margin-right: 5px; font-size: 13px;">Aaj ki
+                <label for="csvFileInput" style="font-weight: bold; margin-right: 5px; font-size: 13px;">1. Aaj ki
                     Excel/CSV:</label>
-                <input type="file" id="csvFileInput" accept=".csv" style="font-size: 12px; width: 180px;">
+                <input type="file" id="csvFileInput" accept=".csv, .xls, .xlsx" style="font-size: 12px; width: 180px;">
+            </div>
+
+            <div>
+                <label for="itemCsvFileInput"
+                    style="font-weight: bold; margin-right: 5px; font-size: 13px; color: #008CBA;">2. Item Detail
+                    CSV/Excel:</label>
+                <input type="file" id="itemCsvFileInput" accept=".csv, .xls, .xlsx"
+                    style="font-size: 12px; width: 180px;">
             </div>
 
             <div class="top-controls-center">
@@ -930,14 +884,51 @@
                 <span class="close-btn" onclick="closeModal()">&times;</span>
                 <h3>Receive Payment & Settlement</h3>
 
-                <div class="modal-info">
-                    Party: <b id="m-party" style="font-size: 16px;"></b><br>
-                    Bill Date: <b id="m-bill-date"></b> | Bill No: <b id="m-bill"></b><br>
-                    Original Due: <span id="m-due" style="font-size: 16px;"></span>
+                <div class="modal-info"
+                    style="border: 2px solid #000; background: #fff; padding: 15px; border-radius: 6px;">
+                    <div
+                        style="display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 8px; margin-bottom: 8px;">
+                        <span style="font-weight: bold; font-size: 15px; color: #d9534f;">B. N - <span
+                                id="m-broker"></span></span>
+                        <span style="font-weight: bold; font-size: 15px;">BILL NO - <span id="m-bill"></span></span>
+                    </div>
+
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="font-weight: bold; font-size: 18px; color: #0056b3;" id="m-party"></span>
+                        <span style="font-weight: bold; font-size: 15px;" id="m-bill-date"></span>
+                    </div>
+
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; background: #f4f7f6; padding: 8px; border-radius: 4px;">
+                        <span>Original Due Amount:</span>
+                        <span id="m-due" style="color: #d9534f; font-weight: bold; font-size: 16px;"></span>
+                    </div>
 
                     <div class="bill-age-box">
                         ⏱️ Bill is <span id="m-bill-age" style="font-size: 22px; color: #d84315;">0</span> Days Old
                     </div>
+                </div>
+
+                <div id="m-item-details"
+                    style="display:none; margin-top: 10px; background: #fff; border: 1px dashed #008CBA; padding: 10px; border-radius: 4px; max-height: 160px; overflow-y: auto;">
+                    <h4 style="margin-top: 0; margin-bottom: 5px; font-size: 13px; color: #0056b3;">📦 Bill ki Item
+                        Details:</h4>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;"
+                        id="m-item-table">
+                        <thead>
+                            <tr style="background:#f4f7f6; border-bottom: 1px solid #ccc;">
+                                <th>Item Name</th>
+                                <th>Nag</th>
+                                <th>Qty</th>
+                                <th>Rate</th>
+                                <!-- <th>Oth.Chg</th> -->
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="m-item-tbody">
+                        </tbody>
+                    </table>
                 </div>
 
                 <div class="radio-group">
@@ -1028,38 +1019,45 @@
 
     <div class="print-area" id="print-receipt-section">
         <div class="inner-border">
-            <div class="receipt-header">
-                <div class="voucher-title">RECEIPT VOUCHER</div>
+
+            <div class="rcpt-header">
+                <div class="rcpt-title">RECEIPT VOUCHER</div>
             </div>
 
-            <div class="top-row">
-                <div>No. : <span class="fill-blank" style="min-width: 100px;" id="r-voucherno"></span></div>
-                <div>Dated : <span class="fill-blank" style="min-width: 150px;" id="r-date"></span></div>
+            <div class="rcpt-row-top">
+                <div>Bill No. : <span id="r-bill-no"></span></div>
+                <div>Date : <span id="r-date"></span></div>
             </div>
 
-            <div class="body-text">
-                Received with thanks from <span class="fill-blank" style="width: 70%;" id="r-party"></span><br>
-                The sum of Indian Rupees <span class="fill-blank" style="width: 73%;" id="r-words"></span><br>
-                By Cash / Cheque / DD No. <span class="fill-blank" style="width: 40%;" id="r-mode-ref"></span>
-                Drawn on <span class="fill-blank" style="width: 26%;"></span><br>
-                Towards Payment of <span class="fill-blank" style="width: 78%;" id="r-bill"></span>
+            <div class="rcpt-body">
+                <div style="font-size: 14px; font-weight: bold; color: #000;" id="r-party"></div>
             </div>
 
-            <div class="footer-row">
-                <div class="amount-box">₹ <span id="r-amount-paid"></span> /-</div>
-                <div class="signatures">
-                    <div class="sig-line">Received By</div>
-                    <div class="sig-line">Authorised Signatory</div>
+            <table class="rcpt-item-table" id="r-item-table">
+                <thead>
+                    <tr>
+                        <th style="width: 30px; text-align: center;">S.no</th>
+                        <th>Item Name</th>
+                        <th>Nag</th>
+                        <th>Qty</th>
+                        <th>Rate</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="r-item-tbody">
+                </tbody>
+            </table>
+
+            <div class="rcpt-footer">
+                <div class="rcpt-amt-box">₹ <span id="r-amount-paid"></span> /-</div>
+                <div class="rcpt-sign">
+                    <br><br>
+                    Authorised Signatory
                 </div>
             </div>
 
-            <div class="account-summary">
-                <h4>Account Settlement Summary</h4>
-                <table class="summary-table" id="dynamic-summary-table"></table>
-            </div>
         </div>
     </div>
-
     <div class="print-area" id="print-statement-section">
         <div class="stmt-header">
             <h2 id="stmt-title">OUTSTANDING STATEMENT</h2>
@@ -1091,6 +1089,7 @@
         let currentPayParty = ""; let currentPayBill = ""; let currentPayDue = 0;
         let currentPayBillDateStr = ""; let currentOverdueDays = 0;
 
+        // Firebase Setup - Outstanding
         const outstandingDoc = doc(db, "erp", "outstanding");
 
         onSnapshot(outstandingDoc, (docSnap) => {
@@ -1101,6 +1100,22 @@
             }
             refreshUI();
         });
+
+        // Firebase Setup - Items Data
+        let allItemData = [];
+        const itemsDoc = doc(db, "erp", "billItems");
+
+        onSnapshot(itemsDoc, (docSnap) => {
+            if (docSnap.exists()) {
+                allItemData = docSnap.data().data || [];
+            } else {
+                allItemData = [];
+            }
+        });
+
+        async function saveItemsToStorage() {
+            await setDoc(itemsDoc, { data: allItemData });
+        }
 
         function refreshUI() {
             let brokers = new Set();
@@ -1127,13 +1142,58 @@
             await setDoc(outstandingDoc, { data: allData });
         }
 
+
+        // ==========================================
+        // SMART EXCEL & CSV UPLOAD LOGIC
+        // ==========================================
+
         document.getElementById('csvFileInput').addEventListener('change', function (e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function (e) { processCSV(e.target.result); };
-            reader.readAsText(file);
+            handleFileUpload(e.target.files[0], processCSV);
         });
+
+        document.getElementById('itemCsvFileInput').addEventListener('change', function (e) {
+            handleFileUpload(e.target.files[0], processItemCSV);
+        });
+
+        function handleFileUpload(file, processFunction) {
+            if (!file) return;
+
+            if (file.name.toLowerCase().match(/\.(xlsx|xls)$/)) {
+                readAsExcel(file, processFunction);
+            } else {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    let text = event.target.result;
+                    if (text.includes('[Content_Types]') || text.includes('PK\x03\x04')) {
+                        readAsExcel(file, processFunction);
+                    } else {
+                        processFunction(text);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function readAsExcel(file, processFunction) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                try {
+                    const data = new Uint8Array(event.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.SheetNames[0];
+                    const csvText = XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheet]);
+                    processFunction(csvText);
+                } catch (err) {
+                    alert("❌ Excel file padhne me dikkat aayi. Kripya file check karein.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+
+        // ==========================================
+        // PROCESS OUTSTANDING DATA
+        // ==========================================
 
         function formatToStandardDate(ddmmyy) {
             if (!ddmmyy) return "";
@@ -1174,10 +1234,110 @@
                     }
                 }
             }
+            // File padhne wale loop ke baad ka code
+            if (tempAllData.length > 0) {
+                // --- OPTION 2: SMART MERGE LOGIC FOR OUTSTANDING ---
 
-            allData = tempAllData;
-            saveToStorage();
+                let newOsBillNumbers = new Set(tempAllData.map(row => row.billNo));
+                let filteredOldOsData = allData.filter(row => !newOsBillNumbers.has(row.billNo));
+
+                allData = [...filteredOldOsData, ...tempAllData];
+                saveToStorage();
+
+                alert("✅ Outstanding data successfully UPDATE ho gaya!\n\nNaye/Updated Bills: " + tempAllData.length + "\nTotal Outstanding Bills: " + allData.length);
+            }
         }
+        }
+
+        // ==========================================
+        // PROCESS ITEM DETAILS DATA
+        // ==========================================
+
+        function processItemCSV(csvText) {
+            let separator = csvText.includes('\t') ? '\t' : ',';
+            const lines = csvText.split('\n');
+            let tempItems = [];
+            let headerFound = false;
+            let colIndex = {};
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                const columns = line.split(separator);
+                let lowerLine = line.toLowerCase();
+
+                if (!headerFound && lowerLine.includes('bill') && lowerLine.includes('item')) {
+                    headerFound = true;
+                    columns.forEach((col, index) => {
+                        let colName = col.trim().toLowerCase();
+
+                        if (colName.includes("bill")) colIndex.billNo = index;
+                        else if (colName.includes("item")) colIndex.itemName = index;
+                        else if (colName.includes("nag")) colIndex.nag = index;
+                        else if (colName.includes("qty") || colName.includes("quantity")) colIndex.qty = index;
+                        else if (colName.includes("rate") || colName.includes("price")) colIndex.rate = index;
+
+                        // NAYA: Sirf aur sirf 'Oth.Chg.BT Amount' (Column I) ko target karega
+                        else if (colName.includes("oth.chg.bt") || colName.includes("bt amount")) {
+                            colIndex.other = index;
+                        }
+
+                        // Main Amount ke liye (Baaki 'Oth.Chg' wale columns ko ignore karega)
+                        else if (colName.includes("amount") || colName.includes("exempt")) {
+                            if (!colName.includes("bt") && !colName.includes("oth.chg") && colIndex.amount === undefined) {
+                                colIndex.amount = index;
+                            }
+                        }
+                    });
+                    continue;
+                }
+
+                if (headerFound) {
+                    if (colIndex.billNo === undefined || !columns[colIndex.billNo]) continue;
+
+                    let billNoStr = columns[colIndex.billNo].trim().replace(/^["']|["']$/g, '');
+                    if (billNoStr === "") continue;
+                    if (billNoStr.endsWith(".0")) billNoStr = billNoStr.slice(0, -2);
+
+                    let otherChg = colIndex.other !== undefined && columns[colIndex.other] ? columns[colIndex.other].trim() : "";
+
+                    tempItems.push({
+                        billNo: billNoStr,
+                        itemName: colIndex.itemName !== undefined && columns[colIndex.itemName] ? columns[colIndex.itemName].trim().replace(/^["']|["']$/g, '') : "",
+                        nag: colIndex.nag !== undefined && columns[colIndex.nag] ? columns[colIndex.nag].trim() : "",
+                        qty: colIndex.qty !== undefined && columns[colIndex.qty] ? columns[colIndex.qty].trim() : "",
+                        rate: colIndex.rate !== undefined && columns[colIndex.rate] ? columns[colIndex.rate].trim() : "",
+                        amount: colIndex.amount !== undefined && columns[colIndex.amount] ? columns[colIndex.amount].trim() : "",
+                        other: otherChg
+                    });
+                }
+            }
+
+            if (tempItems.length > 0) {
+                // --- OPTION 2: SMART MERGE LOGIC (No Duplicates) ---
+
+                // 1. Nayi file me aaye hue saare Bill Numbers ki ek list bana lo
+                let newBillNumbers = new Set(tempItems.map(item => item.billNo));
+
+                // 2. Purane data me se wo bills nikal do jo nayi file me dobara aaye hain
+                let filteredOldData = allItemData.filter(item => !newBillNumbers.has(item.billNo));
+
+                // 3. Ab bache hue purane data me naya data jod do
+                allItemData = [...filteredOldData, ...tempItems];
+
+                saveItemsToStorage();
+                alert("✅ Sales Items successfully UPDATE ho gaye!\n\nNaye jode gaye Items: " + tempItems.length + "\nTotal Items in System: " + allItemData.length);
+            } else {
+                alert("❌ ERROR: 0 Items mile!\n\nKripya Check Karein:\n1. Kahin galti se Outstanding wali file toh nahi chun li?\n2. Kya file me 'Bill' aur 'Item' ki heading maujood hai?");
+            }
+        }
+        }
+
+
+        // ==========================================
+        // UI & FILTER LOGIC
+        // ==========================================
 
         function applyFilters() {
             let fParty = document.getElementById("f-party").value.toLowerCase();
@@ -1277,7 +1437,7 @@
                     <td>${entry.broker}</td>
                     <td style="color: #d9534f; font-weight: bold;">₹${entry.amount.toLocaleString('en-IN')}</td>
                     <td class="action-cell">
-                        <button class="pay-btn" tabindex="-1" onclick="openPaymentModal('${jsSafeName}', '${entry.billNo}', ${entry.amount}, '${entry.dateVal}', '${entry.displayDate}')">Receive Payment</button>
+                        <button class="pay-btn" tabindex="-1" onclick="openPaymentModal('${jsSafeName}', '${entry.billNo}', ${entry.amount}, '${entry.dateVal}', '${entry.displayDate}', '${entry.broker}')">Receive Payment</button>
                         <button class="hide-btn" tabindex="-1" title="Bill temporary hide karein" onclick="hideBill('${entry.billNo}')">👁️ Hide</button>
                     </td>
                 </tr>
@@ -1287,6 +1447,120 @@
             document.getElementById("totalOutstanding").innerText = total.toLocaleString('en-IN');
         }
 
+
+        // ==========================================
+        // PAYMENT MODAL & ITEM MATCHING
+        // ==========================================
+
+        function openPaymentModal(name, billNo, dueAmount, dateVal, displayDate, brokerName) {
+            currentPayParty = name; currentPayBill = billNo; currentPayDue = dueAmount; currentPayBillDateStr = dateVal;
+            let bDate = new Date(dateVal); let today = new Date(); bDate.setHours(0, 0, 0, 0); today.setHours(0, 0, 0, 0);
+            let totalAgeDays = today > bDate ? Math.floor((today - bDate) / (1000 * 60 * 60 * 24)) : 0;
+
+            document.getElementById("m-broker").innerText = (brokerName && brokerName !== "-") ? brokerName.toUpperCase() : "DIRECT";
+            document.getElementById("m-bill").innerText = billNo;
+            document.getElementById("m-party").innerText = name;
+            document.getElementById("m-bill-date").innerText = displayDate;
+            document.getElementById("m-due").innerText = "₹" + dueAmount.toLocaleString('en-IN');
+            document.getElementById("m-bill-age").innerText = totalAgeDays;
+
+            // --- SMART ITEM MATCHING (UPDATED FOR @SI-SL/002310 & DRY-150) ---
+            let origBillFull = String(billNo).trim().toUpperCase();
+            let cleanOrigBill = origBillFull;
+
+            // Logic: Agar '/' hai toh last wala hissa lo, agar '-' hai toh beech wala hissa lo
+            if (origBillFull.includes('/')) {
+                // @SI-SL/002310 me se 002310 nikalega aur fir aage ke 0 hatayega
+                cleanOrigBill = origBillFull.split('/').pop().replace(/^0+/, '');
+            } else if (origBillFull.includes('-')) {
+                // DRY-150-25-26 me se 150 nikalega
+                let parts = origBillFull.split('-');
+                if (parts.length > 1) {
+                    cleanOrigBill = parts[1].replace(/^0+/, '');
+                }
+            } else {
+                // Agar normal number hai (jaise 002310) toh sirf aage ke 0 hatayega
+                cleanOrigBill = origBillFull.replace(/^0+/, '');
+            }
+
+            let matchedItems = allItemData.filter(item => {
+                let itemCleanBill = String(item.billNo).trim().toUpperCase().replace(/^0+/, '');
+
+                return itemCleanBill === cleanOrigBill ||
+                    origBillFull === itemCleanBill ||
+                    origBillFull.includes("/" + itemCleanBill) ||
+                    origBillFull.includes("-" + itemCleanBill + "-") ||
+                    origBillFull.endsWith(itemCleanBill);
+            });
+
+            let itemDiv = document.getElementById("m-item-details");
+            let itemTbody = document.getElementById("m-item-tbody");
+            itemTbody.innerHTML = "";
+
+            itemDiv.style.display = "block";
+
+            if (matchedItems.length > 0) {
+                let totalOther = 0;
+                let totalItemAmount = 0; // Sirf items ka total
+
+                matchedItems.forEach(item => {
+                    totalOther += parseFloat(item.other) || 0;
+
+                    // Amount me se comma hatakar number me badalna
+                    let amtVal = String(item.amount).replace(/,/g, '');
+                    totalItemAmount += parseFloat(amtVal) || 0;
+
+                    itemTbody.innerHTML += `
+                        <tr>
+                            <td style="border-bottom: 1px solid #eee; padding: 4px;"><b>${item.itemName}</b></td>
+                            <td style="border-bottom: 1px solid #eee; padding: 4px;">${item.nag}</td>
+                            <td style="border-bottom: 1px solid #eee; padding: 4px; color: #0056b3;">${item.qty}</td>
+                            <td style="border-bottom: 1px solid #eee; padding: 4px;">₹${item.rate}</td>
+                            <td style="border-bottom: 1px solid #eee; padding: 4px; font-weight: bold;">₹${item.amount}</td>
+                        </tr>`;
+                });
+
+                // Final Net Amount calculation
+                let netAmount = totalItemAmount + totalOther;
+
+                // 1. Item Total Row (Sirf Amount ka total dikhega)
+                itemTbody.innerHTML += `
+                    <tr style="border-top: 2px solid #ccc; background-color: #fdfdfd;">
+                        <td colspan="4" style="padding: 6px; text-align: right; font-weight: bold; color: #555;">Total:</td>
+                        <td style="padding: 6px; font-weight: bold; color: #333;">₹${totalItemAmount.toLocaleString('en-IN')}</td>
+                    </tr>`;
+
+                // 2. Other Charges Row
+                itemTbody.innerHTML += `
+                    <tr>
+                        <td colspan="4" style="padding: 4px 6px; text-align: right; font-weight: bold; color: #d84315;">Other Charges (+):</td>
+                        <td style="padding: 4px 6px; font-weight: bold; color: #d84315;">₹${totalOther.toLocaleString('en-IN')}</td>
+                    </tr>`;
+
+                // 3. Net Amount Row (Grand Total)
+                itemTbody.innerHTML += `
+                    <tr style="background-color: #e9f5e9; border-top: 2px solid #4CAF50;">
+                        <td colspan="4" style="padding: 8px 6px; text-align: right; font-weight: bold; color: #28a745; font-size: 13px;">NET AMOUNT:</td>
+                        <td style="padding: 8px 6px; font-weight: bold; color: #d9534f; font-size: 14px;">₹${netAmount.toLocaleString('en-IN')}</td>
+                    </tr>`;
+
+            } else {
+                itemTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#d9534f; padding:10px;">Is bill ki details nahi mili. Kripya check karein ki kya ye bill 'Item Detail CSV' file mein maujood hai?</td></tr>`;
+            }
+            // --- MATCHING CODE END ---
+
+            // Reset Fields
+            document.querySelector('input[value="none"]').checked = true; document.getElementById("m-credit-days").value = "0";
+            document.getElementById("m-int-rate").value = "0"; document.getElementById("m-interest").value = "0";
+            document.getElementById("m-discount").value = "0"; document.getElementById("m-disc-percent").value = "";
+            document.getElementById("m-overdue-info").innerText = "Interest for: 0 Days";
+            document.getElementById("m-received").value = dueAmount; document.getElementById("m-ref").value = ""; document.getElementById("m-mode").value = "Cash";
+
+            toggleAdjustment(); document.getElementById("paymentModal").style.display = "block";
+        }
+
+        function closeModal() { document.getElementById("paymentModal").style.display = "none"; }
+
         function showPartyDetails(partyName) {
             document.getElementById("pd-title").innerText = partyName + " - All Outstanding Bills";
             let tbody = document.getElementById("pd-table-body");
@@ -1294,7 +1568,6 @@
             let total = 0;
 
             let partyBills = allData.filter(row => row.name === partyName && !row.hidden);
-
             partyBills.sort((a, b) => (a.dateVal > b.dateVal) ? 1 : -1);
 
             if (partyBills.length === 0) {
@@ -1310,7 +1583,7 @@
                             <td>${bill.billNo}</td>
                             <td style="color: #d9534f; font-weight: bold; text-align: right;">₹${bill.amount.toLocaleString('en-IN')}</td>
                             <td style="text-align: center;">
-                                <button class="pay-btn" onclick="closePartyDetailsModal(); openPaymentModal('${jsSafeName}', '${bill.billNo}', ${bill.amount}, '${bill.dateVal}', '${bill.displayDate}')">Pay</button>
+                                <button class="pay-btn" onclick="closePartyDetailsModal(); openPaymentModal('${jsSafeName}', '${bill.billNo}', ${bill.amount}, '${bill.dateVal}', '${bill.displayDate}', '${bill.broker}')">Pay</button>
                             </td>
                         </tr>
                     `;
@@ -1381,26 +1654,6 @@
             document.getElementById("live-total").innerText = "₹" + finalDue.toLocaleString('en-IN');
             document.getElementById("m-received").value = finalDue;
         }
-
-        function openPaymentModal(name, billNo, dueAmount, dateVal, displayDate) {
-            currentPayParty = name; currentPayBill = billNo; currentPayDue = dueAmount; currentPayBillDateStr = dateVal;
-            let bDate = new Date(dateVal); let today = new Date(); bDate.setHours(0, 0, 0, 0); today.setHours(0, 0, 0, 0);
-            let totalAgeDays = today > bDate ? Math.floor((today - bDate) / (1000 * 60 * 60 * 24)) : 0;
-
-            document.getElementById("m-party").innerText = name; document.getElementById("m-bill").innerText = billNo;
-            document.getElementById("m-bill-date").innerText = displayDate; document.getElementById("m-due").innerText = "₹" + dueAmount.toLocaleString('en-IN');
-            document.getElementById("m-bill-age").innerText = totalAgeDays;
-
-            document.querySelector('input[value="none"]').checked = true; document.getElementById("m-credit-days").value = "0";
-            document.getElementById("m-int-rate").value = "0"; document.getElementById("m-interest").value = "0";
-            document.getElementById("m-discount").value = "0"; document.getElementById("m-disc-percent").value = "";
-            document.getElementById("m-overdue-info").innerText = "Interest for: 0 Days";
-            document.getElementById("m-received").value = dueAmount; document.getElementById("m-ref").value = ""; document.getElementById("m-mode").value = "Cash";
-
-            toggleAdjustment(); document.getElementById("paymentModal").style.display = "block";
-        }
-
-        function closeModal() { document.getElementById("paymentModal").style.display = "none"; }
 
         function numberToWords(num) {
             if (num === 0) return "Zero";
@@ -1489,54 +1742,103 @@
             let adjType = document.querySelector('input[name="adj_type"]:checked').value;
             let interestAmount = adjType === 'interest' ? (parseFloat(document.getElementById("m-interest").value) || 0) : 0;
             let discountAmount = adjType === 'discount' ? (parseFloat(document.getElementById("m-discount").value) || 0) : 0;
-            let mode = document.getElementById("m-mode").value; let ref = document.getElementById("m-ref").value;
 
             if (isNaN(receivedAmount) || receivedAmount <= 0) { alert("Kripya sahi receive amount daalein."); return; }
 
-            let finalDue = currentPayDue + interestAmount - discountAmount;
-            let newBalance = finalDue - receivedAmount;
             let today = new Date(); let dateOnly = today.getDate() + "/" + (today.getMonth() + 1) + "/" + today.getFullYear();
 
-            document.getElementById("r-voucherno").innerText = receiptCounter;
+            // Values set karna (Faltu details hata di gayi hain)
+            document.getElementById("r-bill-no").innerText = currentPayBill;
             document.getElementById("r-date").innerText = dateOnly;
-            document.getElementById("r-party").innerText = " " + currentPayParty.toUpperCase();
-            document.getElementById("r-words").innerText = " " + numberToWords(receivedAmount);
-
-            let modeRefText = " " + mode; if (ref.trim() !== "") modeRefText += " (Ref: " + ref + ")";
-            document.getElementById("r-mode-ref").innerText = modeRefText;
-
-            let billText = " Bill No: " + currentPayBill;
-            if (interestAmount > 0) billText += " (With Late Fee)";
-            if (discountAmount > 0) billText += " (With Cash Discount)";
-            document.getElementById("r-bill").innerText = billText;
+            document.getElementById("r-party").innerText = "M/S: " + currentPayParty.toUpperCase();
             document.getElementById("r-amount-paid").innerText = receivedAmount.toLocaleString('en-IN');
 
-            let summaryTable = document.getElementById("dynamic-summary-table");
-            let tableHTML = `
-            <tr>
-                <th>Original Due</th>
-                ${adjType === 'interest' && interestAmount > 0 ? '<th>Late Fee (+)</th>' : ''}
-                ${adjType === 'discount' && discountAmount > 0 ? '<th>Discount (-)</th>' : ''}
-                <th>Total Payable</th>
-                <th>Amount Paid Now</th>
-                <th>Balance Left</th>
-            </tr>
-            <tr>
-                <td>₹ ${currentPayDue.toLocaleString('en-IN')}</td>
-                ${adjType === 'interest' && interestAmount > 0 ? `<td style="color: #d9534f; font-weight: bold;">+ ₹ ${interestAmount.toLocaleString('en-IN')}<br><span style="font-size: 11px; font-weight: normal; color: #555;">(for ${currentOverdueDays} Days)</span></td>` : ''}
-                ${adjType === 'discount' && discountAmount > 0 ? `<td style="color: #28a745; font-weight: bold;">- ₹ ${discountAmount.toLocaleString('en-IN')}</td>` : ''}
-                <td style="font-weight: bold; background-color: #fcfcfc;">₹ ${finalDue.toLocaleString('en-IN')}</td>
-                <td style="color: #28a745; font-weight: bold;">- ₹ ${receivedAmount.toLocaleString('en-IN')}</td>
-                <td class="highlight-bal">₹ ${newBalance.toLocaleString('en-IN')}</td>
-            </tr>`;
-            summaryTable.innerHTML = tableHTML;
+            // --- SMART ITEM MATCHING FOR RECEIPT ---
+            let origBillFull = String(currentPayBill).trim().toUpperCase();
+            let cleanOrigBill = origBillFull;
+            if (origBillFull.includes('/')) cleanOrigBill = origBillFull.split('/').pop().replace(/^0+/, '');
+            else if (origBillFull.includes('-')) {
+                let parts = origBillFull.split('-');
+                if (parts.length > 1) cleanOrigBill = parts[1].replace(/^0+/, '');
+            } else cleanOrigBill = origBillFull.replace(/^0+/, '');
+
+            let matchedItems = allItemData.filter(item => {
+                let itemCleanBill = String(item.billNo).trim().toUpperCase().replace(/^0+/, '');
+                return itemCleanBill === cleanOrigBill || origBillFull === itemCleanBill ||
+                    origBillFull.includes("/" + itemCleanBill) || origBillFull.includes("-" + itemCleanBill + "-") || origBillFull.endsWith(itemCleanBill);
+            });
+
+            // TABLE MEIN DATA BHARNA
+            let rTbody = document.getElementById("r-item-tbody");
+            rTbody.innerHTML = "";
+
+            if (matchedItems.length > 0) {
+                let totalOther = 0; let totalItemAmount = 0;
+
+                matchedItems.forEach((item, index) => {
+                    totalOther += parseFloat(item.other) || 0;
+                    let amtVal = String(item.amount).replace(/,/g, '');
+                    totalItemAmount += parseFloat(amtVal) || 0;
+
+                    rTbody.innerHTML += `
+                        <tr>
+                            <td style="text-align: center;">${index + 1}</td>
+                            <td><b>${item.itemName}</b></td>
+                            <td>${item.nag}</td>
+                            <td>${item.qty}</td>
+                            <td>₹${item.rate}</td>
+                            <td style="font-weight: bold;">₹${item.amount}</td>
+                        </tr>`;
+                });
+
+                let netAmount = totalItemAmount + totalOther;
+
+                // Totals Row
+                rTbody.innerHTML += `
+                    <tr>
+                        <td colspan="5" style="text-align: right; font-weight: bold;">Total:</td>
+                        <td style="font-weight: bold;">₹${totalItemAmount.toLocaleString('en-IN')}</td>
+                    </tr>`;
+
+                if (totalOther > 0) {
+                    rTbody.innerHTML += `
+                        <tr>
+                            <td colspan="5" style="text-align: right; font-weight: bold; color: #d84315 !important;-webkit-print-color-adjust: exact;">Other Charges (+):</td>
+                            <td style="font-weight: bold; color: #d84315 !important;-webkit-print-color-adjust: exact;">₹${totalOther.toLocaleString('en-IN')}</td>
+                        </tr>`;
+                }
+
+                if (interestAmount > 0) {
+                    netAmount += interestAmount;
+                    rTbody.innerHTML += `
+                        <tr>
+                            <td colspan="5" style="text-align: right; font-weight: bold;">Late Fee Interest (+):</td>
+                            <td style="font-weight: bold;">₹${interestAmount.toLocaleString('en-IN')}</td>
+                        </tr>`;
+                }
+                if (discountAmount > 0) {
+                    netAmount -= discountAmount;
+                    rTbody.innerHTML += `
+                        <tr>
+                            <td colspan="5" style="text-align: right; font-weight: bold;">Discount (-):</td>
+                            <td style="font-weight: bold;">- ₹${discountAmount.toLocaleString('en-IN')}</td>
+                        </tr>`;
+                }
+
+                rTbody.innerHTML += `
+                    <tr style="background-color: #f4f7f6 !important; -webkit-print-color-adjust: exact;">
+                        <td colspan="5" style="text-align: right; font-weight: bold; font-size: 12px;">NET AMOUNT:</td>
+                        <td style="font-weight: bold; font-size: 16px;">₹${netAmount.toLocaleString('en-IN')}</td>
+                    </tr>`;
+            } else {
+                rTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 10px;">Item details are not available for this bill.</td></tr>`;
+            }
 
             document.getElementById("print-statement-section").classList.remove("active");
             document.getElementById("print-receipt-section").classList.add("active");
 
             receiptCounter++; closeModal(); window.print();
         }
-
         function calculateSelectedTotal() {
             let checkboxes = document.querySelectorAll('.row-checkbox:checked');
             let total = 0;
@@ -1570,45 +1872,30 @@
         }
 
         document.addEventListener('keydown', function (event) {
-
-            // --- NAYA CODE: Esc button se popup band karne ke liye ---
             if (event.key === 'Escape' || event.key === 'Esc') {
                 let paymentModal = document.getElementById("paymentModal");
                 let partyDetailsModal = document.getElementById("partyDetailsModal");
 
-                if (paymentModal && paymentModal.style.display === "block") {
-                    closeModal();
-                }
-                if (partyDetailsModal && partyDetailsModal.style.display === "block") {
-                    closePartyDetailsModal();
-                }
+                if (paymentModal && paymentModal.style.display === "block") closeModal();
+                if (partyDetailsModal && partyDetailsModal.style.display === "block") closePartyDetailsModal();
             }
-            // ---------------------------------------------------------
 
             let activeRow = document.activeElement;
-
             if (activeRow && activeRow.classList.contains('keyboard-row')) {
                 if (event.key === 'ArrowDown') {
                     event.preventDefault();
                     let nextRow = activeRow.nextElementSibling;
-                    if (nextRow && nextRow.classList.contains('keyboard-row')) {
-                        nextRow.focus();
-                    }
+                    if (nextRow && nextRow.classList.contains('keyboard-row')) nextRow.focus();
                 }
                 else if (event.key === 'ArrowUp') {
                     event.preventDefault();
                     let prevRow = activeRow.previousElementSibling;
-                    if (prevRow && prevRow.classList.contains('keyboard-row')) {
-                        prevRow.focus();
-                    }
+                    if (prevRow && prevRow.classList.contains('keyboard-row')) prevRow.focus();
                 }
                 else if (event.key === ' ') {
                     event.preventDefault();
                     let checkbox = activeRow.querySelector('.row-checkbox');
-                    if (checkbox) {
-                        checkbox.checked = !checkbox.checked;
-                        calculateSelectedTotal();
-                    }
+                    if (checkbox) { checkbox.checked = !checkbox.checked; calculateSelectedTotal(); }
                 }
                 else if (event.key === 'Enter') {
                     event.preventDefault();
@@ -1621,6 +1908,7 @@
             }
         });
 
+        // Global Bindings
         window.calculateSelectedTotal = calculateSelectedTotal;
         window.toggleSelectAll = toggleSelectAll;
         window.applyFilters = applyFilters;
@@ -1637,7 +1925,6 @@
         window.updateLiveTotal = updateLiveTotal;
         window.printStatement = printStatement;
         window.generateReceipt = generateReceipt;
-
         window.showPartyDetails = showPartyDetails;
         window.closePartyDetailsModal = closePartyDetailsModal;
 
