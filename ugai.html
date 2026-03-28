@@ -1377,6 +1377,7 @@
             document.getElementById("m-bill-age").innerText = totalAgeDays;
 
             // --- SMART ITEM MATCHING ---
+            // --- SMART ITEM MATCHING ---
             let origBillFull = String(billNo).trim().toUpperCase();
             let cleanOrigBill = origBillFull;
 
@@ -1384,21 +1385,24 @@
                 cleanOrigBill = origBillFull.split('/').pop().replace(/^0+/, '');
             } else if (origBillFull.includes('-')) {
                 let parts = origBillFull.split('-');
-                if (parts.length > 1) {
-                    cleanOrigBill = parts[1].replace(/^0+/, '');
-                }
+                if (parts.length > 1) cleanOrigBill = parts[1].replace(/^0+/, '');
             } else {
                 cleanOrigBill = origBillFull.replace(/^0+/, '');
             }
 
             let matchedItems = allItemData.filter(item => {
-                let itemCleanBill = String(item.billNo).trim().toUpperCase().replace(/^0+/, '');
+                let itemFull = String(item.billNo).trim().toUpperCase();
+                let itemClean = itemFull;
 
-                return itemCleanBill === cleanOrigBill ||
-                    origBillFull === itemCleanBill ||
-                    origBillFull.includes("/" + itemCleanBill) ||
-                    origBillFull.includes("-" + itemCleanBill + "-") ||
-                    origBillFull.endsWith(itemCleanBill);
+                // Item wali file me bhi agar / ya - ho toh usko bhi saaf kar lo
+                if (itemFull.includes('/')) itemClean = itemFull.split('/').pop().replace(/^0+/, '');
+                else if (itemFull.includes('-')) {
+                    let parts = itemFull.split('-');
+                    if (parts.length > 1) itemClean = parts[1].replace(/^0+/, '');
+                } else itemClean = itemFull.replace(/^0+/, '');
+
+                // NAYA RULE: Sirf wahi item aayega jiska main number ekdum exact match karega (No partial matching)
+                return cleanOrigBill === itemClean;
             });
 
             let itemDiv = document.getElementById("m-item-details");
@@ -1644,16 +1648,27 @@
             // SMART MATCHING
             let origBillFull = String(currentPayBill).trim().toUpperCase();
             let cleanOrigBill = origBillFull;
-            if (origBillFull.includes('/')) cleanOrigBill = origBillFull.split('/').pop().replace(/^0+/, '');
-            else if (origBillFull.includes('-')) {
+
+            if (origBillFull.includes('/')) {
+                cleanOrigBill = origBillFull.split('/').pop().replace(/^0+/, '');
+            } else if (origBillFull.includes('-')) {
                 let parts = origBillFull.split('-');
                 if (parts.length > 1) cleanOrigBill = parts[1].replace(/^0+/, '');
-            } else cleanOrigBill = origBillFull.replace(/^0+/, '');
+            } else {
+                cleanOrigBill = origBillFull.replace(/^0+/, '');
+            }
 
             let matchedItems = allItemData.filter(item => {
-                let itemCleanBill = String(item.billNo).trim().toUpperCase().replace(/^0+/, '');
-                return itemCleanBill === cleanOrigBill || origBillFull === itemCleanBill ||
-                    origBillFull.includes("/" + itemCleanBill) || origBillFull.includes("-" + itemCleanBill + "-") || origBillFull.endsWith(itemCleanBill);
+                let itemFull = String(item.billNo).trim().toUpperCase();
+                let itemClean = itemFull;
+
+                if (itemFull.includes('/')) itemClean = itemFull.split('/').pop().replace(/^0+/, '');
+                else if (itemFull.includes('-')) {
+                    let parts = itemFull.split('-');
+                    if (parts.length > 1) itemClean = parts[1].replace(/^0+/, '');
+                } else itemClean = itemFull.replace(/^0+/, '');
+
+                return cleanOrigBill === itemClean;
             });
 
             // FILL TABLE
