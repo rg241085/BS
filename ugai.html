@@ -962,10 +962,17 @@
             <div style="display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center;">
                 <span style="font-weight: bold; color: #555; font-size: 15px;">Total Items in System: <span
                         id="total-items-count" style="color: #d9534f; font-size: 18px;">0</span></span>
-                <button onclick="clearAllItems()"
-                    style="background-color: #d9534f; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;">🗑️
-                    Delete All Items</button>
+                <div>
+                    <button onclick="syncItemsWithOutstanding()"
+                        style="background-color: #17a2b8; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; margin-right: 5px;">🔄
+                        Auto-Clean (Sync)</button>
+                    <button onclick="clearAllItems()"
+                        style="background-color: #d9534f; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;">🗑️
+                        Delete All</button>
+                </div>
             </div>
+            <div id="uploaded-periods-list"
+                style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; margin-top: 10px;"></div>
 
             <div class="table-container"
                 style="max-height: 450px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
@@ -983,6 +990,32 @@
                     <tbody id="items-table-body">
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+    <div id="periodModal" class="modal" style="z-index: 200;">
+        <div class="modal-content" style="width: 420px;">
+            <h3 style="color: #008CBA; margin-top: 0; border-bottom: 1px solid #ddd; padding-bottom: 10px;">📅 Select
+                Period</h3>
+            <p style="font-size: 13px; color: #555; font-weight: bold;">Ye Item Excel file kis period ki hai?</p>
+
+            <div style="display: flex; gap: 15px; margin-top: 15px;">
+                <div style="flex: 1;">
+                    <label>Start Date:</label>
+                    <input type="date" id="p-start" style="width: 100%; padding: 8px; margin-top: 5px;">
+                </div>
+                <div style="flex: 1;">
+                    <label>End Date:</label>
+                    <input type="date" id="p-end" style="width: 100%; padding: 8px; margin-top: 5px;">
+                </div>
+            </div>
+
+            <div style="margin-top: 25px; text-align: right;">
+                <button onclick="cancelPeriod()"
+                    style="background: #ccc; color: black; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-right: 10px; font-weight: bold;">Cancel</button>
+                <button onclick="confirmPeriod()"
+                    style="background: #4CAF50; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">✔️
+                    Confirm & Upload</button>
             </div>
         </div>
     </div>
@@ -1048,9 +1081,12 @@
         let currentPayParty = ""; let currentPayBill = ""; let currentPayDue = 0;
         let currentPayBillDateStr = ""; let currentOverdueDays = 0;
 
-        // Firebase Setup - Outstanding
-        const outstandingDoc = doc(db, "erp", "outstanding");
+        // ==========================================
+        // FIREBASE SETUP
+        // ==========================================
 
+        // 1. Outstanding Data
+        const outstandingDoc = doc(db, "erp", "outstanding");
         onSnapshot(outstandingDoc, (docSnap) => {
             if (docSnap.exists()) {
                 allData = docSnap.data().data || [];
@@ -1060,20 +1096,29 @@
             refreshUI();
         });
 
-        // Firebase Setup - Items Data
+        // 2. Items Data & Periods
         let allItemData = [];
-        const itemsDoc = doc(db, "erp", "billItems");
+        let uploadedPeriods = [];
+        let pendingItemFile = null;
 
+        const itemsDoc = doc(db, "erp", "billItems");
         onSnapshot(itemsDoc, (docSnap) => {
             if (docSnap.exists()) {
-                allItemData = docSnap.data().data || [];
+                let dbData = docSnap.data();
+                allItemData = dbData.data || [];
+                uploadedPeriods = dbData.periods || [];
             } else {
                 allItemData = [];
+                uploadedPeriods = [];
             }
         });
 
         async function saveItemsToStorage() {
-            await setDoc(itemsDoc, { data: allItemData });
+            await setDoc(itemsDoc, { data: allItemData, periods: uploadedPeriods });
+        }
+
+        async function saveToStorage() {
+            await setDoc(outstandingDoc, { data: allData });
         }
 
         function refreshUI() {
@@ -1097,21 +1142,20 @@
             applyFilters();
         }
 
-        async function saveToStorage() {
-            await setDoc(outstandingDoc, { data: allData });
-        }
-
-
         // ==========================================
-        // SMART EXCEL & CSV UPLOAD LOGIC
+        // EXCEL & CSV UPLOAD LOGIC (WITH PERIOD ASK)
         // ==========================================
 
         document.getElementById('csvFileInput').addEventListener('change', function (e) {
             handleFileUpload(e.target.files[0], processCSV);
         });
 
+        // Item CSV ke liye naya Listener jo pehle Date poochega
         document.getElementById('itemCsvFileInput').addEventListener('change', function (e) {
-            handleFileUpload(e.target.files[0], processItemCSV);
+            if (e.target.files.length > 0) {
+                pendingItemFile = e.target.files[0];
+                document.getElementById("periodModal").style.display = "block";
+            }
         });
 
         function handleFileUpload(file, processFunction) {
@@ -1147,6 +1191,43 @@
                 }
             };
             reader.readAsArrayBuffer(file);
+        }
+
+        // ==========================================
+        // PERIOD MODAL FUNCTIONS
+        // ==========================================
+
+        function cancelPeriod() {
+            document.getElementById("periodModal").style.display = "none";
+            document.getElementById('itemCsvFileInput').value = "";
+            pendingItemFile = null;
+        }
+
+        function confirmPeriod() {
+            let start = document.getElementById("p-start").value;
+            let end = document.getElementById("p-end").value;
+
+            if (!start || !end) {
+                alert("❌ Kripya Start Date aur End Date dono select karein.");
+                return;
+            }
+
+            let sDate = new Date(start); let eDate = new Date(end);
+            let sStr = sDate.getDate() + "-" + (sDate.getMonth() + 1) + "-" + sDate.getFullYear();
+            let eStr = eDate.getDate() + "-" + (eDate.getMonth() + 1) + "-" + eDate.getFullYear();
+            let periodStr = sStr + " to " + eStr + " tak";
+
+            if (!uploadedPeriods.includes(periodStr)) {
+                uploadedPeriods.push(periodStr);
+            }
+
+            document.getElementById("periodModal").style.display = "none";
+            handleFileUpload(pendingItemFile, processItemCSV);
+
+            pendingItemFile = null;
+            document.getElementById('itemCsvFileInput').value = "";
+            document.getElementById("p-start").value = "";
+            document.getElementById("p-end").value = "";
         }
 
 
@@ -1195,10 +1276,8 @@
             }
 
             if (tempAllData.length > 0) {
-                // NAYA LOGIC: Purana data poori tarah hata do, aur sirf NAYA data set karo
                 allData = tempAllData;
                 saveToStorage();
-
                 alert("✅ Outstanding data UPDATE ho gaya!\n\nPurana data hata diya gaya hai.\nTotal Outstanding Bills: " + allData.length);
             }
         }
@@ -1269,16 +1348,8 @@
             }
 
             if (tempItems.length > 0) {
-                // --- SMART UPSERT (UPDATE/INSERT) LOGIC ---
-
-                // 1. Nayi file me aaye hue saare Bill Numbers nikal lo
                 let newBillNumbers = new Set(tempItems.map(item => item.billNo));
-
-                // 2. Purane database me se un bills ko hata do jo nayi file me aaye hain (Taaki duplicate na bane)
-                // (Isse purani entries bachi rahengi, sirf naye wale update honge)
                 let filteredOldData = allItemData.filter(item => !newBillNumbers.has(item.billNo));
-
-                // 3. Purana bacha hua data aur naya data aapas me jod do
                 allItemData = [...filteredOldData, ...tempItems];
 
                 saveItemsToStorage();
@@ -1290,7 +1361,7 @@
 
 
         // ==========================================
-        // UI & FILTER LOGIC
+        // UI, FILTER & SORTING LOGIC
         // ==========================================
 
         function applyFilters() {
@@ -1374,9 +1445,7 @@
                 document.getElementById("totalOutstanding").innerText = "0"; return;
             }
 
-            // NAYA FAST RENDERING METHOD
             let htmlContent = "";
-
             data.forEach((entry) => {
                 total += entry.amount;
 
@@ -1401,9 +1470,128 @@
             `;
             });
 
-            // Ek hi baar mein poori table update kar di (Super Fast)
             tableBody.innerHTML = htmlContent;
             document.getElementById("totalOutstanding").innerText = total.toLocaleString('en-IN');
+        }
+
+        // ==========================================
+        // ITEM LIST VIEW & DELETE LOGIC
+        // ==========================================
+
+        function openItemsModal() {
+            let tbody = document.getElementById("items-table-body");
+            document.getElementById("total-items-count").innerText = allItemData.length;
+
+            // Show Uploaded Periods
+            let periodsHtml = uploadedPeriods.map(p => `<span style="background: #e9ecef; padding: 5px 10px; border-radius: 4px; font-size: 13px; font-weight: bold; border: 1px solid #ccc; color: #0056b3;">📅 ${p}</span>`).join("");
+            let listDiv = document.getElementById("uploaded-periods-list");
+            if (listDiv) {
+                listDiv.innerHTML = periodsHtml || "<i style='color:#777; font-size: 13px;'>Koi period record nahi hai.</i>";
+            }
+
+            if (allItemData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #d9534f; font-weight: bold; padding: 20px;">Data nahi hai! Kripya 'Item Detail CSV' file upload karein.</td></tr>`;
+            } else {
+                let reversedData = [...allItemData].reverse();
+                let htmlContent = "";
+
+                reversedData.forEach((item, reversedIndex) => {
+                    let originalIndex = allItemData.length - 1 - reversedIndex;
+                    htmlContent += `
+                        <tr>
+                            <td style="color: #0056b3; font-weight: bold;">${item.billNo}</td>
+                            <td>${item.dateVal || '-'}</td>
+                            <td>${item.itemName}</td>
+                            <td>${item.qty}</td>
+                            <td style="font-weight: bold;">₹${item.amount}</td>
+                            <td style="text-align: center;">
+                                <button onclick="deleteSingleItem(${originalIndex})" style="background-color: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px;">🗑️ Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = htmlContent;
+            }
+            document.getElementById("itemsModal").style.display = "block";
+        }
+
+        function closeItemsModal() {
+            document.getElementById("itemsModal").style.display = "none";
+        }
+
+        function deleteSingleItem(index) {
+            if (confirm("Kya aap waqai is item ko system se delete karna chahte hain?")) {
+                allItemData.splice(index, 1);
+                saveItemsToStorage();
+                openItemsModal();
+            }
+        }
+
+        function clearAllItems() {
+            if (allItemData.length === 0) {
+                alert("System mein delete karne ke liye koi item nahi hai.");
+                return;
+            }
+
+            let pass = prompt("⚠️ DHYAN DEIN: Isse saare Items system se hamesha ke liye delete ho jayenge.\n\nConfirm karne ke liye box me 'DELETE' (Bade aksharon me) type karein:");
+            if (pass === "DELETE") {
+                allItemData = [];
+                uploadedPeriods = []; // Period bhi clear kar diya
+                saveItemsToStorage();
+                openItemsModal();
+                alert("✅ Saare items aur unke periods successfully clear ho gaye!");
+            } else {
+                if (pass !== null) alert("❌ Galat spelling. Deletion cancel ho gaya.");
+            }
+        }
+
+        function syncItemsWithOutstanding() {
+            if (allData.length === 0) {
+                alert("⚠️ Outstanding list khali hai. Pehle 'Aaj ki Excel/CSV' upload karein tabhi sync ho payega.");
+                return;
+            }
+
+            if (confirm("🔄 Auto-Clean: Kya aap waqai wo saare Items delete karna chahte hain jinka Bill ab Outstanding list me nahi hai?")) {
+                let initialCount = allItemData.length;
+
+                // 1. Outstanding list me maujood saare 'Clean' Bill Numbers nikal lo
+                let outstandingBillNumbers = new Set();
+                allData.forEach(row => {
+                    let origBillFull = String(row.billNo).trim().toUpperCase();
+                    let cleanOrigBill = origBillFull;
+
+                    if (origBillFull.includes('/')) {
+                        cleanOrigBill = origBillFull.split('/').pop().replace(/^0+/, '');
+                    } else if (origBillFull.includes('-')) {
+                        let parts = origBillFull.split('-');
+                        if (parts.length > 1) cleanOrigBill = parts[1].replace(/^0+/, '');
+                    } else {
+                        cleanOrigBill = origBillFull.replace(/^0+/, '');
+                    }
+                    outstandingBillNumbers.add(cleanOrigBill);
+                });
+
+                // 2. Sirf un Items ko filter karke bacha lo jinka Bill Number outstanding set me hai
+                allItemData = allItemData.filter(item => {
+                    let itemFull = String(item.billNo).trim().toUpperCase();
+                    let itemClean = itemFull;
+
+                    if (itemFull.includes('/')) itemClean = itemFull.split('/').pop().replace(/^0+/, '');
+                    else if (itemFull.includes('-')) {
+                        let parts = itemFull.split('-');
+                        if (parts.length > 1) itemClean = parts[1].replace(/^0+/, '');
+                    } else itemClean = itemFull.replace(/^0+/, '');
+
+                    return outstandingBillNumbers.has(itemClean);
+                });
+
+                let deletedCount = initialCount - allItemData.length;
+
+                saveItemsToStorage(); // Firebase me update kar diya
+                openItemsModal();     // Modal ko refresh kar diya
+
+                alert(`✅ Sync Complete!\n\n${deletedCount} purane/extra items delete kar diye gaye hain jo Outstanding list me nahi the.`);
+            }
         }
 
         // ==========================================
@@ -1422,7 +1610,6 @@
             document.getElementById("m-due").innerText = "₹" + dueAmount.toLocaleString('en-IN');
             document.getElementById("m-bill-age").innerText = totalAgeDays;
 
-            // --- SMART ITEM MATCHING (BILL NO + YEAR) ---
             let origBillFull = String(billNo).trim().toUpperCase();
             let cleanOrigBill = origBillFull;
 
@@ -1445,18 +1632,13 @@
                     if (parts.length > 1) itemClean = parts[1].replace(/^0+/, '');
                 } else itemClean = itemFull.replace(/^0+/, '');
 
-                // RULE 1: Bill Number check
                 let isBillMatch = (cleanOrigBill === itemClean);
                 let isDateMatch = true;
 
-                // RULE 2: Smart Year (FY) Check
                 if (item.dateVal && currentPayBillDateStr) {
                     if (item.dateVal !== currentPayBillDateStr) {
-                        // Dono dates me se 4-digit saal (2024, 2025) nikalne ki koshish
                         let iYear = item.dateVal.match(/\d{4}/);
                         let bYear = currentPayBillDateStr.match(/\d{4}/);
-
-                        // Agar dono me saal mil gaya aur wo alag hai, toh hi isko reject karo
                         if (iYear && bYear && iYear[0] !== bYear[0]) {
                             isDateMatch = false;
                         }
@@ -1472,8 +1654,7 @@
             itemDiv.style.display = "block";
 
             if (matchedItems.length > 0) {
-                let totalOther = 0;
-                let totalItemAmount = 0;
+                let totalOther = 0; let totalItemAmount = 0;
 
                 matchedItems.forEach(item => {
                     totalOther += parseFloat(item.other) || 0;
@@ -1492,23 +1673,9 @@
 
                 let netAmount = totalItemAmount + totalOther;
 
-                itemTbody.innerHTML += `
-                    <tr style="border-top: 2px solid #ccc; background-color: #fdfdfd;">
-                        <td colspan="4" style="padding: 6px; text-align: right; font-weight: bold; color: #555;">Total:</td>
-                        <td style="padding: 6px; font-weight: bold; color: #333;">₹${totalItemAmount.toLocaleString('en-IN')}</td>
-                    </tr>`;
-
-                itemTbody.innerHTML += `
-                    <tr>
-                        <td colspan="4" style="padding: 4px 6px; text-align: right; font-weight: bold; color: #d84315;">Other Charges (+):</td>
-                        <td style="padding: 4px 6px; font-weight: bold; color: #d84315;">₹${totalOther.toLocaleString('en-IN')}</td>
-                    </tr>`;
-
-                itemTbody.innerHTML += `
-                    <tr style="background-color: #e9f5e9; border-top: 2px solid #4CAF50;">
-                        <td colspan="4" style="padding: 8px 6px; text-align: right; font-weight: bold; color: #28a745; font-size: 13px;">NET AMOUNT:</td>
-                        <td style="padding: 8px 6px; font-weight: bold; color: #d9534f; font-size: 14px;">₹${netAmount.toLocaleString('en-IN')}</td>
-                    </tr>`;
+                itemTbody.innerHTML += `<tr style="border-top: 2px solid #ccc; background-color: #fdfdfd;"><td colspan="4" style="padding: 6px; text-align: right; font-weight: bold; color: #555;">Total:</td><td style="padding: 6px; font-weight: bold; color: #333;">₹${totalItemAmount.toLocaleString('en-IN')}</td></tr>`;
+                itemTbody.innerHTML += `<tr><td colspan="4" style="padding: 4px 6px; text-align: right; font-weight: bold; color: #d84315;">Other Charges (+):</td><td style="padding: 4px 6px; font-weight: bold; color: #d84315;">₹${totalOther.toLocaleString('en-IN')}</td></tr>`;
+                itemTbody.innerHTML += `<tr style="background-color: #e9f5e9; border-top: 2px solid #4CAF50;"><td colspan="4" style="padding: 8px 6px; text-align: right; font-weight: bold; color: #28a745; font-size: 13px;">NET AMOUNT:</td><td style="padding: 8px 6px; font-weight: bold; color: #d9534f; font-size: 14px;">₹${netAmount.toLocaleString('en-IN')}</td></tr>`;
 
             } else {
                 itemTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#d9534f; padding:10px;">Is bill ki details nahi mili. Kripya check karein ki kya ye bill 'Item Detail CSV' file mein maujood hai?</td></tr>`;
@@ -1525,11 +1692,14 @@
 
         function closeModal() { document.getElementById("paymentModal").style.display = "none"; }
 
+        // ==========================================
+        // INTEREST, CALCULATIONS & MISC
+        // ==========================================
+
         function showPartyDetails(partyName) {
             document.getElementById("pd-title").innerText = partyName + " - All Outstanding Bills";
             let tbody = document.getElementById("pd-table-body");
-            tbody.innerHTML = "";
-            let total = 0;
+            tbody.innerHTML = ""; let total = 0;
 
             let partyBills = allData.filter(row => row.name === partyName && !row.hidden);
             partyBills.sort((a, b) => (a.dateVal > b.dateVal) ? 1 : -1);
@@ -1558,9 +1728,7 @@
             document.getElementById("partyDetailsModal").style.display = "block";
         }
 
-        function closePartyDetailsModal() {
-            document.getElementById("partyDetailsModal").style.display = "none";
-        }
+        function closePartyDetailsModal() { document.getElementById("partyDetailsModal").style.display = "none"; }
 
         function clearFilters() {
             document.getElementById("f-party").value = ""; document.getElementById("f-bill").value = "";
@@ -1619,75 +1787,6 @@
             document.getElementById("m-received").value = finalDue;
         }
 
-        function printStatement() {
-            if (currentFilteredData.length === 0) {
-                alert("Print karne ke liye koi list nahi hai. Pehle Party ya Broker search karein."); return;
-            }
-            let fParty = document.getElementById("f-party").value.trim();
-            let fBroker = document.getElementById("f-broker").value;
-
-            let uniqueParties = [...new Set(currentFilteredData.map(item => item.name))];
-            let showPartyCol = uniqueParties.length > 1;
-            let showBrokerCol = (fBroker === "" && fParty === "");
-
-            let reportTitle = "OUTSTANDING STATEMENT";
-            let subTitle = "All Records (Total Business)";
-
-            if (fParty && !fBroker) {
-                reportTitle = "STATEMENT OF ACCOUNT";
-                subTitle = uniqueParties.length === 1 ? "M/S : " + uniqueParties[0].toUpperCase() : "Search : " + fParty.toUpperCase() + " (Multiple Parties)";
-            } else if (fBroker && !fParty) {
-                reportTitle = "BROKER OUTSTANDING REPORT";
-                subTitle = "Broker Name : " + fBroker.toUpperCase();
-            } else if (fParty && fBroker) {
-                reportTitle = "OUTSTANDING STATEMENT";
-                subTitle = "Broker : " + fBroker.toUpperCase() + " | Party : " + (uniqueParties.length === 1 ? uniqueParties[0].toUpperCase() : fParty.toUpperCase());
-            }
-
-            document.getElementById("stmt-title").innerText = reportTitle;
-            document.getElementById("stmt-subtitle").innerText = subTitle;
-
-            let theadHTML = `
-            <tr>
-                <th>S.No.</th>
-                <th>Bill Date</th>
-                <th>Bill No. (OS.ID)</th>
-                ${showPartyCol ? '<th>Party Name</th>' : ''}
-                ${showBrokerCol ? '<th>Broker Name</th>' : ''}
-                <th style="color: #e65100;">Age (Days)</th>
-                <th style="text-align: right;">Pending Amount (₹)</th>
-            </tr>`;
-            document.getElementById("stmt-table-head").innerHTML = theadHTML;
-
-            let tbody = document.getElementById("stmt-table-body");
-            tbody.innerHTML = ""; let total = 0;
-
-            currentFilteredData.forEach((row, index) => {
-                total += row.amount;
-                let bDate = new Date(row.dateVal); let t = new Date();
-                bDate.setHours(0, 0, 0, 0); t.setHours(0, 0, 0, 0);
-                let ageDays = t > bDate ? Math.floor((t - bDate) / (1000 * 60 * 60 * 24)) : 0;
-
-                tbody.innerHTML += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${row.displayDate}</td>
-                    <td>${row.billNo}</td>
-                    ${showPartyCol ? `<td><b>${row.name}</b></td>` : ''}
-                    ${showBrokerCol ? `<td>${row.broker}</td>` : ''}
-                    <td style="color: #e65100; font-weight: bold;">${ageDays}</td>
-                    <td style="text-align: right; font-weight: bold;">₹ ${row.amount.toLocaleString('en-IN')}</td>
-                </tr>`;
-            });
-
-            document.getElementById("stmt-total").innerText = "₹ " + total.toLocaleString('en-IN');
-            document.getElementById("print-receipt-section").classList.remove("active");
-            document.getElementById("print-statement-section").classList.add("active");
-            window.print();
-        }
-
-        // --- NAYA AUR CLEAN GENERATE RECEIPT LOGIC ---
-        // --- NAYA AUR CLEAN GENERATE RECEIPT LOGIC ---
         function generateReceipt() {
             let receivedAmount = parseFloat(document.getElementById("m-received").value);
             let adjType = document.querySelector('input[name="adj_type"]:checked').value;
@@ -1702,7 +1801,6 @@
             document.getElementById("r-date").innerText = dateOnly;
             document.getElementById("r-party").innerText = "M/S: " + currentPayParty.toUpperCase();
 
-            // SMART MATCHING (BILL NO + YEAR)
             let origBillFull = String(currentPayBill).trim().toUpperCase();
             let cleanOrigBill = origBillFull;
 
@@ -1728,7 +1826,6 @@
                 let isBillMatch = (cleanOrigBill === itemClean);
                 let isDateMatch = true;
 
-                // Smart Year Check
                 if (item.dateVal && currentPayBillDateStr) {
                     if (item.dateVal !== currentPayBillDateStr) {
                         let iYear = item.dateVal.match(/\d{4}/);
@@ -1766,42 +1863,22 @@
 
                 let netAmount = totalItemAmount + totalOther;
 
-                rTbody.innerHTML += `
-                    <tr>
-                        <td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px;">Total:</td>
-                        <td style="text-align: center; font-weight: bold;">₹${totalItemAmount.toLocaleString('en-IN')}</td>
-                    </tr>`;
+                rTbody.innerHTML += `<tr><td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px;">Total:</td><td style="text-align: center; font-weight: bold;">₹${totalItemAmount.toLocaleString('en-IN')}</td></tr>`;
 
                 if (totalOther > 0) {
-                    rTbody.innerHTML += `
-                        <tr>
-                            <td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px; color: #d84315 !important;-webkit-print-color-adjust: exact;">Other Charges (+):</td>
-                            <td style="text-align: center; font-weight: bold; color: #d84315 !important;-webkit-print-color-adjust: exact;">₹${totalOther.toLocaleString('en-IN')}</td>
-                        </tr>`;
+                    rTbody.innerHTML += `<tr><td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px; color: #d84315 !important;-webkit-print-color-adjust: exact;">Other Charges (+):</td><td style="text-align: center; font-weight: bold; color: #d84315 !important;-webkit-print-color-adjust: exact;">₹${totalOther.toLocaleString('en-IN')}</td></tr>`;
                 }
 
                 if (interestAmount > 0) {
                     netAmount += interestAmount;
-                    rTbody.innerHTML += `
-                        <tr>
-                            <td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px;">Late Fee Interest (+):</td>
-                            <td style="text-align: center; font-weight: bold;">₹${interestAmount.toLocaleString('en-IN')}</td>
-                        </tr>`;
+                    rTbody.innerHTML += `<tr><td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px;">Late Fee Interest (+):</td><td style="text-align: center; font-weight: bold;">₹${interestAmount.toLocaleString('en-IN')}</td></tr>`;
                 }
                 if (discountAmount > 0) {
                     netAmount -= discountAmount;
-                    rTbody.innerHTML += `
-                        <tr>
-                            <td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px;">Discount (-):</td>
-                            <td style="text-align: center; font-weight: bold;">- ₹${discountAmount.toLocaleString('en-IN')}</td>
-                        </tr>`;
+                    rTbody.innerHTML += `<tr><td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px;">Discount (-):</td><td style="text-align: center; font-weight: bold;">- ₹${discountAmount.toLocaleString('en-IN')}</td></tr>`;
                 }
 
-                rTbody.innerHTML += `
-                    <tr style="background-color: #f4f7f6 !important; -webkit-print-color-adjust: exact;">
-                        <td colspan="5" style="text-align: right; font-weight: bold; font-size: 12px; padding-right: 10px;">NET AMOUNT:</td>
-                        <td style="text-align: center; font-weight: bold; font-size: 12px;">₹${netAmount.toLocaleString('en-IN')}</td>
-                    </tr>`;
+                rTbody.innerHTML += `<tr style="background-color: #f4f7f6 !important; -webkit-print-color-adjust: exact;"><td colspan="5" style="text-align: right; font-weight: bold; font-size: 12px; padding-right: 10px;">NET AMOUNT:</td><td style="text-align: center; font-weight: bold; font-size: 12px;">₹${netAmount.toLocaleString('en-IN')}</td></tr>`;
             } else {
                 rTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 5px;">Item details are not available.</td></tr>`;
             }
@@ -1812,12 +1889,59 @@
             receiptCounter++; closeModal(); window.print();
         }
 
+        function printStatement() {
+            if (currentFilteredData.length === 0) {
+                alert("Print karne ke liye koi list nahi hai. Pehle Party ya Broker search karein."); return;
+            }
+            let fParty = document.getElementById("f-party").value.trim();
+            let fBroker = document.getElementById("f-broker").value;
+
+            let uniqueParties = [...new Set(currentFilteredData.map(item => item.name))];
+            let showPartyCol = uniqueParties.length > 1;
+            let showBrokerCol = (fBroker === "" && fParty === "");
+
+            let reportTitle = "OUTSTANDING STATEMENT";
+            let subTitle = "All Records (Total Business)";
+
+            if (fParty && !fBroker) {
+                reportTitle = "STATEMENT OF ACCOUNT";
+                subTitle = uniqueParties.length === 1 ? "M/S : " + uniqueParties[0].toUpperCase() : "Search : " + fParty.toUpperCase() + " (Multiple Parties)";
+            } else if (fBroker && !fParty) {
+                reportTitle = "BROKER OUTSTANDING REPORT";
+                subTitle = "Broker Name : " + fBroker.toUpperCase();
+            } else if (fParty && fBroker) {
+                reportTitle = "OUTSTANDING STATEMENT";
+                subTitle = "Broker : " + fBroker.toUpperCase() + " | Party : " + (uniqueParties.length === 1 ? uniqueParties[0].toUpperCase() : fParty.toUpperCase());
+            }
+
+            document.getElementById("stmt-title").innerText = reportTitle;
+            document.getElementById("stmt-subtitle").innerText = subTitle;
+
+            let theadHTML = `<tr><th>S.No.</th><th>Bill Date</th><th>Bill No. (OS.ID)</th>${showPartyCol ? '<th>Party Name</th>' : ''}${showBrokerCol ? '<th>Broker Name</th>' : ''}<th style="color: #e65100;">Age (Days)</th><th style="text-align: right;">Pending Amount (₹)</th></tr>`;
+            document.getElementById("stmt-table-head").innerHTML = theadHTML;
+
+            let tbody = document.getElementById("stmt-table-body");
+            tbody.innerHTML = ""; let total = 0;
+
+            currentFilteredData.forEach((row, index) => {
+                total += row.amount;
+                let bDate = new Date(row.dateVal); let t = new Date();
+                bDate.setHours(0, 0, 0, 0); t.setHours(0, 0, 0, 0);
+                let ageDays = t > bDate ? Math.floor((t - bDate) / (1000 * 60 * 60 * 24)) : 0;
+
+                tbody.innerHTML += `<tr><td>${index + 1}</td><td>${row.displayDate}</td><td>${row.billNo}</td>${showPartyCol ? `<td><b>${row.name}</b></td>` : ''}${showBrokerCol ? `<td>${row.broker}</td>` : ''}<td style="color: #e65100; font-weight: bold;">${ageDays}</td><td style="text-align: right; font-weight: bold;">₹ ${row.amount.toLocaleString('en-IN')}</td></tr>`;
+            });
+
+            document.getElementById("stmt-total").innerText = "₹ " + total.toLocaleString('en-IN');
+            document.getElementById("print-receipt-section").classList.remove("active");
+            document.getElementById("print-statement-section").classList.add("active");
+            window.print();
+        }
+
         function calculateSelectedTotal() {
             let checkboxes = document.querySelectorAll('.row-checkbox:checked');
             let total = 0;
-            checkboxes.forEach(cb => {
-                total += parseFloat(cb.getAttribute('data-amount')) || 0;
-            });
+            checkboxes.forEach(cb => { total += parseFloat(cb.getAttribute('data-amount')) || 0; });
             document.getElementById('selectedOutstanding').innerText = total.toLocaleString('en-IN');
 
             if (window.parent && typeof window.parent.selectedUgaiAmount !== 'undefined') {
@@ -1838,21 +1962,26 @@
             let selectAllCb = document.getElementById('selectAllCheckbox');
             let isChecked = selectAllCb.checked;
             let checkboxes = document.querySelectorAll('.row-checkbox');
-            checkboxes.forEach(cb => {
-                cb.checked = isChecked;
-            });
+            checkboxes.forEach(cb => { cb.checked = isChecked; });
             calculateSelectedTotal();
         }
+
+        // ==========================================
+        // KEYBOARD SHORTCUTS
+        // ==========================================
 
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape' || event.key === 'Esc') {
                 let paymentModal = document.getElementById("paymentModal");
                 let partyDetailsModal = document.getElementById("partyDetailsModal");
+                let itemsModal = document.getElementById("itemsModal");
+                let periodModal = document.getElementById("periodModal");
 
                 if (paymentModal && paymentModal.style.display === "block") closeModal();
                 if (partyDetailsModal && partyDetailsModal.style.display === "block") closePartyDetailsModal();
+                if (itemsModal && itemsModal.style.display === "block") closeItemsModal();
+                if (periodModal && periodModal.style.display === "block") cancelPeriod();
             }
-            if (document.getElementById("itemsModal") && document.getElementById("itemsModal").style.display === "block") closeItemsModal();
 
             let activeRow = document.activeElement;
             if (activeRow && activeRow.classList.contains('keyboard-row')) {
@@ -1883,75 +2012,8 @@
         });
 
         // ==========================================
-        // ITEM LIST VIEW & DELETE LOGIC
+        // GLOBAL BINDINGS
         // ==========================================
-
-        function openItemsModal() {
-            let tbody = document.getElementById("items-table-body");
-            document.getElementById("total-items-count").innerText = allItemData.length;
-
-            if (allItemData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #d9534f; font-weight: bold; padding: 20px;">Data nahi hai! Kripya 'Item Detail CSV' file upload karein.</td></tr>`;
-            } else {
-                let reversedData = [...allItemData].reverse();
-
-                // NAYA FAST RENDERING METHOD
-                let htmlContent = "";
-
-                reversedData.forEach((item, reversedIndex) => {
-                    let originalIndex = allItemData.length - 1 - reversedIndex;
-
-                    htmlContent += `
-                        <tr>
-                            <td style="color: #0056b3; font-weight: bold;">${item.billNo}</td>
-                            <td>${item.dateVal || '-'}</td>
-                            <td>${item.itemName}</td>
-                            <td>${item.qty}</td>
-                            <td style="font-weight: bold;">₹${item.amount}</td>
-                            <td style="text-align: center;">
-                                <button onclick="deleteSingleItem(${originalIndex})" style="background-color: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px;">🗑️ Delete</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                // Ek hi baar mein poori list daal di (Browser hang nahi hoga)
-                tbody.innerHTML = htmlContent;
-            }
-            document.getElementById("itemsModal").style.display = "block";
-        }
-
-        function closeItemsModal() {
-            document.getElementById("itemsModal").style.display = "none";
-        }
-
-        function deleteSingleItem(index) {
-            if (confirm("Kya aap waqai is item ko system se delete karna chahte hain?")) {
-                allItemData.splice(index, 1); // Array se item hata diya
-                saveItemsToStorage();         // Firebase me save kar diya
-                openItemsModal();             // Table ko wapas refresh kar diya
-            }
-        }
-
-        function clearAllItems() {
-            if (allItemData.length === 0) {
-                alert("System mein delete karne ke liye koi item nahi hai.");
-                return;
-            }
-
-            // Security ke liye ek chhota sa check dalenge taaki galti se delete na ho jaye
-            let pass = prompt("⚠️ DHYAN DEIN: Isse saare Items system se hamesha ke liye delete ho jayenge.\n\nConfirm karne ke liye box me 'DELETE' (Bade aksharon me) type karein:");
-            if (pass === "DELETE") {
-                allItemData = [];             // Array poora khali kar diya
-                saveItemsToStorage();         // Firebase me khali array bhej diya
-                openItemsModal();             // Table refresh
-                alert("✅ Saare items successfully clear ho gaye!");
-            } else {
-                if (pass !== null) alert("❌ Galat spelling. Deletion cancel ho gaya.");
-            }
-        }
-
-        // Global Bindings
         window.calculateSelectedTotal = calculateSelectedTotal;
         window.toggleSelectAll = toggleSelectAll;
         window.applyFilters = applyFilters;
@@ -1974,6 +2036,9 @@
         window.closeItemsModal = closeItemsModal;
         window.deleteSingleItem = deleteSingleItem;
         window.clearAllItems = clearAllItems;
+        window.cancelPeriod = cancelPeriod;
+        window.confirmPeriod = confirmPeriod;
+        window.syncItemsWithOutstanding = syncItemsWithOutstanding;
 
     </script>
 </body>
