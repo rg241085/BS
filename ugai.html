@@ -762,6 +762,9 @@
             </div>
 
             <div class="top-controls-right">
+                <button
+                    style="background-color: #ff9800; color: white; border: none; padding: 7px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;"
+                    onclick="openItemsModal()">📦 Items List</button>
                 <button class="clear-btn" onclick="clearFilters()">🧹 Clear</button>
                 <button class="print-stmt-btn" onclick="printStatement()">🖨️ Print</button>
             </div>
@@ -949,6 +952,39 @@
             </div>
         </div>
 
+    </div>
+    <div id="itemsModal" class="modal">
+        <div class="modal-content" style="width: 850px; max-width: 95%;">
+            <span class="close-btn" onclick="closeItemsModal()">&times;</span>
+            <h3 style="color: #ff9800; margin-top: 0; border-bottom: 2px solid #ddd; padding-bottom: 10px;">📦 Uploaded
+                Items Data</h3>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center;">
+                <span style="font-weight: bold; color: #555; font-size: 15px;">Total Items in System: <span
+                        id="total-items-count" style="color: #d9534f; font-size: 18px;">0</span></span>
+                <button onclick="clearAllItems()"
+                    style="background-color: #d9534f; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;">🗑️
+                    Delete All Items</button>
+            </div>
+
+            <div class="table-container"
+                style="max-height: 450px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
+                <table class="details-table" style="margin-top: 0;">
+                    <thead>
+                        <tr style="background: #f4f7f6;">
+                            <th style="position: sticky; top: 0; z-index: 2;">Bill No.</th>
+                            <th style="position: sticky; top: 0; z-index: 2;">Date</th>
+                            <th style="position: sticky; top: 0; z-index: 2;">Item Name</th>
+                            <th style="position: sticky; top: 0; z-index: 2;">Qty</th>
+                            <th style="position: sticky; top: 0; z-index: 2;">Amount</th>
+                            <th style="position: sticky; top: 0; z-index: 2; text-align: center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="items-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <div class="print-area" id="print-receipt-section">
@@ -1159,14 +1195,11 @@
             }
 
             if (tempAllData.length > 0) {
-                // --- SMART MERGE LOGIC FOR OUTSTANDING ---
-                let newOsBillNumbers = new Set(tempAllData.map(row => row.billNo));
-                let filteredOldOsData = allData.filter(row => !newOsBillNumbers.has(row.billNo));
-
-                allData = [...filteredOldOsData, ...tempAllData];
+                // NAYA LOGIC: Purana data poori tarah hata do, aur sirf NAYA data set karo
+                allData = tempAllData;
                 saveToStorage();
 
-                alert("✅ Outstanding data successfully UPDATE ho gaya!\n\nNaye/Updated Bills: " + tempAllData.length + "\nTotal Outstanding Bills: " + allData.length);
+                alert("✅ Outstanding data UPDATE ho gaya!\n\nPurana data hata diya gaya hai.\nTotal Outstanding Bills: " + allData.length);
             }
         }
 
@@ -1197,12 +1230,10 @@
                         else if (colName.includes("nag")) colIndex.nag = index;
                         else if (colName.includes("qty") || colName.includes("quantity")) colIndex.qty = index;
                         else if (colName.includes("rate") || colName.includes("price")) colIndex.rate = index;
-
-                        // NAYA: Sirf aur sirf 'Oth.Chg.BT Amount' (Column I) ko target karega
+                        else if (colName.includes("date")) colIndex.date = index;
                         else if (colName.includes("oth.chg.bt") || colName.includes("bt amount") || colName === "oth.chg.bt amount") {
                             colIndex.other = index;
                         }
-                        // Main Amount
                         else if (colName.includes("amount") || colName.includes("exempt")) {
                             if (!colName.includes("bt") && !colName.includes("oth.chg") && colIndex.amount === undefined) {
                                 colIndex.amount = index;
@@ -1221,8 +1252,12 @@
 
                     let otherChg = colIndex.other !== undefined && columns[colIndex.other] ? columns[colIndex.other].trim() : "";
 
+                    let rawDate = colIndex.date !== undefined && columns[colIndex.date] ? columns[colIndex.date].trim().replace(/^["']|["']$/g, '') : "";
+                    let itemDateVal = formatToStandardDate(rawDate);
+
                     tempItems.push({
                         billNo: billNoStr,
+                        dateVal: itemDateVal,
                         itemName: colIndex.itemName !== undefined && columns[colIndex.itemName] ? columns[colIndex.itemName].trim().replace(/^["']|["']$/g, '') : "",
                         nag: colIndex.nag !== undefined && columns[colIndex.nag] ? columns[colIndex.nag].trim() : "",
                         qty: colIndex.qty !== undefined && columns[colIndex.qty] ? columns[colIndex.qty].trim() : "",
@@ -1234,13 +1269,20 @@
             }
 
             if (tempItems.length > 0) {
-                // --- SMART MERGE LOGIC FOR ITEMS ---
+                // --- SMART UPSERT (UPDATE/INSERT) LOGIC ---
+
+                // 1. Nayi file me aaye hue saare Bill Numbers nikal lo
                 let newBillNumbers = new Set(tempItems.map(item => item.billNo));
+
+                // 2. Purane database me se un bills ko hata do jo nayi file me aaye hain (Taaki duplicate na bane)
+                // (Isse purani entries bachi rahengi, sirf naye wale update honge)
                 let filteredOldData = allItemData.filter(item => !newBillNumbers.has(item.billNo));
 
+                // 3. Purana bacha hua data aur naya data aapas me jod do
                 allItemData = [...filteredOldData, ...tempItems];
+
                 saveItemsToStorage();
-                alert("✅ Sales Items successfully UPDATE ho gaye!\n\nNaye jode gaye Items: " + tempItems.length + "\nTotal Items in System: " + allItemData.length);
+                alert("✅ Sales Items successfully UPDATE ho gaye!\n\nNaye jode gaye/Updated Items: " + tempItems.length + "\nTotal Items in System: " + allItemData.length);
             } else {
                 alert("❌ ERROR: 0 Items mile!\n\nKripya Check Karein:\n1. Kahin galti se Outstanding wali file toh nahi chun li?\n2. Kya file me 'Bill' aur 'Item' ki heading maujood hai?");
             }
@@ -1321,7 +1363,7 @@
 
         function renderTable(data) {
             let tableBody = document.getElementById("tableBody");
-            tableBody.innerHTML = ""; let total = 0;
+            let total = 0;
 
             document.getElementById("selectedOutstanding").innerText = "0";
             let selectAllCb = document.getElementById("selectAllCheckbox");
@@ -1332,13 +1374,16 @@
                 document.getElementById("totalOutstanding").innerText = "0"; return;
             }
 
+            // NAYA FAST RENDERING METHOD
+            let htmlContent = "";
+
             data.forEach((entry) => {
                 total += entry.amount;
 
                 let safeNameHTML = entry.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
                 let jsSafeName = entry.name.replace(/'/g, "\\'");
 
-                tableBody.innerHTML += `
+                htmlContent += `
                 <tr tabindex="0" class="keyboard-row" onclick="this.focus()">
                     <td style="text-align: center;">
                         <input type="checkbox" class="row-checkbox" tabindex="-1" data-amount="${entry.amount}" onchange="calculateSelectedTotal()" style="transform: scale(1.2); cursor: pointer;">
@@ -1356,9 +1401,10 @@
             `;
             });
 
+            // Ek hi baar mein poori table update kar di (Super Fast)
+            tableBody.innerHTML = htmlContent;
             document.getElementById("totalOutstanding").innerText = total.toLocaleString('en-IN');
         }
-
 
         // ==========================================
         // PAYMENT MODAL & ITEM MATCHING
@@ -1376,8 +1422,7 @@
             document.getElementById("m-due").innerText = "₹" + dueAmount.toLocaleString('en-IN');
             document.getElementById("m-bill-age").innerText = totalAgeDays;
 
-            // --- SMART ITEM MATCHING ---
-            // --- SMART ITEM MATCHING ---
+            // --- SMART ITEM MATCHING (BILL NO + YEAR) ---
             let origBillFull = String(billNo).trim().toUpperCase();
             let cleanOrigBill = origBillFull;
 
@@ -1394,15 +1439,31 @@
                 let itemFull = String(item.billNo).trim().toUpperCase();
                 let itemClean = itemFull;
 
-                // Item wali file me bhi agar / ya - ho toh usko bhi saaf kar lo
                 if (itemFull.includes('/')) itemClean = itemFull.split('/').pop().replace(/^0+/, '');
                 else if (itemFull.includes('-')) {
                     let parts = itemFull.split('-');
                     if (parts.length > 1) itemClean = parts[1].replace(/^0+/, '');
                 } else itemClean = itemFull.replace(/^0+/, '');
 
-                // NAYA RULE: Sirf wahi item aayega jiska main number ekdum exact match karega (No partial matching)
-                return cleanOrigBill === itemClean;
+                // RULE 1: Bill Number check
+                let isBillMatch = (cleanOrigBill === itemClean);
+                let isDateMatch = true;
+
+                // RULE 2: Smart Year (FY) Check
+                if (item.dateVal && currentPayBillDateStr) {
+                    if (item.dateVal !== currentPayBillDateStr) {
+                        // Dono dates me se 4-digit saal (2024, 2025) nikalne ki koshish
+                        let iYear = item.dateVal.match(/\d{4}/);
+                        let bYear = currentPayBillDateStr.match(/\d{4}/);
+
+                        // Agar dono me saal mil gaya aur wo alag hai, toh hi isko reject karo
+                        if (iYear && bYear && iYear[0] !== bYear[0]) {
+                            isDateMatch = false;
+                        }
+                    }
+                }
+
+                return isBillMatch && isDateMatch;
             });
 
             let itemDiv = document.getElementById("m-item-details");
@@ -1431,21 +1492,18 @@
 
                 let netAmount = totalItemAmount + totalOther;
 
-                // Item Total Row
                 itemTbody.innerHTML += `
                     <tr style="border-top: 2px solid #ccc; background-color: #fdfdfd;">
                         <td colspan="4" style="padding: 6px; text-align: right; font-weight: bold; color: #555;">Total:</td>
                         <td style="padding: 6px; font-weight: bold; color: #333;">₹${totalItemAmount.toLocaleString('en-IN')}</td>
                     </tr>`;
 
-                // Other Charges Row
                 itemTbody.innerHTML += `
                     <tr>
                         <td colspan="4" style="padding: 4px 6px; text-align: right; font-weight: bold; color: #d84315;">Other Charges (+):</td>
                         <td style="padding: 4px 6px; font-weight: bold; color: #d84315;">₹${totalOther.toLocaleString('en-IN')}</td>
                     </tr>`;
 
-                // Net Amount Row 
                 itemTbody.innerHTML += `
                     <tr style="background-color: #e9f5e9; border-top: 2px solid #4CAF50;">
                         <td colspan="4" style="padding: 8px 6px; text-align: right; font-weight: bold; color: #28a745; font-size: 13px;">NET AMOUNT:</td>
@@ -1456,7 +1514,6 @@
                 itemTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#d9534f; padding:10px;">Is bill ki details nahi mili. Kripya check karein ki kya ye bill 'Item Detail CSV' file mein maujood hai?</td></tr>`;
             }
 
-            // Reset Fields
             document.querySelector('input[value="none"]').checked = true; document.getElementById("m-credit-days").value = "0";
             document.getElementById("m-int-rate").value = "0"; document.getElementById("m-interest").value = "0";
             document.getElementById("m-discount").value = "0"; document.getElementById("m-disc-percent").value = "";
@@ -1630,6 +1687,7 @@
         }
 
         // --- NAYA AUR CLEAN GENERATE RECEIPT LOGIC ---
+        // --- NAYA AUR CLEAN GENERATE RECEIPT LOGIC ---
         function generateReceipt() {
             let receivedAmount = parseFloat(document.getElementById("m-received").value);
             let adjType = document.querySelector('input[name="adj_type"]:checked').value;
@@ -1640,12 +1698,11 @@
 
             let today = new Date(); let dateOnly = today.getDate() + "/" + (today.getMonth() + 1) + "/" + today.getFullYear();
 
-            // Set Top Details
             document.getElementById("r-bill-no").innerText = currentPayBill;
             document.getElementById("r-date").innerText = dateOnly;
             document.getElementById("r-party").innerText = "M/S: " + currentPayParty.toUpperCase();
 
-            // SMART MATCHING
+            // SMART MATCHING (BILL NO + YEAR)
             let origBillFull = String(currentPayBill).trim().toUpperCase();
             let cleanOrigBill = origBillFull;
 
@@ -1668,10 +1725,23 @@
                     if (parts.length > 1) itemClean = parts[1].replace(/^0+/, '');
                 } else itemClean = itemFull.replace(/^0+/, '');
 
-                return cleanOrigBill === itemClean;
+                let isBillMatch = (cleanOrigBill === itemClean);
+                let isDateMatch = true;
+
+                // Smart Year Check
+                if (item.dateVal && currentPayBillDateStr) {
+                    if (item.dateVal !== currentPayBillDateStr) {
+                        let iYear = item.dateVal.match(/\d{4}/);
+                        let bYear = currentPayBillDateStr.match(/\d{4}/);
+                        if (iYear && bYear && iYear[0] !== bYear[0]) {
+                            isDateMatch = false;
+                        }
+                    }
+                }
+
+                return isBillMatch && isDateMatch;
             });
 
-            // FILL TABLE
             let rTbody = document.getElementById("r-item-tbody");
             rTbody.innerHTML = "";
 
@@ -1683,7 +1753,6 @@
                     let amtVal = String(item.amount).replace(/,/g, '');
                     totalItemAmount += parseFloat(amtVal) || 0;
 
-                    // Yahan sabhi <td> ko theek se center kar diya gaya hai
                     rTbody.innerHTML += `
                         <tr>
                             <td style="text-align: center;">${index + 1}</td>
@@ -1697,7 +1766,6 @@
 
                 let netAmount = totalItemAmount + totalOther;
 
-                // Niche ke saare totals ka Amount wala column bhi center kar diya gaya hai
                 rTbody.innerHTML += `
                     <tr>
                         <td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px;">Total:</td>
@@ -1784,6 +1852,7 @@
                 if (paymentModal && paymentModal.style.display === "block") closeModal();
                 if (partyDetailsModal && partyDetailsModal.style.display === "block") closePartyDetailsModal();
             }
+            if (document.getElementById("itemsModal") && document.getElementById("itemsModal").style.display === "block") closeItemsModal();
 
             let activeRow = document.activeElement;
             if (activeRow && activeRow.classList.contains('keyboard-row')) {
@@ -1813,6 +1882,75 @@
             }
         });
 
+        // ==========================================
+        // ITEM LIST VIEW & DELETE LOGIC
+        // ==========================================
+
+        function openItemsModal() {
+            let tbody = document.getElementById("items-table-body");
+            document.getElementById("total-items-count").innerText = allItemData.length;
+
+            if (allItemData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #d9534f; font-weight: bold; padding: 20px;">Data nahi hai! Kripya 'Item Detail CSV' file upload karein.</td></tr>`;
+            } else {
+                let reversedData = [...allItemData].reverse();
+
+                // NAYA FAST RENDERING METHOD
+                let htmlContent = "";
+
+                reversedData.forEach((item, reversedIndex) => {
+                    let originalIndex = allItemData.length - 1 - reversedIndex;
+
+                    htmlContent += `
+                        <tr>
+                            <td style="color: #0056b3; font-weight: bold;">${item.billNo}</td>
+                            <td>${item.dateVal || '-'}</td>
+                            <td>${item.itemName}</td>
+                            <td>${item.qty}</td>
+                            <td style="font-weight: bold;">₹${item.amount}</td>
+                            <td style="text-align: center;">
+                                <button onclick="deleteSingleItem(${originalIndex})" style="background-color: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px;">🗑️ Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                // Ek hi baar mein poori list daal di (Browser hang nahi hoga)
+                tbody.innerHTML = htmlContent;
+            }
+            document.getElementById("itemsModal").style.display = "block";
+        }
+
+        function closeItemsModal() {
+            document.getElementById("itemsModal").style.display = "none";
+        }
+
+        function deleteSingleItem(index) {
+            if (confirm("Kya aap waqai is item ko system se delete karna chahte hain?")) {
+                allItemData.splice(index, 1); // Array se item hata diya
+                saveItemsToStorage();         // Firebase me save kar diya
+                openItemsModal();             // Table ko wapas refresh kar diya
+            }
+        }
+
+        function clearAllItems() {
+            if (allItemData.length === 0) {
+                alert("System mein delete karne ke liye koi item nahi hai.");
+                return;
+            }
+
+            // Security ke liye ek chhota sa check dalenge taaki galti se delete na ho jaye
+            let pass = prompt("⚠️ DHYAN DEIN: Isse saare Items system se hamesha ke liye delete ho jayenge.\n\nConfirm karne ke liye box me 'DELETE' (Bade aksharon me) type karein:");
+            if (pass === "DELETE") {
+                allItemData = [];             // Array poora khali kar diya
+                saveItemsToStorage();         // Firebase me khali array bhej diya
+                openItemsModal();             // Table refresh
+                alert("✅ Saare items successfully clear ho gaye!");
+            } else {
+                if (pass !== null) alert("❌ Galat spelling. Deletion cancel ho gaya.");
+            }
+        }
+
         // Global Bindings
         window.calculateSelectedTotal = calculateSelectedTotal;
         window.toggleSelectAll = toggleSelectAll;
@@ -1832,6 +1970,10 @@
         window.generateReceipt = generateReceipt;
         window.showPartyDetails = showPartyDetails;
         window.closePartyDetailsModal = closePartyDetailsModal;
+        window.openItemsModal = openItemsModal;
+        window.closeItemsModal = closeItemsModal;
+        window.deleteSingleItem = deleteSingleItem;
+        window.clearAllItems = clearAllItems;
 
     </script>
 </body>
