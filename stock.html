@@ -254,7 +254,8 @@
             box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
         }
 
-        input[readonly] {
+        input[readonly],
+        input[disabled] {
             background-color: #f8f9fa;
             color: #555;
             font-weight: bold;
@@ -305,7 +306,6 @@
             font-weight: bold;
         }
 
-        /* Minimize Button Styling */
         .min-btn {
             position: absolute;
             top: 0px;
@@ -439,15 +439,6 @@
 
         .h-content.active {
             display: block;
-        }
-
-        .search-box-large {
-            font-size: 16px;
-            font-weight: bold;
-            border: 2px solid #607d8b;
-            padding: 10px;
-            background: #fff;
-            width: 50%;
         }
 
         #quickLedgerModal .form-card {
@@ -611,10 +602,6 @@
                 padding: 0 10px;
             }
 
-            .header-row {
-                padding-top: 10px;
-            }
-
             #editFields {
                 grid-template-columns: 1fr !important;
             }
@@ -628,12 +615,6 @@
                 margin-bottom: 5px;
                 padding: 12px;
             }
-
-            .search-box-large,
-            #histSearchLot {
-                width: 100% !important;
-                box-sizing: border-box;
-            }
         }
     </style>
 </head>
@@ -645,12 +626,18 @@
         <div id="printTitle">Stock Report</div>
 
         <div class="top-nav no-print">
-            <button class="btn-main btn-in-cold" onclick="showForm('inForm')">📥 Naya Maal Aamad (IN)</button>
+            <button class="btn-main btn-in-cold" onclick="showForm('inForm')">📥 Naya Maal (IN)</button>
             <button class="btn-main btn-out-cold" onclick="showForm('outForm')">📤 Transfer to Shop</button>
-            <button class="btn-main btn-out-shop" onclick="showForm('shopOutForm')">🛒 Shop Se Sale Karein</button>
+            <button class="btn-main btn-out-shop" onclick="showForm('shopOutForm')">🛒 Shop Se Sale</button>
             <button class="btn-main btn-edit" onclick="showForm('editForm')">🛠️ Edit / Adjust Lot</button>
-            <button class="btn-main btn-history" onclick="showForm('historyForm')">📊 Registers & History</button>
-            <button class="btn-main btn-empty" onclick="showForm('zeroStockModal')">🗑️ Zero Stock (Bik Chuka)</button>
+
+            <button class="btn-main" style="background-color: #e74c3c; color: white;"
+                onclick="showForm('saleReturnForm')">↩️ Sale Return</button>
+            <button class="btn-main" style="background-color: #f39c12; color: white;"
+                onclick="showForm('jobWorkForm')">⚙️ Karkhana (Job Work)</button>
+
+            <button class="btn-main btn-history" onclick="showForm('historyForm')">📊 History</button>
+            <button class="btn-main btn-empty" onclick="showForm('zeroStockModal')">🗑️ Zero Stock</button>
         </div>
 
         <div class="action-bar no-print"
@@ -658,14 +645,12 @@
             <input type="text" id="masterSearch" onkeyup="searchMasterTable()"
                 placeholder="🔍 Search Party, Lot, Item ya Marka..."
                 style="flex: 1; min-width: 250px; padding: 10px; font-size: 16px; border: 2px solid #3498db; border-radius: 5px;">
-
             <button class="btn-main" style="background: #27ae60; color: white;" onclick="filterStock('all')">🟢 All
                 Stock</button>
             <button class="btn-main" style="background: #1565c0; color: white;" onclick="filterStock('cold')">❄️ Cold
                 Stock</button>
             <button class="btn-main" style="background: #8e44ad; color: white;" onclick="filterStock('shop')">🏪 Shop
                 Stock</button>
-
             <button class="btn-main" style="background: #34495e; color: white;" onclick="printCustomReport()">🖨️ Print
                 Report</button>
             <button class="btn-main" style="background: #f39c12; color: white;" onclick="showForm('dailyReportForm')">📅
@@ -677,9 +662,9 @@
                 <tr>
                     <th onclick="sortTable(0)" style="cursor:pointer;" title="Click to Sort">Cold Store ↕️</th>
                     <th onclick="sortTable(1)" style="cursor:pointer;" title="Click to Sort">Party Name ↕️</th>
-                    <th onclick="sortTable(2)" style="cursor:pointer;" title="Click to Sort">Lot No (Cold) ↕️</th>
+                    <th onclick="sortTable(2)" style="cursor:pointer;" title="Click to Sort">Lot No ↕️</th>
                     <th onclick="sortTable(3)" style="cursor:pointer;" title="Click to Sort">Item Name ↕️</th>
-                    <th onclick="sortTable(4)" style="cursor:pointer;" title="Click to Sort">Mark No (Shop) ↕️</th>
+                    <th onclick="sortTable(4)" style="cursor:pointer;" title="Click to Sort">Mark No ↕️</th>
                     <th>Bharti</th>
                     <th>Rate (₹)</th>
                     <th id="thColdQty" onclick="sortTable(7)"
@@ -700,8 +685,7 @@
         <div class="form-card" id="inFormContainer">
             <span class="min-btn" onclick="toggleMinimize(this)" title="Minimize">_</span>
             <span class="close-x" onclick="closeAll()">×</span>
-            <h3 style="color:#2980b9; border-bottom: 1px solid #eee; padding-bottom: 10px;">📥 Naya Maal Aamad (Inward
-                Receipt)</h3>
+            <h3 style="color:#2980b9; border-bottom: 1px solid #eee; padding-bottom: 10px;">📥 Naya Maal Aamad</h3>
             <div class="chalan-header" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
                 <div style="background:#e3f2fd; padding:10px; border-radius:5px; border:1px solid #90caf9;">
                     <label style="color:#1565c0; font-size:13px;">📍 Maal Kahan Aaya?</label>
@@ -710,11 +694,9 @@
                         <option value="shop">🏪 Shop Godown</option>
                     </select>
                 </div>
-                <div><label>Cold Store Name</label><input type="text" id="inColdStore" list="coldStoreList"
-                        placeholder="(Shop ke liye optional)"></div>
+                <div><label>Cold Store Name</label><input type="text" id="inColdStore" list="coldStoreList"></div>
                 <div><label>Date</label><input type="date" id="inDate"></div>
-                <div><label>Receipt Number</label><input type="text" id="inReceiptNo" list="receiptList"
-                        placeholder="Parchi No."></div>
+                <div><label>Receipt Number</label><input type="text" id="inReceiptNo" list="receiptList"></div>
                 <div><label>Party Name</label><input type="text" id="inParty" list="partyList"></div>
             </div>
 
@@ -724,7 +706,7 @@
                     <div>Unit</div>
                     <div>Bharti</div>
                     <div>Marka (Shop)</div>
-                    <div>Lot No (Cold)</div>
+                    <div>Lot No</div>
                     <div>Quantity</div>
                     <div>Rate</div>
                     <div>Weight (Kg)</div>
@@ -739,11 +721,12 @@
                         </select>
                         <input type="number" class="in-bharti" oninput="calcInTotals(this)">
                         <input type="text" class="in-mark" oninput="extractQtyFromMarka(this)">
-                        <input type="text" class="in-lot">
+                        <input type="text" class="in-lot" oninput="autoFillInwardDetails(this)" list="lotList">
                         <input type="number" class="in-qty" oninput="calcInTotals(this)">
                         <input type="number" class="in-rate" oninput="calcInTotals(this)">
                         <input type="text" class="in-wt" readonly tabindex="-1">
                         <input type="text" class="in-val" readonly tabindex="-1">
+                        <div class="stock-info" style="grid-column: span 9;"></div>
                     </div>
                 </div>
                 <div class="in-grid totals-row">
@@ -769,19 +752,18 @@
             <span class="min-btn" onclick="toggleMinimize(this)" title="Minimize">_</span>
             <span class="close-x" onclick="closeAll()">×</span>
             <h3 style="color:#e67e22; border-bottom: 1px solid #eee; padding-bottom: 10px;">🚚 Dispatch Chalan (Cold Se
-                Shop Bhejein)</h3>
+                Shop)</h3>
             <div class="chalan-header" style="grid-template-columns: 1fr 1fr;">
                 <div><label>Date</label><input type="date" id="outDate"></div>
-                <div><label>Chalan / Parchi No.</label><input type="text" id="outChalanNo" list="chalanList"
-                        placeholder="Slip Number"></div>
+                <div><label>Chalan / Parchi No.</label><input type="text" id="outChalanNo" list="chalanList"></div>
             </div>
             <div id="outRowsContainer">
                 <div class="out-grid header-row">
-                    <div>Cold Marka (Lot No)</div>
+                    <div>Lot No</div>
                     <div>Item Name</div>
                     <div>Bharti</div>
                     <div>Cold Prev Bal</div>
-                    <div>Qty Out (To Shop)</div>
+                    <div>Qty Out</div>
                     <div>Cold Balance</div>
                 </div>
                 <div id="outRows">
@@ -798,9 +780,9 @@
             </div>
             <button
                 style="background:#f1f3f5; border:1px solid #ccc; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold; color:#555; margin-top:5px;"
-                onclick="addDynamicRow('outRows', 'out-row')">+ Ek aur Item jodein</button>
+                onclick="addDynamicRow('outRows', 'out-row')">+ Ek aur Item</button>
             <button class="btn-save" style="background:#e67e22;" onclick="saveColdOutChalan()">Chalan Confirm Karein
-                (Transfer to Shop) 📤</button>
+                📤</button>
         </div>
     </div>
 
@@ -810,26 +792,24 @@
             <span class="close-x" onclick="closeAll()">×</span>
             <h3 style="color:#8e44ad; border-bottom: 1px solid #eee; padding-bottom: 10px;">🛒 Shop Sale (Dukaan Se
                 Bika)</h3>
-
             <div class="chalan-header" style="grid-template-columns: 1fr 1fr;">
                 <div><label>Date</label><input type="date" id="shopOutDate" onchange="generateSaleFormNumber()"></div>
                 <div><label>Form Number (Auto)</label><input type="text" id="shopOutFormNo" readonly
                         style="background:#e8f5e9; font-weight:bold; color:#2e7d32; border: 1px solid #a5d6a7;"></div>
             </div>
-
             <div id="shopOutRowsContainer">
                 <div class="shop-grid header-row">
                     <div>Bill Number</div>
                     <div>Item Name</div>
                     <div>Mark No (Shop)</div>
                     <div>Shop Prev Bal</div>
-                    <div>Sale Qty (Boxes)</div>
+                    <div>Sale Qty</div>
                     <div>Shop Balance</div>
                 </div>
                 <div id="shopOutRows">
                     <div class="shop-grid shop-row">
                         <input type="text" class="shop-bill" placeholder="Bill No">
-                        <input type="text" class="shop-item" readonly tabindex="-1" placeholder="Auto Fill">
+                        <input type="text" class="shop-item" readonly tabindex="-1">
                         <input type="text" class="shop-mark" oninput="fetchShopLotByMark(this)"
                             list="shopAvailableMarkList" placeholder="Mark No. Select Karein">
                         <input type="text" class="shop-prev-bal" readonly tabindex="-1">
@@ -839,7 +819,6 @@
                             style="grid-column: span 6; height: 15px; margin-top: 5px; margin-bottom: 10px;"></div>
                     </div>
                 </div>
-
                 <div class="shop-grid totals-row"
                     style="border-top: 2px dashed #8e44ad; padding-top: 10px; margin-top: 10px;">
                     <div
@@ -851,12 +830,69 @@
                     <div></div>
                 </div>
             </div>
-
             <button
                 style="background:#f1f3f5; border:1px solid #ccc; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold; color:#555; margin-top:15px;"
-                onclick="addDynamicRow('shopOutRows', 'shop-row')">+ Ek aur Item jodein</button>
-            <button class="btn-save" style="background:#8e44ad;" onclick="saveShopSaleNew()">Sale Confirm Karein & Shop
-                Stock Kam Karein 🛒</button>
+                onclick="addDynamicRow('shopOutRows', 'shop-row')">+ Ek aur Item</button>
+            <button class="btn-save" style="background:#8e44ad;" onclick="saveShopSaleNew()">Sale Confirm Karein
+                🛒</button>
+        </div>
+    </div>
+
+    <div id="saleReturnForm" class="overlay no-print">
+        <div class="form-card" style="max-width: 800px; border-top: 5px solid #e74c3c;">
+            <span class="min-btn" onclick="toggleMinimize(this)" title="Minimize">_</span>
+            <span class="close-x" onclick="closeAll()">×</span>
+            <h3 style="color:#c0392b; border-bottom: 1px solid #eee; padding-bottom: 10px;">↩️ Sale Return (Grahak se
+                wapis aaya)</h3>
+            <div class="chalan-header" style="grid-template-columns: 1fr 1fr;">
+                <div><label>Date</label><input type="date" id="returnDate" onchange="generateReturnFormNumber()"></div>
+                <div><label>Sale Return Number (Auto)</label><input type="text" id="returnFormNo" readonly
+                        style="background:#fdedec; font-weight:bold; color:#c0392b; border: 1px solid #f5b7b1;"></div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <div><label>Mark No (Search)</label><input type="text" id="returnMark"
+                        oninput="fetchReturnLotDetails(this)" list="shopAvailableMarkList"
+                        placeholder="Marka type karein"></div>
+                <div><label>Item Name</label><input type="text" id="returnItemName" readonly tabindex="-1"></div>
+                <div><label>Return Qty (Boxes)</label><input type="number" id="returnQty"></div>
+            </div>
+            <input type="hidden" id="returnLotNo">
+            <input type="hidden" id="returnParty">
+            <button class="btn-save" style="background:#e74c3c;" onclick="saveSaleReturn()">Return Entry Save Karein &
+                Stock Badhayein ↩️</button>
+        </div>
+    </div>
+
+    <div id="jobWorkForm" class="overlay no-print">
+        <div class="form-card" style="max-width: 800px; border-top: 5px solid #f39c12;">
+            <span class="min-btn" onclick="toggleMinimize(this)" title="Minimize">_</span>
+            <span class="close-x" onclick="closeAll()">×</span>
+            <h3 style="color:#e67e22; border-bottom: 1px solid #eee; padding-bottom: 10px;">⚙️ Karkhana / Job Work
+                (Clean hone bhejna)</h3>
+            <div class="chalan-header" style="grid-template-columns: 1fr 1fr 1fr;">
+                <div><label>Date</label><input type="date" id="jobDate"></div>
+                <div>
+                    <label>Action (Kya karna hai?)</label>
+                    <select id="jobAction" onchange="toggleJobAction()"
+                        style="font-weight:bold; font-size:15px; color:#e67e22;">
+                        <option value="send">📤 Karkhana Bheja (Stock -)</option>
+                        <option value="receive">📥 Karkhana Se Aaya (Stock +)</option>
+                    </select>
+                </div>
+                <div><label>Job Parchi / Ref No.</label><input type="text" id="jobRef" placeholder="Reference No.">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1.5fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <div><label>Lot No</label><input type="text" id="jobLot" oninput="fetchJobLotDetails(this)"
+                        list="lotList" placeholder="Lot No. Type Karein"></div>
+                <div><label>Item Name</label><input type="text" id="jobItem" readonly tabindex="-1"></div>
+                <div><label id="jobQtyLabel">Bhejne ki Qty (Box/Bag)</label><input type="number" id="jobQty"></div>
+                <div><label>Nayi Bharti (Kg) [Optional]</label><input type="number" id="jobNewBharti"
+                        placeholder="Safai ke baad wajan" disabled></div>
+            </div>
+            <input type="hidden" id="jobOldBharti">
+            <button class="btn-save" id="btnSaveJob" style="background:#e67e22;" onclick="saveJobWork()">Karkhana Bheja
+                - Stock Kam Karein 📤</button>
         </div>
     </div>
 
@@ -868,7 +904,7 @@
             <div style="background:#fff3e0; padding:15px; border-radius:5px; margin-bottom:15px;">
                 <label style="color:#d35400;">Lot No. Search Karein (Jise theek karna hai)</label>
                 <input type="text" id="editSearchLot" oninput="fetchLotForEdit(this.value)" list="editSmartList"
-                    placeholder="🔍 Search Party, Lot, Item ya Marka..."
+                    placeholder="🔍 Search Lot..."
                     style="font-size:16px; font-weight:bold; border-color:#d35400; padding:10px; width:100%; box-sizing:border-box;">
                 <p id="editErrorMsg" style="color:red; font-size:12px; margin-top:5px; display:none;">❌ Yeh Lot No nahi
                     mila.</p>
@@ -883,13 +919,11 @@
                         <option>Box</option>
                         <option>Bag</option>
                     </select></div>
-                <div style="background:#e3f2fd; padding:15px; border-radius:5px;">
-                    <label style="color:#1565c0;">🔵 Cold Qty (Bacha Hua)</label>
-                    <input type="number" id="editColdQty" style="font-weight:bold; font-size:16px;">
+                <div style="background:#e3f2fd; padding:15px; border-radius:5px;"><label style="color:#1565c0;">🔵 Cold
+                        Qty</label><input type="number" id="editColdQty" style="font-weight:bold; font-size:16px;">
                 </div>
-                <div style="background:#f3e5f5; padding:15px; border-radius:5px;">
-                    <label style="color:#8e44ad;">🟣 Shop Qty (Dukaan Par)</label>
-                    <input type="number" id="editShopQty" style="font-weight:bold; font-size:16px;">
+                <div style="background:#f3e5f5; padding:15px; border-radius:5px;"><label style="color:#8e44ad;">🟣 Shop
+                        Qty</label><input type="number" id="editShopQty" style="font-weight:bold; font-size:16px;">
                 </div>
                 <button class="btn-save" style="grid-column: 1 / -1; background:#d35400; margin-top:10px;"
                     onclick="saveLotEdit()">Update Details & Adjust Stock ✅</button>
@@ -904,13 +938,13 @@
             <h3 style="color:#27ae60; border-bottom: 1px solid #eee; padding-bottom: 10px;">📊 Registers & Ledgers</h3>
             <div class="hist-tabs">
                 <button class="h-tab-btn active" onclick="switchHistTab('lotHist')">📜 Lot Ledger</button>
-                <button class="h-tab-btn" onclick="switchHistTab('receiptHist')">📥 Receipt Register (IN)</button>
-                <button class="h-tab-btn" onclick="switchHistTab('chalanHist')">📤 Transfer (Cold to Shop)</button>
+                <button class="h-tab-btn" onclick="switchHistTab('receiptHist')">📥 Receipt Register</button>
+                <button class="h-tab-btn" onclick="switchHistTab('chalanHist')">📤 Transfer/Job Register</button>
                 <button class="h-tab-btn" onclick="switchHistTab('saleHist')">🛍️ Sale Register</button>
             </div>
             <div id="lotHist" class="h-content active">
                 <div style="background: #f4f6f8; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
-                    <label>Lot No (Marka) Search Karein</label>
+                    <label>Lot No Search Karein</label>
                     <input type="text" id="histSearchLot" oninput="renderLotHistory()" list="lotList"
                         placeholder="Enter Lot No..."
                         style="font-size: 16px; font-weight: bold; border-color: #27ae60; padding:10px;">
@@ -920,7 +954,7 @@
                         <tr>
                             <th class="th-hist">Date</th>
                             <th class="th-hist">Action Type</th>
-                            <th class="th-hist">Ref No (Parchi/Bill)</th>
+                            <th class="th-hist">Ref No</th>
                             <th class="th-hist">Qty IN</th>
                             <th class="th-hist">Qty OUT</th>
                         </tr>
@@ -952,7 +986,7 @@
                         <tr>
                             <th class="th-reg">Date</th>
                             <th class="th-reg">Action Type</th>
-                            <th class="th-reg">Chalan / Bill No.</th>
+                            <th class="th-reg">Chalan / Ref No.</th>
                             <th class="th-reg" style="text-align:center;">Total Items</th>
                             <th class="th-reg" style="text-align:center;">Total Qty OUT</th>
                             <th class="th-reg" style="text-align:center;">Action</th>
@@ -1053,7 +1087,6 @@
                 <input type="date" id="reportDate" onchange="generateDailyReport()"
                     style="font-size: 16px; padding: 8px; width: auto; display: inline-block;">
             </div>
-
             <div style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
                 <div
                     style="flex: 1; min-width: 300px; background: #e3f2fd; border: 2px solid #90caf9; border-radius: 8px; padding: 15px;">
@@ -1094,7 +1127,6 @@
                     </div>
                 </div>
             </div>
-
             <table>
                 <thead>
                     <tr>
@@ -1116,10 +1148,14 @@
         </div>
     </div>
 
-    <datalist id="itemNames"></datalist><datalist id="lotList"></datalist><datalist
-        id="shopLotList"></datalist><datalist id="coldStoreList"></datalist>
-    <datalist id="partyList"></datalist><datalist id="receiptList"></datalist><datalist
-        id="chalanList"></datalist><datalist id="shopAvailableMarkList"></datalist>
+    <datalist id="itemNames"></datalist>
+    <datalist id="lotList"></datalist>
+    <datalist id="shopLotList"></datalist>
+    <datalist id="coldStoreList"></datalist>
+    <datalist id="partyList"></datalist>
+    <datalist id="receiptList"></datalist>
+    <datalist id="chalanList"></datalist>
+    <datalist id="shopAvailableMarkList"></datalist>
     <datalist id="editSmartList"></datalist>
 
     <script type="module">
@@ -1152,10 +1188,14 @@
             await setDoc(inventoryDoc, { coldStock, shopStock, lotHistory, savedNames, savedColdStores, savedParties });
         }
 
-        document.getElementById('inDate').valueAsDate = new Date();
-        document.getElementById('outDate').valueAsDate = new Date();
-        document.getElementById('shopOutDate').valueAsDate = new Date();
-        document.getElementById('reportDate').valueAsDate = new Date();
+        // Set Today's Date everywhere
+        let today = new Date();
+        document.getElementById('inDate').valueAsDate = today;
+        document.getElementById('outDate').valueAsDate = today;
+        document.getElementById('shopOutDate').valueAsDate = today;
+        document.getElementById('reportDate').valueAsDate = today;
+        document.getElementById('returnDate').valueAsDate = today;
+        document.getElementById('jobDate').valueAsDate = today;
 
         function switchHistTab(tabId) {
             document.querySelectorAll('.h-content').forEach(t => t.classList.remove('active'));
@@ -1171,7 +1211,6 @@
             let formOverlay = document.getElementById(id);
             formOverlay.style.display = 'block';
 
-            // NAYA FIX: Agar form pehle se minimize tha, toh upar wala button dabane se wapas bada ho jayega
             let card = formOverlay.querySelector('.form-card');
             if (card && card.classList.contains('minimized-card')) {
                 card.classList.remove('minimized-card');
@@ -1182,41 +1221,49 @@
 
             updateLists();
             setTimeout(() => {
-                const firstInput = formOverlay.querySelector('input:not([readonly]), select:not([disabled])');
+                const firstInput = formOverlay.querySelector('input:not([readonly]):not([disabled]), select:not([disabled])');
                 if (firstInput) firstInput.focus();
             }, 100);
 
             if (id === 'dailyReportForm') generateDailyReport();
             if (id === 'shopOutForm') generateSaleFormNumber();
+            if (id === 'saleReturnForm') generateReturnFormNumber();
         }
 
-        // NAYA: Minimize Function
+        // NAYA: Auto-Generate Sale Return Number
+        function generateReturnFormNumber() {
+            let dateStr = document.getElementById('returnDate').value;
+            if (!dateStr) return;
+            let dateVal = dateStr.replace(/-/g, '');
+
+            let todaysReturns = lotHistory.filter(h => h.date === dateStr && h.type === 'Sale Return');
+            let uniqueForms = new Set(todaysReturns.map(h => h.ref));
+            let nextNum = uniqueForms.size + 1;
+
+            document.getElementById('returnFormNo').value = `RET-${dateVal}-${nextNum}`;
+        }
+
         function toggleMinimize(element) {
             let card = element.closest('.form-card');
             let overlay = element.closest('.overlay');
 
-            // NAYA FIX: Click ko turant aage badhne se rokna taaki form wapas bada na ho
             if (window.event) { window.event.stopPropagation(); }
 
             if (!card.classList.contains('minimized-card')) {
-                // Form ko minimize karna
                 card.classList.add('minimized-card');
                 overlay.classList.add('minimized-overlay');
 
-                // Ek se zyada form minimize ho toh unhe upar-neeche stack karna
                 let minCount = document.querySelectorAll('.minimized-card').length - 1;
                 card.style.bottom = (20 + (minCount * 60)) + "px";
 
-                // Thoda delay dekar click event lagayen taaki turant open na ho
                 setTimeout(() => {
                     card.onclick = function (e) {
                         if (card.classList.contains('minimized-card')) {
                             card.classList.remove('minimized-card');
                             overlay.classList.remove('minimized-overlay');
-                            card.style.bottom = ""; // bottom margin reset karein
-                            card.onclick = null; // Click event hata dein
+                            card.style.bottom = "";
+                            card.onclick = null;
 
-                            // Baaki minimized forms ki jagah set karein
                             let allMin = document.querySelectorAll('.minimized-card');
                             allMin.forEach((mCard, idx) => {
                                 mCard.style.bottom = (20 + (idx * 60)) + "px";
@@ -1228,7 +1275,6 @@
         }
 
         function closeAll() {
-            // Minimize huye forms ko bhi theek karke band karein
             document.querySelectorAll('.overlay').forEach(el => {
                 el.style.display = 'none';
                 el.classList.remove('minimized-overlay');
@@ -1240,20 +1286,39 @@
             });
 
             resetForm('outRows'); resetForm('shopOutRows'); resetForm('inRows'); calcInTotals(); calcShopTotals();
+
+            // Clear edit fields
             document.getElementById('editSearchLot').value = "";
             document.getElementById('editFields').style.display = "none";
             document.getElementById('editErrorMsg').style.display = "none";
+
+            // Clear history search
             document.getElementById('histSearchLot').value = "";
             document.getElementById('historyTableBody').innerHTML = `<tr><td colspan="5" style="text-align:center; color:#777;">Lot No. dalkar history dekhein</td></tr>`;
+
+            // Clear Job Work and Return forms
+            document.getElementById('returnMark').value = '';
+            document.getElementById('returnItemName').value = '';
+            document.getElementById('returnQty').value = '';
+            document.getElementById('returnSlipNo').value = '';
+
+            document.getElementById('jobLot').value = '';
+            document.getElementById('jobItem').value = '';
+            document.getElementById('jobQty').value = '';
+            document.getElementById('jobNewBharti').value = '';
+            document.getElementById('jobRef').value = '';
         }
 
         function resetForm(containerId) {
             let container = document.getElementById(containerId);
+            if (!container) return;
             while (container.children.length > 1) { container.removeChild(container.lastChild); }
             let firstRow = container.children[0];
-            firstRow.querySelectorAll('input').forEach(i => { i.value = ""; i.style.color = ""; i.style.backgroundColor = ""; });
-            let info = firstRow.querySelector('.stock-info');
-            if (info) info.innerText = "";
+            if (firstRow) {
+                firstRow.querySelectorAll('input').forEach(i => { i.value = ""; i.style.color = ""; i.style.backgroundColor = ""; });
+                let info = firstRow.querySelector('.stock-info');
+                if (info) info.innerText = "";
+            }
         }
 
         function extractQtyFromMarka(input) {
@@ -1267,13 +1332,34 @@
             }
         }
 
+        // NAYA: Auto-fill for Inward
+        function autoFillInwardDetails(input) {
+            let lotNo = input.value.trim();
+            let row = input.closest('.in-row');
+            if (lotNo === "") return;
+
+            let existingItem = coldStock.find(s => s.lot.toLowerCase() === lotNo.toLowerCase()) ||
+                shopStock.find(s => s.lot.toLowerCase() === lotNo.toLowerCase());
+
+            if (existingItem) {
+                row.querySelector('.in-item').value = existingItem.name;
+                row.querySelector('.in-unit').value = existingItem.unit;
+                row.querySelector('.in-bharti').value = existingItem.bharti;
+                row.querySelector('.in-rate').value = existingItem.rate;
+                row.querySelector('.in-mark').value = existingItem.mark !== "-" ? existingItem.mark : "";
+
+                let infoDiv = row.querySelector('.stock-info');
+                infoDiv.innerHTML = `<span style="color:#27ae60;">Pehle se maujood lot. Nayi Qty isme plus hogi.</span>`;
+            }
+        }
+
         function setupFocusNavigation(containerId) {
             const container = document.getElementById(containerId);
             if (!container) return;
             container.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    const allInputs = Array.from(container.querySelectorAll('input:not([readonly]), select:not([disabled])'));
+                    const allInputs = Array.from(container.querySelectorAll('input:not([readonly]):not([disabled]), select:not([disabled])'));
                     const index = allInputs.indexOf(e.target);
                     if (e.shiftKey) { if (index > 0) allInputs[index - 1].focus(); }
                     else {
@@ -1325,6 +1411,7 @@
             newRow.querySelector('.in-unit').value = oldUnit;
             newRow.querySelector('.in-bharti').value = oldBharti;
             newRow.querySelector('.in-lot').value = newLot;
+            newRow.querySelector('.stock-info').innerHTML = ""; // Clear info
             container.appendChild(newRow); calcInTotals();
             setTimeout(() => newRow.querySelector('.in-item').focus(), 10);
         }
@@ -1333,38 +1420,31 @@
             let container = document.getElementById(containerId);
             let lastRow = container.children[container.children.length - 1];
 
-            // NAYA: Auto-increment Bill Number check
             let lastBill = "";
-            if (containerId === 'shopOutRows') {
-                lastBill = lastRow.querySelector('.shop-bill').value.trim();
-            }
+            if (containerId === 'shopOutRows') { lastBill = lastRow.querySelector('.shop-bill').value.trim(); }
 
             let newRow = lastRow.cloneNode(true);
             newRow.querySelectorAll('input').forEach(i => { i.value = ""; i.style.color = ""; i.style.backgroundColor = ""; });
             newRow.querySelector('.stock-info').innerText = "";
 
-            // Agar shop sale form hai toh agla bill no daal do
             if (containerId === 'shopOutRows' && lastBill !== "") {
-                let match = lastBill.match(/(\d+)$/); // String ke aakhiri number ko dhoondhega
+                let match = lastBill.match(/(\d+)$/);
                 if (match) {
                     let nextNum = String(parseInt(match[0]) + 1).padStart(match[0].length, '0');
                     newRow.querySelector('.shop-bill').value = lastBill.replace(/(\d+)$/, nextNum);
                 } else {
-                    newRow.querySelector('.shop-bill').value = lastBill; // Agar koi number nahi hai toh wahi rakh dega
+                    newRow.querySelector('.shop-bill').value = lastBill;
                 }
             }
 
             container.appendChild(newRow);
-
             let focusSelector = containerId.includes('shop') ? '.shop-bill' : '.out-lot';
 
-            // Agar bill number khud set ho gaya hai toh direct marka par focus le jao
             if (containerId === 'shopOutRows' && lastBill !== "") {
                 setTimeout(() => newRow.querySelector('.shop-mark').focus(), 10);
             } else {
                 setTimeout(() => newRow.querySelector(focusSelector).focus(), 10);
             }
-
             if (containerId === 'shopOutRows') calcShopTotals();
         }
 
@@ -1417,6 +1497,7 @@
                     let existingIndex = targetStock.findIndex(s => s.lot.toLowerCase() === lot.toLowerCase());
                     if (existingIndex > -1) targetStock[existingIndex].qty += qty;
                     else targetStock.push(newItem);
+
                     let typeLabel = destination === 'cold' ? 'Cold IN' : 'Shop IN';
                     lotHistory.push({ date: inDate, lot: lot, name: name, type: typeLabel, ref: 'Receipt: ' + receiptNo, qtyIn: qty, qtyOut: '-' });
                     if (!savedNames.includes(newItem.name)) savedNames.push(newItem.name);
@@ -1507,7 +1588,6 @@
             if (successCount > 0) { saveAllData(); alert("✅ Transfer Successful!"); closeAll(); }
         }
 
-        // NAYA: Shop Sale Total calc karna
         function calcShopTotals() {
             let total = 0;
             document.querySelectorAll('#shopOutRows .shop-qty-input').forEach(input => {
@@ -1535,7 +1615,6 @@
                 row.querySelector('.shop-prev-bal').value = currentAvailable;
                 row.querySelector('.shop-qty-input').max = currentAvailable;
 
-                // NAYA: Marka ki details save karna 
                 row.dataset.lot = found.lot;
                 row.dataset.name = found.name;
                 row.dataset.party = found.party;
@@ -1561,7 +1640,6 @@
             let outQty = parseFloat(input.value) || 0; let balance = availQty - outQty;
             balInput.value = balance;
 
-            // NAYA: Marka Details ka display text
             let detailsStr = "";
             if (row.dataset.lot) {
                 detailsStr = `Lot: <b style="color:#d35400;">${row.dataset.lot}</b> | Party: <b style="color:#2c3e50;">${row.dataset.party || "-"}</b> | Bharti: <b style="color:#2c3e50;">${row.dataset.bharti || "-"}Kg</b> | Rate: <b style="color:#2c3e50;">₹${row.dataset.rate || "-"}</b>`;
@@ -1575,18 +1653,16 @@
                 infoDiv.innerHTML = `<span style="color:#2980b9;">${detailsStr}</span> <span style="color:#27ae60; font-weight:bold; margin-left:15px;">Available: ${availQty} Box</span>`;
             }
 
-            calcShopTotals(); // Jab bhi quantity change hogi total update hoga
+            calcShopTotals();
         }
 
         function generateSaleFormNumber() {
             let dateStr = document.getElementById('shopOutDate').value;
             if (!dateStr) return;
             let dateVal = dateStr.replace(/-/g, '');
-
-            let todaysSales = lotHistory.filter(h => h.date === dateStr && h.type.includes('Sale'));
+            let todaysSales = lotHistory.filter(h => h.date === dateStr && h.type.includes('Sale (Bika)'));
             let uniqueForms = new Set(todaysSales.map(h => h.ref));
             let nextNum = uniqueForms.size + 1;
-
             document.getElementById('shopOutFormNo').value = `SALE-${dateVal}-${nextNum}`;
         }
 
@@ -1628,6 +1704,122 @@
                 }
             });
             if (successCount > 0) { saveAllData(); alert("🛒 Sale confirm ho gayi!"); closeAll(); }
+        }
+
+        // NAYA: Sale Return Logic
+        function fetchReturnLotDetails(input) {
+            let markNo = input.value.trim();
+            if (markNo === "") { document.getElementById('returnItemName').value = ""; return; }
+            let found = shopStock.find(s => s.mark && s.mark.toLowerCase() === markNo.toLowerCase());
+            if (found) {
+                document.getElementById('returnItemName').value = found.name;
+                document.getElementById('returnLotNo').value = found.lot;
+                document.getElementById('returnParty').value = found.party;
+            } else {
+                document.getElementById('returnItemName').value = "Not Found";
+            }
+        }
+
+        // UPDATE: saveSaleReturn function ko isse replace karein
+        function saveSaleReturn() {
+            let returnDate = document.getElementById('returnDate').value;
+            let formNo = document.getElementById('returnFormNo').value; // Ab yahan auto number aayega
+            let markNo = document.getElementById('returnMark').value.trim();
+            let qty = parseFloat(document.getElementById('returnQty').value);
+            let lot = document.getElementById('returnLotNo').value;
+            let name = document.getElementById('returnItemName').value;
+
+            if (!markNo || isNaN(qty) || qty <= 0 || !lot) {
+                alert("Kripya sahi details bharein!"); return;
+            }
+
+            let sIdx = shopStock.findIndex(s => s.lot === lot);
+            if (sIdx !== -1) {
+                shopStock[sIdx].qty += qty;
+                // Slip No ki jagah formNo save hoga
+                lotHistory.push({ date: returnDate, lot: lot, name: name, type: 'Sale Return', ref: formNo, qtyIn: qty, qtyOut: '-' });
+                saveAllData();
+                alert("✅ Sale Return Successfully Added!");
+                closeAll();
+            } else {
+                alert("❌ Original Lot nahi mila!");
+            }
+        }
+        // NAYA: Job Work Logic
+        function toggleJobAction() {
+            let action = document.getElementById('jobAction').value;
+            let btn = document.getElementById('btnSaveJob');
+            let label = document.getElementById('jobQtyLabel');
+            let bhartiInput = document.getElementById('jobNewBharti');
+
+            if (action === 'send') {
+                btn.innerHTML = "Karkhana Bheja - Stock Kam Karein 📤";
+                btn.style.background = "#e67e22";
+                label.innerText = "Bhejne ki Qty (Box/Bag)";
+                bhartiInput.disabled = true;
+                bhartiInput.value = "";
+            } else {
+                btn.innerHTML = "Clean Hoke Aaya - Stock Wapis Badhayein 📥";
+                btn.style.background = "#27ae60";
+                label.innerText = "Aane ki Qty (Box/Bag)";
+                bhartiInput.disabled = false;
+                bhartiInput.value = document.getElementById('jobOldBharti').value;
+            }
+        }
+
+        function fetchJobLotDetails(input) {
+            let lotNo = input.value.trim().toLowerCase();
+            if (lotNo === "") { document.getElementById('jobItem').value = ""; return; }
+            let found = coldStock.find(s => s.lot.toLowerCase() === lotNo) || shopStock.find(s => s.lot.toLowerCase() === lotNo);
+
+            if (found) {
+                document.getElementById('jobItem').value = found.name;
+                document.getElementById('jobOldBharti').value = found.bharti;
+                if (document.getElementById('jobAction').value === 'receive') {
+                    document.getElementById('jobNewBharti').value = found.bharti;
+                }
+            } else {
+                document.getElementById('jobItem').value = "Not Found";
+            }
+        }
+
+        function saveJobWork() {
+            let date = document.getElementById('jobDate').value;
+            let action = document.getElementById('jobAction').value;
+            let ref = document.getElementById('jobRef').value.trim() || "JobWork";
+            let lot = document.getElementById('jobLot').value.trim();
+            let name = document.getElementById('jobItem').value;
+            let qty = parseFloat(document.getElementById('jobQty').value);
+            let newBharti = parseFloat(document.getElementById('jobNewBharti').value);
+
+            if (!lot || isNaN(qty) || qty <= 0 || name === "Not Found") {
+                alert("Kripya sahi Lot No. aur Qty bharein!"); return;
+            }
+
+            let targetStock = coldStock;
+            let sIdx = targetStock.findIndex(s => s.lot.toLowerCase() === lot.toLowerCase());
+
+            if (sIdx === -1) {
+                targetStock = shopStock;
+                sIdx = targetStock.findIndex(s => s.lot.toLowerCase() === lot.toLowerCase());
+            }
+
+            if (sIdx !== -1) {
+                if (action === 'send') {
+                    if (qty > targetStock[sIdx].qty) { alert("⚠️ Error: Stock mein itni quantity nahi hai!"); return; }
+                    targetStock[sIdx].qty -= qty;
+                    lotHistory.push({ date: date, lot: lot, name: name, type: 'Job Work (OUT)', ref: ref, qtyIn: '-', qtyOut: qty });
+                    alert("📤 Maal safai ke liye Karkhana bhej diya gaya!");
+                } else {
+                    targetStock[sIdx].qty += qty;
+                    if (!isNaN(newBharti) && newBharti > 0) { targetStock[sIdx].bharti = newBharti; }
+                    lotHistory.push({ date: date, lot: lot, name: name, type: 'Job Work (IN)', ref: ref, qtyIn: qty, qtyOut: '-' });
+                    alert("📥 Maal Karkhana se wapis aa gaya!");
+                }
+                saveAllData(); closeAll();
+            } else {
+                alert("❌ Yeh Lot No. stock mein nahi mila!");
+            }
         }
 
         function fetchLotForEdit(lotNo) {
@@ -1683,11 +1875,11 @@
 
         function openQuickLedger(lotNo) {
             let tbody = document.getElementById('qlTableBody'); tbody.innerHTML = "";
-            document.getElementById('qlTitle').innerText = "📜 Lot Ledger - Marka: " + lotNo;
+            document.getElementById('qlTitle').innerText = "📜 Lot Ledger - Lot: " + lotNo;
             let filtered = lotHistory.filter(h => h.lot.toLowerCase() === lotNo.toLowerCase());
             if (filtered.length === 0) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">No History</td></tr>`;
             else filtered.forEach(h => {
-                let typeClass = h.type.includes("IN") ? "hist-in" : (h.type.includes("Transfer") ? "hist-trans" : "hist-sale");
+                let typeClass = h.type.includes("IN") || h.type.includes("Return") ? "hist-in" : (h.type.includes("Transfer") || h.type.includes("Job Work") ? "hist-trans" : "hist-sale");
                 tbody.innerHTML += `<tr><td>${h.date}</td><td class="${typeClass}">${h.type}</td><td>${h.ref}</td><td style="color:#2980b9;">${h.qtyIn}</td><td style="color:#e74c3c;">${h.qtyOut}</td></tr>`;
             });
             document.getElementById('quickLedgerModal').style.display = 'block';
@@ -1700,7 +1892,7 @@
             let filtered = lotHistory.filter(h => h.lot.toLowerCase() === searchLot);
             if (filtered.length === 0) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">No History</td></tr>`;
             else filtered.forEach(h => {
-                let typeClass = h.type.includes("IN") ? "hist-in" : (h.type.includes("Transfer") ? "hist-trans" : "hist-sale");
+                let typeClass = h.type.includes("IN") || h.type.includes("Return") ? "hist-in" : (h.type.includes("Transfer") || h.type.includes("Job Work") ? "hist-trans" : "hist-sale");
                 tbody.innerHTML += `<tr><td>${h.date}</td><td class="${typeClass}">${h.type}</td><td>${h.ref}</td><td style="color:#2980b9;">${h.qtyIn}</td><td style="color:#e74c3c;">${h.qtyOut}</td></tr>`;
             });
         }
@@ -1708,7 +1900,7 @@
         function renderReceiptRegister() {
             let tbody = document.getElementById('receiptHistBody');
             tbody.innerHTML = "";
-            let receipts = lotHistory.filter(h => h.qtyIn !== '-' && parseFloat(h.qtyIn) > 0);
+            let receipts = lotHistory.filter(h => h.qtyIn !== '-' && parseFloat(h.qtyIn) > 0 && !h.type.includes("Job Work") && !h.type.includes("Return"));
 
             if (receipts.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#777;">Koi aamad (Receipt) nahi hai.</td></tr>`;
@@ -1726,14 +1918,10 @@
             Object.values(grouped).reverse().forEach(g => {
                 let safeRef = g.ref.replace(/'/g, "\\'");
                 tbody.innerHTML += `<tr>
-                    <td>${g.date}</td>
-                    <td style="font-weight:bold; color:#2980b9;">${g.ref}</td>
+                    <td>${g.date}</td><td style="font-weight:bold; color:#2980b9;">${g.ref}</td>
                     <td style="text-align:center;">${g.itemsCount} Item(s)</td>
                     <td style="color:#27ae60; font-weight:bold; text-align:center;">${g.totalQty}</td>
-                    <td style="text-align:center;">
-                        <button style="padding:6px 12px; cursor:pointer; background:#2980b9; color:white; border:none; border-radius:4px; font-weight:bold;" 
-                        onclick="showDocDetails('${g.date}', '${safeRef}', 'IN')">👁️ View</button>
-                    </td>
+                    <td style="text-align:center;"><button style="padding:6px 12px; cursor:pointer; background:#2980b9; color:white; border:none; border-radius:4px; font-weight:bold;" onclick="showDocDetails('${g.date}', '${safeRef}', 'IN')">👁️ View</button></td>
                 </tr>`;
             });
         }
@@ -1741,10 +1929,10 @@
         function renderChalanRegister() {
             let tbody = document.getElementById('chalanHistBody');
             tbody.innerHTML = "";
-            let chalans = lotHistory.filter(h => h.qtyOut !== '-' && parseFloat(h.qtyOut) > 0 && !h.type.includes('Sale'));
+            let chalans = lotHistory.filter(h => h.qtyOut !== '-' && parseFloat(h.qtyOut) > 0 && !h.type.includes('Sale (Bika)'));
 
             if (chalans.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#777;">Koi dispatch (Chalan) nahi hai.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#777;">Koi dispatch/job work nahi hai.</td></tr>`;
                 return;
             }
 
@@ -1757,18 +1945,13 @@
             });
 
             Object.values(grouped).reverse().forEach(g => {
-                let typeColor = g.type.includes("Sale") ? "#8e44ad" : "#e67e22";
+                let typeColor = g.type.includes("Job Work") ? "#d35400" : "#e67e22";
                 let safeRef = g.ref.replace(/'/g, "\\'");
                 tbody.innerHTML += `<tr>
-                    <td>${g.date}</td>
-                    <td style="color:${typeColor}; font-weight:bold;">${g.type}</td>
-                    <td style="font-weight:bold;">${g.ref}</td>
-                    <td style="text-align:center;">${g.itemsCount} Item(s)</td>
+                    <td>${g.date}</td><td style="color:${typeColor}; font-weight:bold;">${g.type}</td>
+                    <td style="font-weight:bold;">${g.ref}</td><td style="text-align:center;">${g.itemsCount} Item(s)</td>
                     <td style="color:#c0392b; font-weight:bold; text-align:center;">${g.totalQty}</td>
-                    <td style="text-align:center;">
-                        <button style="padding:6px 12px; cursor:pointer; background:${typeColor}; color:white; border:none; border-radius:4px; font-weight:bold;" 
-                        onclick="showDocDetails('${g.date}', '${safeRef}', 'OUT')">👁️ View</button>
-                    </td>
+                    <td style="text-align:center;"><button style="padding:6px 12px; cursor:pointer; background:${typeColor}; color:white; border:none; border-radius:4px; font-weight:bold;" onclick="showDocDetails('${g.date}', '${safeRef}', 'OUT')">👁️ View</button></td>
                 </tr>`;
             });
         }
@@ -1776,7 +1959,7 @@
         function renderSaleRegister() {
             let tbody = document.getElementById('saleHistBody');
             tbody.innerHTML = "";
-            let sales = lotHistory.filter(h => h.qtyOut !== '-' && parseFloat(h.qtyOut) > 0 && h.type.includes('Sale'));
+            let sales = lotHistory.filter(h => h.qtyOut !== '-' && parseFloat(h.qtyOut) > 0 && h.type.includes('Sale (Bika)'));
 
             if (sales.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#777;">Koi sale nahi hui hai.</td></tr>`;
@@ -1794,14 +1977,10 @@
             Object.values(grouped).reverse().forEach(g => {
                 let safeRef = g.formNo.replace(/'/g, "\\'");
                 tbody.innerHTML += `<tr>
-                    <td>${g.date}</td>
-                    <td style="font-weight:bold; color:#8e44ad;">${g.formNo}</td>
+                    <td>${g.date}</td><td style="font-weight:bold; color:#8e44ad;">${g.formNo}</td>
                     <td style="text-align:center;">${g.itemsCount} Item(s)</td>
                     <td style="color:#c0392b; font-weight:bold; text-align:center;">${g.totalQty}</td>
-                    <td style="text-align:center;">
-                        <button style="padding:6px 12px; cursor:pointer; background:#8e44ad; color:white; border:none; border-radius:4px; font-weight:bold;" 
-                        onclick="showDocDetails('${g.date}', '${safeRef}', 'SALE')">👁️ View</button>
-                    </td>
+                    <td style="text-align:center;"><button style="padding:6px 12px; cursor:pointer; background:#8e44ad; color:white; border:none; border-radius:4px; font-weight:bold;" onclick="showDocDetails('${g.date}', '${safeRef}', 'SALE')">👁️ View</button></td>
                 </tr>`;
             });
         }
@@ -1813,52 +1992,28 @@
 
             if (typeFlag === 'SALE') {
                 document.getElementById('docDetailsTitle').innerText = `🛒 Sale Form Details: ${ref} (${date})`;
-                thead.innerHTML = `<tr>
-                    <th style="background:#8e44ad; color:white;">Bill No</th>
-                    <th style="background:#8e44ad; color:white;">Item Name</th>
-                    <th style="background:#8e44ad; color:white;">Lot No</th>
-                    <th style="background:#8e44ad; color:white;">Marka</th>
-                    <th style="background:#8e44ad; color:white;">Qty OUT</th>
-                </tr>`;
+                thead.innerHTML = `<tr><th style="background:#8e44ad; color:white;">Bill No</th><th style="background:#8e44ad; color:white;">Item Name</th><th style="background:#8e44ad; color:white;">Lot No</th><th style="background:#8e44ad; color:white;">Marka</th><th style="background:#8e44ad; color:white;">Qty OUT</th></tr>`;
             } else {
                 let color = typeFlag === 'IN' ? '#27ae60' : '#e67e22';
                 document.getElementById('docDetailsTitle').innerText = `📄 Document Details: ${ref} (${date})`;
-                thead.innerHTML = `<tr>
-                    <th style="background:${color}; color:white;">Item Name</th>
-                    <th style="background:${color}; color:white;">Lot No</th>
-                    <th style="background:${color}; color:white;">Marka</th>
-                    <th style="background:${color}; color:white;">Qty</th>
-                </tr>`;
+                thead.innerHTML = `<tr><th style="background:${color}; color:white;">Item Name</th><th style="background:${color}; color:white;">Lot No</th><th style="background:${color}; color:white;">Marka</th><th style="background:${color}; color:white;">Qty</th></tr>`;
             }
 
             let filtered = lotHistory.filter(h => h.date === date && h.ref === ref);
 
             filtered.forEach(h => {
                 let qty = typeFlag === 'IN' ? h.qtyIn : h.qtyOut;
-                let foundItem = coldStock.find(s => s.lot.toLowerCase() === h.lot.toLowerCase()) ||
-                    shopStock.find(s => s.lot.toLowerCase() === h.lot.toLowerCase());
+                let foundItem = coldStock.find(s => s.lot.toLowerCase() === h.lot.toLowerCase()) || shopStock.find(s => s.lot.toLowerCase() === h.lot.toLowerCase());
                 let marka = (foundItem && foundItem.mark && foundItem.mark !== "-") ? foundItem.mark : "-";
 
                 if (typeFlag === 'SALE') {
                     let bNo = h.billNo || "-";
-                    tbody.innerHTML += `<tr>
-                        <td style="font-weight:bold; color:#555;">${bNo}</td>
-                        <td><b>${h.name}</b></td>
-                        <td><span class="badge-lot">${h.lot}</span></td>
-                        <td style="font-weight:bold; color:#8e44ad;">${marka}</td>
-                        <td style="color:#c0392b; font-weight:bold; font-size:15px;">${qty}</td>
-                    </tr>`;
+                    tbody.innerHTML += `<tr><td style="font-weight:bold; color:#555;">${bNo}</td><td><b>${h.name}</b></td><td><span class="badge-lot">${h.lot}</span></td><td style="font-weight:bold; color:#8e44ad;">${marka}</td><td style="color:#c0392b; font-weight:bold; font-size:15px;">${qty}</td></tr>`;
                 } else {
                     let qtyColor = typeFlag === 'IN' ? '#27ae60' : '#c0392b';
-                    tbody.innerHTML += `<tr>
-                        <td><b>${h.name}</b></td>
-                        <td><span class="badge-lot">${h.lot}</span></td>
-                        <td style="font-weight:bold; color:#555;">${marka}</td>
-                        <td style="color:${qtyColor}; font-weight:bold; font-size:15px;">${qty}</td>
-                    </tr>`;
+                    tbody.innerHTML += `<tr><td><b>${h.name}</b></td><td><span class="badge-lot">${h.lot}</span></td><td style="font-weight:bold; color:#555;">${marka}</td><td style="color:${qtyColor}; font-weight:bold; font-size:15px;">${qty}</td></tr>`;
                 }
             });
-
             document.getElementById('docDetailsModal').style.display = 'block';
         }
 
@@ -1897,64 +2052,31 @@
             if (zBody.innerHTML === "") zBody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Koi zero stock item nahi hai.</td></tr>";
         }
 
-        // ==========================================
-        // SEARCH, SORT, FILTER & REPORT FUNCTIONS
-        // ==========================================
-
         function searchMasterTable() {
             let input = document.getElementById("masterSearch");
             let filter = input.value.toUpperCase();
             let table = document.getElementById("masterTable");
             let tr = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
-
             for (let i = 0; i < tr.length; i++) {
                 let rowContent = tr[i].textContent || tr[i].innerText;
-                if (rowContent.toUpperCase().indexOf(filter) > -1) {
-                    tr[i].style.display = "";
-                } else {
-                    tr[i].style.display = "none";
-                }
+                tr[i].style.display = rowContent.toUpperCase().indexOf(filter) > -1 ? "" : "none";
             }
         }
 
         function sortTable(n) {
-            let table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-            table = document.getElementById("masterTable");
-            switching = true;
-            dir = "asc";
-
+            let table = document.getElementById("masterTable"), rows, switching = true, i, x, y, shouldSwitch, dir = "asc", switchcount = 0;
             while (switching) {
-                switching = false;
-                rows = table.getElementsByTagName("tbody")[0].rows;
+                switching = false; rows = table.getElementsByTagName("tbody")[0].rows;
                 for (i = 0; i < (rows.length - 1); i++) {
-                    shouldSwitch = false;
-                    x = rows[i].getElementsByTagName("td")[n];
-                    y = rows[i + 1].getElementsByTagName("td")[n];
-
-                    let valX = x.innerText.toLowerCase();
-                    let valY = y.innerText.toLowerCase();
-
-                    let numX = parseFloat(valX.replace(/[^0-9.-]+/g, ""));
-                    let numY = parseFloat(valY.replace(/[^0-9.-]+/g, ""));
-
+                    shouldSwitch = false; x = rows[i].getElementsByTagName("td")[n]; y = rows[i + 1].getElementsByTagName("td")[n];
+                    let valX = x.innerText.toLowerCase(), valY = y.innerText.toLowerCase();
+                    let numX = parseFloat(valX.replace(/[^0-9.-]+/g, "")), numY = parseFloat(valY.replace(/[^0-9.-]+/g, ""));
                     if (!isNaN(numX) && !isNaN(numY)) { valX = numX; valY = numY; }
-
-                    if (dir == "asc") {
-                        if (valX > valY) { shouldSwitch = true; break; }
-                    } else if (dir == "desc") {
-                        if (valX < valY) { shouldSwitch = true; break; }
-                    }
+                    if (dir == "asc") { if (valX > valY) { shouldSwitch = true; break; } }
+                    else if (dir == "desc") { if (valX < valY) { shouldSwitch = true; break; } }
                 }
-                if (shouldSwitch) {
-                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                    switching = true;
-                    switchcount++;
-                } else {
-                    if (switchcount == 0 && dir == "asc") {
-                        dir = "desc";
-                        switching = true;
-                    }
-                }
+                if (shouldSwitch) { rows[i].parentNode.insertBefore(rows[i + 1], rows[i]); switching = true; switchcount++; }
+                else if (switchcount == 0 && dir == "asc") { dir = "desc"; switching = true; }
             }
         }
 
@@ -1962,9 +2084,7 @@
 
         function filterStock(type) {
             window.currentFilterType = type;
-
             let title = document.getElementById("printTitle");
-
             let tr = document.getElementById("masterStockBody").getElementsByTagName("tr");
 
             if (type === 'cold') title.innerText = "Dryfu - Cold Storage Stock Report";
@@ -1974,128 +2094,70 @@
             for (let i = 0; i < tr.length; i++) {
                 let coldQty = parseFloat(tr[i].getElementsByClassName("col-cold")[0].innerText) || 0;
                 let shopQty = parseFloat(tr[i].getElementsByClassName("col-shop")[0].innerText) || 0;
-
-                if (type === 'cold' && coldQty > 0) {
-                    tr[i].style.display = "";
-                } else if (type === 'shop' && shopQty > 0) {
-                    tr[i].style.display = "";
-                } else if (type === 'all') {
-                    tr[i].style.display = "";
-                } else {
-                    tr[i].style.display = "none";
-                }
+                if (type === 'cold' && coldQty > 0) tr[i].style.display = "";
+                else if (type === 'shop' && shopQty > 0) tr[i].style.display = "";
+                else if (type === 'all') tr[i].style.display = "";
+                else tr[i].style.display = "none";
             }
         }
 
         function generateDailyReport() {
             let dateInput = document.getElementById("reportDate").value;
             if (!dateInput) return;
-
             let tbody = document.getElementById("dailyReportBody");
             tbody.innerHTML = "";
-
-            let coldOpening = 0, shopOpening = 0;
-            let coldIn = 0, coldOut = 0;
-            let shopIn = 0, shopOut = 0;
+            let coldOpening = 0, shopOpening = 0, coldIn = 0, coldOut = 0, shopIn = 0, shopOut = 0;
 
             lotHistory.forEach(h => {
-                let qIn = parseFloat(h.qtyIn) || 0;
-                let qOut = parseFloat(h.qtyOut) || 0;
-                let d = h.date;
-
+                let qIn = parseFloat(h.qtyIn) || 0; let qOut = parseFloat(h.qtyOut) || 0; let d = h.date;
                 if (d < dateInput) {
-                    if (h.type === 'Cold IN') coldOpening += qIn;
+                    if (h.type === 'Cold IN' || h.type === 'Job Work (IN)') coldOpening += qIn;
                     else if (h.type === 'Transfer to Shop') { coldOpening -= qOut; shopOpening += qOut; }
-                    else if (h.type === 'Shop IN') shopOpening += qIn;
+                    else if (h.type === 'Shop IN' || h.type === 'Sale Return') shopOpening += qIn;
                     else if (h.type === 'Sale (Bika)') shopOpening -= qOut;
-                }
-                else if (d === dateInput) {
-                    if (h.type === 'Cold IN') coldIn += qIn;
+                    else if (h.type === 'Job Work (OUT)') coldOpening -= qOut;
+                } else if (d === dateInput) {
+                    if (h.type === 'Cold IN' || h.type === 'Job Work (IN)') coldIn += qIn;
                     else if (h.type === 'Transfer to Shop') { coldOut += qOut; shopIn += qOut; }
-                    else if (h.type === 'Shop IN') shopIn += qIn;
+                    else if (h.type === 'Shop IN' || h.type === 'Sale Return') shopIn += qIn;
                     else if (h.type === 'Sale (Bika)') shopOut += qOut;
+                    else if (h.type === 'Job Work (OUT)') coldOut += qOut;
                 }
             });
 
-            let coldTotalAB = coldOpening + coldIn;
-            document.getElementById('sumColdOpen').innerText = coldOpening;
-            document.getElementById('sumColdIn').innerText = coldIn;
-            document.getElementById('sumColdTotal').innerText = coldTotalAB;
-            document.getElementById('sumColdOut').innerText = coldOut;
-            document.getElementById('sumColdBal').innerText = coldTotalAB - coldOut;
+            document.getElementById('sumColdOpen').innerText = coldOpening; document.getElementById('sumColdIn').innerText = coldIn;
+            document.getElementById('sumColdTotal').innerText = coldOpening + coldIn; document.getElementById('sumColdOut').innerText = coldOut;
+            document.getElementById('sumColdBal').innerText = (coldOpening + coldIn) - coldOut;
 
-            let shopTotalAB = shopOpening + shopIn;
-            document.getElementById('sumShopOpen').innerText = shopOpening;
-            document.getElementById('sumShopIn').innerText = shopIn;
-            document.getElementById('sumShopTotal').innerText = shopTotalAB;
-            document.getElementById('sumShopOut').innerText = shopOut;
-            document.getElementById('sumShopBal').innerText = shopTotalAB - shopOut;
+            document.getElementById('sumShopOpen').innerText = shopOpening; document.getElementById('sumShopIn').innerText = shopIn;
+            document.getElementById('sumShopTotal').innerText = shopOpening + shopIn; document.getElementById('sumShopOut').innerText = shopOut;
+            document.getElementById('sumShopBal').innerText = (shopOpening + shopIn) - shopOut;
 
             let todaysHistory = lotHistory.filter(h => h.date === dateInput);
-
             if (todaysHistory.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red; font-weight:bold;">Is din ki koi entry nahi hai.</td></tr>`;
                 return;
             }
 
             todaysHistory.forEach(h => {
-                let typeColor = h.type.includes("IN") ? "#2980b9" : (h.type.includes("Sale") ? "#8e44ad" : "#e67e22");
-
-                let foundItem = coldStock.find(s => s.lot.toLowerCase() === h.lot.toLowerCase()) ||
-                    shopStock.find(s => s.lot.toLowerCase() === h.lot.toLowerCase());
+                let typeColor = h.type.includes("IN") || h.type.includes("Return") ? "#2980b9" : (h.type.includes("Sale") ? "#8e44ad" : "#e67e22");
+                let foundItem = coldStock.find(s => s.lot.toLowerCase() === h.lot.toLowerCase()) || shopStock.find(s => s.lot.toLowerCase() === h.lot.toLowerCase());
                 let marka = (foundItem && foundItem.mark && foundItem.mark !== "-") ? foundItem.mark : "-";
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="color:${typeColor}; font-weight:bold;">${h.type}</td>
-                        <td><span class="badge-lot">${h.lot}</span></td>
-                        <td style="font-weight:bold; color:#8e44ad;">${marka}</td>
-                        <td><b>${h.name}</b></td>
-                        <td>${h.ref}</td>
-                        <td style="color:#27ae60; font-weight:bold;">${h.qtyIn !== '-' ? h.qtyIn : ''}</td>
-                        <td style="color:#c0392b; font-weight:bold;">${h.qtyOut !== '-' ? h.qtyOut : ''}</td>
-                    </tr>`;
+                tbody.innerHTML += `<tr><td style="color:${typeColor}; font-weight:bold;">${h.type}</td><td><span class="badge-lot">${h.lot}</span></td><td style="font-weight:bold; color:#8e44ad;">${marka}</td><td><b>${h.name}</b></td><td>${h.ref}</td><td style="color:#27ae60; font-weight:bold;">${h.qtyIn !== '-' ? h.qtyIn : ''}</td><td style="color:#c0392b; font-weight:bold;">${h.qtyOut !== '-' ? h.qtyOut : ''}</td></tr>`;
             });
         }
 
         function printCustomReport() {
-            let style = document.createElement('style');
-            style.id = 'print-columns-style';
-
-            let css = `
-                @media print {
-                    #masterTable th:nth-child(1), #masterTable td:nth-child(1),
-                    #masterTable th:nth-child(2), #masterTable td:nth-child(2),
-                    #masterTable th:nth-child(6), #masterTable td:nth-child(6),
-                    #masterTable th:nth-child(7), #masterTable td:nth-child(7),
-                    #masterTable th:nth-child(11), #masterTable td:nth-child(11),
-                    #masterTable th:nth-child(12), #masterTable td:nth-child(12) {
-                        display: none !important;
-                    }
-            `;
-
-            if (window.currentFilterType === 'cold') {
-                css += `#masterTable th:nth-child(9), #masterTable td:nth-child(9), #masterTable th:nth-child(10), #masterTable td:nth-child(10) { display: none !important; }`;
-            } else if (window.currentFilterType === 'shop') {
-                css += `#masterTable th:nth-child(8), #masterTable td:nth-child(8), #masterTable th:nth-child(10), #masterTable td:nth-child(10) { display: none !important; }`;
-            } else {
-                css += `#masterTable th:nth-child(8), #masterTable td:nth-child(8), #masterTable th:nth-child(9), #masterTable td:nth-child(9) { display: none !important; }`;
-            }
-
-            css += `}`;
-
-            style.innerHTML = css;
-            document.head.appendChild(style);
-
+            let style = document.createElement('style'); style.id = 'print-columns-style';
+            let css = `@media print { #masterTable th:nth-child(1), #masterTable td:nth-child(1), #masterTable th:nth-child(2), #masterTable td:nth-child(2), #masterTable th:nth-child(6), #masterTable td:nth-child(6), #masterTable th:nth-child(7), #masterTable td:nth-child(7), #masterTable th:nth-child(11), #masterTable td:nth-child(11), #masterTable th:nth-child(12), #masterTable td:nth-child(12) { display: none !important; } `;
+            if (window.currentFilterType === 'cold') css += `#masterTable th:nth-child(9), #masterTable td:nth-child(9), #masterTable th:nth-child(10), #masterTable td:nth-child(10) { display: none !important; }`;
+            else if (window.currentFilterType === 'shop') css += `#masterTable th:nth-child(8), #masterTable td:nth-child(8), #masterTable th:nth-child(10), #masterTable td:nth-child(10) { display: none !important; }`;
+            else css += `#masterTable th:nth-child(8), #masterTable td:nth-child(8), #masterTable th:nth-child(9), #masterTable td:nth-child(9) { display: none !important; }`;
+            css += `}`; style.innerHTML = css; document.head.appendChild(style);
             window.print();
-
-            setTimeout(() => {
-                let existingStyle = document.getElementById('print-columns-style');
-                if (existingStyle) existingStyle.remove();
-            }, 500);
+            setTimeout(() => { let existingStyle = document.getElementById('print-columns-style'); if (existingStyle) existingStyle.remove(); }, 500);
         }
 
-        // Export All Functions to Window
         window.switchHistTab = switchHistTab;
         window.printCustomReport = printCustomReport;
         window.showForm = showForm;
@@ -2126,6 +2188,15 @@
         window.generateDailyReport = generateDailyReport;
         window.generateSaleFormNumber = generateSaleFormNumber;
         window.toggleMinimize = toggleMinimize;
+
+        // Naye Functions Exports
+        window.fetchReturnLotDetails = fetchReturnLotDetails;
+        window.saveSaleReturn = saveSaleReturn;
+        window.autoFillInwardDetails = autoFillInwardDetails;
+        window.toggleJobAction = toggleJobAction;
+        window.fetchJobLotDetails = fetchJobLotDetails;
+        window.saveJobWork = saveJobWork;
+        window.generateReturnFormNumber = generateReturnFormNumber;
     </script>
 </body>
 
