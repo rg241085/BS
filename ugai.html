@@ -466,6 +466,41 @@
                 font-family: Arial, sans-serif;
             }
 
+            #print-receipt-section.active .inner-border {
+                border: 1px solid #000;
+                padding: 6px;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+            }
+
+            /* NAYA CODE YAHAN SE: */
+            .table-wrapper {
+                flex-grow: 1;
+                /* Ye items wale hisse ko expand karega, jisse total table niche dhakel di jayegi */
+                overflow: hidden;
+            }
+
+            .total-table {
+                margin-top: auto;
+                /* Ye hamesha table ko bottom me push karega */
+                border-top: 1px solid #000;
+                /* Ek border dega totals aur items ke bich ki khali jagah ko separate karne ke liye */
+            }
+
+            /* Columns ki width dono tables (items aur totals) ke liye same rakhne ke liye */
+            .total-table td:nth-child(1) {
+                width: 80% !important;
+            }
+
+            /* Colspan=5 ki wajah se pehla column 80% hoga */
+            .total-table td:nth-child(2) {
+                width: 20% !important;
+                text-align: right;
+                padding-right: 4px;
+            }
+
             #main-dashboard,
             #paymentModal,
             #partyDetailsModal {
@@ -473,107 +508,135 @@
             }
 
             /* --- NAYA RECEIPT VOUCHER DESIGN (PERFECT A6 FIX) --- */
+            /* --- NAYA RECEIPT VOUCHER DESIGN (14cm x 10cm FIX) --- */
+            /* --- NAYA RECEIPT VOUCHER DESIGN (14cm x 10cm FIX) --- */
+            /* --- NAYA RECEIPT VOUCHER DESIGN (14cm x 10cm PERFECT FIX) --- */
             @page {
-                size: A6 portrait;
-                margin: 4mm;
+                size: A4 portrait;
+                /* A4 Paper set kiya */
+                margin: 0;
+                /* Margin 0 taaki hum khud exact position set kar sakein */
+            }
+
+            @page {
+                size: A4 portrait;
+                /* A4 Paper set kiya */
+                margin: 0;
+                /* Margin 0 taaki hum khud exact position set kar sakein */
+            }
+
+            * {
+                box-sizing: border-box !important;
             }
 
             #print-receipt-section.active {
-                width: 100% !important;
-                max-width: 100% !important;
+                position: absolute !important;
+                /* Box 1 (Top-Left) me exact center karne ke liye coordinates */
+                top: 14.4cm !important;
+                left: 0.25cm !important;
+
+                width: 14cm !important;
+                height: 10cm !important;
+                max-width: 14cm !important;
                 margin: 0 !important;
-                padding: 0 !important;
+                padding: 4mm !important;
                 display: block !important;
+                box-sizing: border-box !important;
+
+                /* Ye jadu receipt ko 90 degree ghuma dega (rotate) aur A4 ke corner me fit kar dega */
+                transform: rotate(-90deg) !important;
+                transform-origin: top left !important;
             }
 
             #print-receipt-section.active .inner-border {
                 border: 1px solid #000;
-                padding: 5px;
-                font-family: Arial, sans-serif;
-                box-sizing: border-box;
+                padding: 6px;
                 width: 100%;
-                min-height: 100px;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
             }
 
             .rcpt-row-top {
                 display: flex;
                 justify-content: space-between;
-                font-size: 11px;
+                font-size: 12px;
                 font-weight: bold;
-                margin-bottom: 6px;
+                margin-bottom: 5px;
                 border-bottom: 1px solid #000;
                 padding-bottom: 4px;
             }
 
             .rcpt-body {
-                margin-bottom: 6px;
+                margin-bottom: 5px;
+            }
+
+            #r-party {
+                font-size: 14px !important;
+                font-weight: bold;
             }
 
             .rcpt-item-table {
-                width: 100%;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                /* YAHAN HAI ASLI JADU! Mobile view ka 800px override karne ke liye */
+                table-layout: fixed !important;
                 border-collapse: collapse;
-                font-size: 10px;
-                font-family: Arial, sans-serif;
-                table-layout: fixed;
+                font-size: 11px;
+                margin: 0;
+            }
+
+            .rcpt-item-table th,
+            .rcpt-item-table td {
+                border: 1px solid #000;
+                padding: 4px 2px;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                white-space: normal !important;
             }
 
             .rcpt-item-table th {
-                border: 1px solid #000;
                 border-bottom: 2px solid #000 !important;
-                padding: 4px 2px;
-                text-align: center;
-                color: #000 !important;
-                font-weight: bold;
                 background-color: #f0f0f0 !important;
+                color: #000 !important;
+                text-align: center;
+                font-weight: bold;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
 
-            .rcpt-item-table td {
-                border: 1px solid #000;
-                padding: 4px 2px;
-                text-align: center;
-                /* Sabko center me kar diya */
-                word-wrap: break-word;
-                overflow-wrap: break-word;
-                box-sizing: border-box;
-            }
-
-            /* Sabhi columns ka alignment center set kiya gaya hai */
-            .rcpt-item-table th:nth-child(1),
-            .rcpt-item-table td:nth-child(1) {
-                width: 8%;
+            /* --- COLUMNS KI FIX WIDTH --- */
+            .rcpt-item-table th:nth-child(1) {
+                width: 6% !important;
                 text-align: center;
             }
 
-            .rcpt-item-table th:nth-child(2),
-            .rcpt-item-table td:nth-child(2) {
-                width: 32%;
+            .rcpt-item-table th:nth-child(2) {
+                width: 38% !important;
+                text-align: left;
+                padding-left: 4px;
+            }
+
+            .rcpt-item-table th:nth-child(3) {
+                width: 10% !important;
                 text-align: center;
             }
 
-            .rcpt-item-table th:nth-child(3),
-            .rcpt-item-table td:nth-child(3) {
-                width: 12%;
+            .rcpt-item-table th:nth-child(4) {
+                width: 12% !important;
                 text-align: center;
             }
 
-            .rcpt-item-table th:nth-child(4),
-            .rcpt-item-table td:nth-child(4) {
-                width: 13%;
+            .rcpt-item-table th:nth-child(5) {
+                width: 14% !important;
                 text-align: center;
             }
 
-            .rcpt-item-table th:nth-child(5),
-            .rcpt-item-table td:nth-child(5) {
-                width: 15%;
-                text-align: center;
-            }
-
-            .rcpt-item-table th:nth-child(6),
-            .rcpt-item-table td:nth-child(6) {
-                width: 20%;
-                text-align: center;
+            .rcpt-item-table th:nth-child(6) {
+                width: 20% !important;
+                text-align: right;
+                padding-right: 4px;
             }
 
             /* BROKER / PARTY STATEMENT */
@@ -1032,21 +1095,26 @@
                 <div style="font-size: 14px; font-weight: bold; color: #000;" id="r-party"></div>
             </div>
 
-            <table class="rcpt-item-table" id="r-item-table">
-                <thead>
-                    <tr>
-                        <th>S.no</th>
-                        <th>Item Name</th>
-                        <th>Nag</th>
-                        <th>Qty</th>
-                        <th>Rate</th>
-                        <th>Amount</th>
-                    </tr>
-                </thead>
-                <tbody id="r-item-tbody">
+            <div class="table-wrapper">
+                <table class="rcpt-item-table" id="r-item-table">
+                    <thead>
+                        <tr>
+                            <th>S.no</th>
+                            <th>Item Name</th>
+                            <th>Nag</th>
+                            <th>Qty</th>
+                            <th>Rate</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="r-item-tbody">
+                    </tbody>
+                </table>
+            </div>
+            <table class="rcpt-item-table total-table" id="r-total-table">
+                <tbody id="r-total-tbody">
                 </tbody>
             </table>
-
         </div>
     </div>
 
@@ -1795,10 +1863,12 @@
 
             if (isNaN(receivedAmount) || receivedAmount <= 0) { alert("Kripya sahi receive amount daalein."); return; }
 
-            let today = new Date(); let dateOnly = today.getDate() + "/" + (today.getMonth() + 1) + "/" + today.getFullYear();
+            // NAYA CODE: Aaj ki jagah Bill ki date nikalne ke liye
+            let bDate = new Date(currentPayBillDateStr);
+            let billDateOnly = bDate.getDate() + "/" + (bDate.getMonth() + 1) + "/" + bDate.getFullYear();
 
             document.getElementById("r-bill-no").innerText = currentPayBill;
-            document.getElementById("r-date").innerText = dateOnly;
+            document.getElementById("r-date").innerText = billDateOnly;
             document.getElementById("r-party").innerText = "M/S: " + currentPayParty.toUpperCase();
 
             let origBillFull = String(currentPayBill).trim().toUpperCase();
@@ -1839,13 +1909,17 @@
                 return isBillMatch && isDateMatch;
             });
 
+            // Yahan se naya code
             let rTbody = document.getElementById("r-item-tbody");
+            let rTotalTbody = document.getElementById("r-total-tbody"); // Naya element fetch kiya
             rTbody.innerHTML = "";
+            rTotalTbody.innerHTML = ""; // Naya
 
             if (matchedItems.length > 0) {
                 let totalOther = 0; let totalItemAmount = 0;
 
                 matchedItems.forEach((item, index) => {
+                    // ... (item wali loop same rahegi) ...
                     totalOther += parseFloat(item.other) || 0;
                     let amtVal = String(item.amount).replace(/,/g, '');
                     totalItemAmount += parseFloat(amtVal) || 0;
@@ -1863,22 +1937,23 @@
 
                 let netAmount = totalItemAmount + totalOther;
 
-                rTbody.innerHTML += `<tr><td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px;">Total:</td><td style="text-align: center; font-weight: bold;">₹${totalItemAmount.toLocaleString('en-IN')}</td></tr>`;
+                // DHYAN DEIN: Ab saara Total wala data 'rTotalTbody' mein jayega
+                rTotalTbody.innerHTML += `<tr><td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px;">Total:</td><td style="text-align: center; font-weight: bold;">₹${totalItemAmount.toLocaleString('en-IN')}</td></tr>`;
 
                 if (totalOther > 0) {
-                    rTbody.innerHTML += `<tr><td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px; color: #d84315 !important;-webkit-print-color-adjust: exact;">Other Charges (+):</td><td style="text-align: center; font-weight: bold; color: #d84315 !important;-webkit-print-color-adjust: exact;">₹${totalOther.toLocaleString('en-IN')}</td></tr>`;
+                    rTotalTbody.innerHTML += `<tr><td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px; color: #d84315 !important;-webkit-print-color-adjust: exact;">Other Charges (+):</td><td style="text-align: center; font-weight: bold; color: #d84315 !important;-webkit-print-color-adjust: exact;">₹${totalOther.toLocaleString('en-IN')}</td></tr>`;
                 }
 
                 if (interestAmount > 0) {
                     netAmount += interestAmount;
-                    rTbody.innerHTML += `<tr><td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px;">Late Fee Interest (+):</td><td style="text-align: center; font-weight: bold;">₹${interestAmount.toLocaleString('en-IN')}</td></tr>`;
+                    rTotalTbody.innerHTML += `<tr><td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px;">Late Fee Interest (+):</td><td style="text-align: center; font-weight: bold;">₹${interestAmount.toLocaleString('en-IN')}</td></tr>`;
                 }
                 if (discountAmount > 0) {
                     netAmount -= discountAmount;
-                    rTbody.innerHTML += `<tr><td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px;">Discount (-):</td><td style="text-align: center; font-weight: bold;">- ₹${discountAmount.toLocaleString('en-IN')}</td></tr>`;
+                    rTotalTbody.innerHTML += `<tr><td colspan="5" style="text-align: right; font-weight: bold; padding-right: 10px;">Discount (-):</td><td style="text-align: center; font-weight: bold;">- ₹${discountAmount.toLocaleString('en-IN')}</td></tr>`;
                 }
 
-                rTbody.innerHTML += `<tr style="background-color: #f4f7f6 !important; -webkit-print-color-adjust: exact;"><td colspan="5" style="text-align: right; font-weight: bold; font-size: 12px; padding-right: 10px;">NET AMOUNT:</td><td style="text-align: center; font-weight: bold; font-size: 12px;">₹${netAmount.toLocaleString('en-IN')}</td></tr>`;
+                rTotalTbody.innerHTML += `<tr style="background-color: #f4f7f6 !important; -webkit-print-color-adjust: exact;"><td colspan="5" style="text-align: right; font-weight: bold; font-size: 12px; padding-right: 10px;">NET AMOUNT:</td><td style="text-align: center; font-weight: bold; font-size: 12px;">₹${netAmount.toLocaleString('en-IN')}</td></tr>`;
             } else {
                 rTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 5px;">Item details are not available.</td></tr>`;
             }
