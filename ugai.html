@@ -1285,7 +1285,14 @@
             let eStr = eDate.getDate() + "-" + (eDate.getMonth() + 1) + "-" + eDate.getFullYear();
             let periodStr = sStr + " to " + eStr + " tak";
 
-            if (!uploadedPeriods.includes(periodStr)) {
+            // Check karein ki kya is Start Date (sStr) ka koi tag pehle se hai
+            let existingIndex = uploadedPeriods.findIndex(p => p.startsWith(sStr + " to "));
+
+            if (existingIndex !== -1) {
+                // Agar same start date ka tag mil gaya, toh use aaj ki date (naya period) se UPDATE kar do
+                uploadedPeriods[existingIndex] = periodStr;
+            } else {
+                // Agar nahi mila (jaise 1-4-2025), toh ise naya tag maan kar ADD kar do
                 uploadedPeriods.push(periodStr);
             }
 
