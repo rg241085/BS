@@ -1145,6 +1145,8 @@
         let currentSortCol = '';
         let isAscending = true;
         let receiptCounter = 1;
+        // NAYA VARIABLE (Memory)👇
+        let selectedBills = new Set();
 
         let currentPayParty = ""; let currentPayBill = ""; let currentPayDue = 0;
         let currentPayBillDateStr = ""; let currentOverdueDays = 0;
@@ -1511,13 +1513,11 @@
             let tableBody = document.getElementById("tableBody");
             let total = 0;
 
-            document.getElementById("selectedOutstanding").innerText = "0";
-            let selectAllCb = document.getElementById("selectAllCheckbox");
-            if (selectAllCb) selectAllCb.checked = false;
-
             if (data.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #777;">Data dekhne ke liye file upload karein</td></tr>`;
-                document.getElementById("totalOutstanding").innerText = "0"; return;
+                document.getElementById("totalOutstanding").innerText = "0";
+                document.getElementById("selectedOutstanding").innerText = "0";
+                return;
             }
 
             let htmlContent = "";
@@ -1527,10 +1527,13 @@
                 let safeNameHTML = entry.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
                 let jsSafeName = entry.name.replace(/'/g, "\\'");
 
+                // MEMORY CHECK: Kya ye bill pehle se selected tha?
+                let isChecked = selectedBills.has(entry.billNo) ? "checked" : "";
+
                 htmlContent += `
                 <tr tabindex="0" class="keyboard-row" onclick="this.focus()">
                     <td style="text-align: center;">
-                        <input type="checkbox" class="row-checkbox" tabindex="-1" data-amount="${entry.amount}" onchange="calculateSelectedTotal()" style="transform: scale(1.2); cursor: pointer;">
+                        <input type="checkbox" class="row-checkbox" tabindex="-1" data-amount="${entry.amount}" data-billno="${entry.billNo}" onchange="handleCheckboxChange(this, '${entry.billNo}')" ${isChecked} style="transform: scale(1.2); cursor: pointer;">
                     </td>
                     <td>${entry.displayDate}</td>
                     <td style="color: #0056b3;">${entry.billNo}</td>
@@ -1547,6 +1550,19 @@
 
             tableBody.innerHTML = htmlContent;
             document.getElementById("totalOutstanding").innerText = total.toLocaleString('en-IN');
+
+            // Render hone ke baad calculation UI update karo
+            calculateSelectedTotal();
+        }
+
+        // NAYA FUNCTION
+        function handleCheckboxChange(checkbox, billNo) {
+            if (checkbox.checked) {
+                selectedBills.add(billNo);
+            } else {
+                selectedBills.delete(billNo);
+            }
+            calculateSelectedTotal();
         }
 
         // ==========================================
@@ -2021,9 +2037,14 @@
         }
 
         function calculateSelectedTotal() {
-            let checkboxes = document.querySelectorAll('.row-checkbox:checked');
             let total = 0;
-            checkboxes.forEach(cb => { total += parseFloat(cb.getAttribute('data-amount')) || 0; });
+            // Sirf wahi amount jodo jo memory (selectedBills) me maujood hai
+            allData.forEach(row => {
+                if (selectedBills.has(row.billNo)) {
+                    total += row.amount;
+                }
+            });
+
             document.getElementById('selectedOutstanding').innerText = total.toLocaleString('en-IN');
 
             if (window.parent && typeof window.parent.selectedUgaiAmount !== 'undefined') {
@@ -2034,9 +2055,10 @@
             }
 
             let allCheckboxes = document.querySelectorAll('.row-checkbox');
+            let checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
             let selectAllCb = document.getElementById("selectAllCheckbox");
             if (selectAllCb && allCheckboxes.length > 0) {
-                selectAllCb.checked = (checkboxes.length === allCheckboxes.length);
+                selectAllCb.checked = (checkedBoxes.length === allCheckboxes.length);
             }
         }
 
@@ -2044,14 +2066,23 @@
             let selectAllCb = document.getElementById('selectAllCheckbox');
             let isChecked = selectAllCb.checked;
             let checkboxes = document.querySelectorAll('.row-checkbox');
-            checkboxes.forEach(cb => { cb.checked = isChecked; });
+
+            checkboxes.forEach(cb => {
+                cb.checked = isChecked;
+                let bNo = cb.getAttribute('data-billno');
+                if (isChecked) {
+                    selectedBills.add(bNo);
+                } else {
+                    selectedBills.delete(bNo);
+                }
+            });
             calculateSelectedTotal();
         }
 
         // ==========================================
         // KEYBOARD SHORTCUTS
         // ==========================================
-// ==========================================
+        // ==========================================
         // KEYBOARD SHORTCUTS
         // ==========================================
 
@@ -2076,7 +2107,7 @@
                     if (nextRow && nextRow.classList.contains('keyboard-row')) {
                         nextRow.focus();
                         // NAYA JODA GAYA CODE 👇
-                        nextRow.scrollIntoView({ block: 'center', behavior: 'smooth' }); 
+                        nextRow.scrollIntoView({ block: 'center', behavior: 'smooth' });
                     }
                 }
                 else if (event.key === 'ArrowUp') {
@@ -2091,7 +2122,16 @@
                 else if (event.key === ' ') {
                     event.preventDefault();
                     let checkbox = activeRow.querySelector('.row-checkbox');
-                    if (checkbox) { checkbox.checked = !checkbox.checked; calculateSelectedTotal(); }
+                    if (checkbox) {
+                        checkbox.checked = !checkbox.checked;
+                        let bNo = checkbox.getAttribute('data-billno');
+
+                        // NAYA JODA GAYA 👇
+                        if (checkbox.checked) selectedBills.add(bNo);
+                        else selectedBills.delete(bNo);
+
+                        calculateSelectedTotal();
+                    }
                 }
                 else if (event.key === 'Enter') {
                     event.preventDefault();
@@ -2132,6 +2172,7 @@
         window.cancelPeriod = cancelPeriod;
         window.confirmPeriod = confirmPeriod;
         window.syncItemsWithOutstanding = syncItemsWithOutstanding;
+        window.handleCheckboxChange = handleCheckboxChange; // Ise List me add kar dein
 
     </script>
 </body>
