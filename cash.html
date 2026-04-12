@@ -14,7 +14,6 @@
             padding: 20px;
             background: #f4f4f4;
             justify-content: center;
-            /* Will be set to flex via JS */
         }
 
         input[type=number]::-webkit-inner-spin-button,
@@ -45,6 +44,7 @@
             background: #fff;
             overflow: hidden;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
         }
 
         .day-header {
@@ -52,7 +52,19 @@
             color: #fff;
             padding: 12px 16px;
             border-radius: 8px 8px 0 0;
+            transition: all 0.3s;
         }
+
+        /* --- SUNDAY RED MODE CSS --- */
+        .day-component.sunday-mode {
+            border: 2px solid #dc3545 !important;
+        }
+
+        .day-header.sunday-mode {
+            background: #dc3545 !important;
+        }
+
+        /* --------------------------- */
 
         .header-row {
             display: flex;
@@ -71,8 +83,7 @@
         }
 
         .date-wrap {
-            position: relative;
-            width: 160px;
+            width: 140px;
         }
 
         .fake-date {
@@ -84,15 +95,8 @@
             color: #333;
             text-align: center;
             font-weight: 700;
-        }
-
-        .real-date {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
+            cursor: default;
+            /* Calendar nahi khulega */
         }
 
         .header-metrics {
@@ -396,26 +400,22 @@
    ========================================= */
         @media (max-width: 850px) {
 
-            /* Main Layout: Cash Counter aur Ledger ko ek ke neeche ek set karna */
             .main-layout-wrapper {
                 flex-direction: column;
                 padding: 0 10px;
                 gap: 15px;
             }
 
-            /* Hisab Layout: Incoming aur Outgoing ko stack karna */
             .hisab-layout-wrapper {
                 flex-direction: column;
                 gap: 15px;
             }
 
-            /* Totals Grid: Totals ko bhi stack karna */
             .hisab-totals-grid {
                 flex-direction: column;
                 gap: 10px;
             }
 
-            /* Header ko mobile ke hisaab se adjust karna */
             .header-row {
                 flex-direction: column;
                 align-items: flex-start;
@@ -438,7 +438,6 @@
                 padding: 10px;
             }
 
-            /* Table ko scrollable banana taaki wo bahar na nikle */
             .container {
                 padding: 15px 10px;
                 overflow-x: auto;
@@ -446,7 +445,6 @@
 
             .counter-table {
                 min-width: 600px;
-                /* Table ko chota hone se rokega, iski jagah scroll aa jayega */
             }
 
             .counter-table th,
@@ -460,7 +458,6 @@
             }
         }
 
-        /* Extra chhoti screen (jaise chote phones) ke liye thoda aur adjustment */
         @media (max-width: 480px) {
             .header-metrics {
                 flex-direction: column;
@@ -480,7 +477,6 @@
 
 <body>
     <div class="page-wrapper">
-        <!-- <h1>💵 Dryfu - Cash Management System</h1> -->
         <div id="day-container"></div>
     </div>
 
@@ -491,8 +487,7 @@
                     <div class="header-date">
                         <span>Date:</span>
                         <div class="date-wrap">
-                            <input type="text" class="fake-date" placeholder="DD-MM-YYYY" readonly>
-                            <input type="date" class="real-date transaction-date">
+                            <input type="text" class="fake-date" readonly>
                         </div>
                     </div>
 
@@ -619,16 +614,17 @@
             if (!user) {
                 window.location.href = "login.html";
             } else {
-                document.body.style.display = "flex"; // Screen show karein
+                document.body.style.display = "flex";
             }
         });
 
         document.addEventListener('DOMContentLoaded', async () => {
-            const MAX_DAYS = 5;
+            // 1. DATA 10 DAYS KA SAVE HO RAHA HAI
+            const MAX_DAYS = 10;
 
-            // --- NAYA FIRESTORE DATABASE REFERENCE ---
+            let isRendering = false;
+
             const cashDocRef = doc(db, "erp", "cashCounter");
-            // --- END ---
 
             const dayContainer = document.getElementById('day-container');
             const dayTemplate = document.getElementById('day-template');
@@ -650,15 +646,12 @@
                 return isNaN(dt) ? null : dt;
             }
 
-            /* ----------------- STORAGE (NAYA FIRESTORE LOGIC) ----------------- */
-
-            // YEH FUNCTION FIRESTORE SE DATA LOAD KAREGA
+            /* ----------------- STORAGE ----------------- */
             async function loadDays() {
                 try {
                     const docSnap = await getDoc(cashDocRef);
                     const arr = docSnap.exists() ? (docSnap.data().days || []) : [];
 
-                    // normalize to DD-MM-YYYY
                     const normalized = (Array.isArray(arr) ? arr : []).map(d => {
                         let dd = '';
                         if (d?.date) {
@@ -674,11 +667,10 @@
                 }
             }
 
-            // YEH FUNCTION FIRESTORE MEIN DATA SAVE KAREGA
             async function saveDays(days) {
                 try {
                     const trimmed = (days || []).slice(0, MAX_DAYS);
-                    await setDoc(cashDocRef, { days: trimmed }); // Data save
+                    await setDoc(cashDocRef, { days: trimmed });
                 } catch (e) {
                     console.error("Firestore save failed:", e);
                 }
@@ -720,6 +712,8 @@
             }
 
             function saveFromDOM() {
+                if (isRendering) return;
+
                 let days = getAllDayComponents().map(serializeDay);
                 if (days.length > MAX_DAYS) days = days.slice(0, MAX_DAYS);
                 saveDays(days);
@@ -935,21 +929,6 @@
                 }
             }
 
-            /* ----------------- PICKER WIRING ----------------- */
-            function wireDatePicker(dayComponent) {
-                const real = dayComponent.querySelector('.real-date');
-                const fake = dayComponent.querySelector('.fake-date');
-
-                const syncFromReal = () => {
-                    const d = dateFromYMD(real.value);
-                    fake.value = d ? formatDDMMYYYY(d) : '';
-                };
-
-                real.addEventListener('change', () => { syncFromReal(); saveFromDOM(); });
-                real.addEventListener('input', syncFromReal);
-                syncFromReal();
-            }
-
             /* ----------------- LIST WIRING ----------------- */
             function handleListWiring(dayComponent) {
                 dayComponent.querySelector('.incoming-list').addEventListener('click', (e) => handleListClick(e, dayComponent));
@@ -999,7 +978,6 @@
 
                 attachHeaderButtons(comp);
                 handleListWiring(comp);
-                wireDatePicker(comp);
 
                 return comp;
             }
@@ -1016,6 +994,10 @@
                     let lastClosingBalance = 0;
                     let nextDate = new Date();
 
+                    // Aaj ki date set karna 
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
                     const previousDay = dayContainer.querySelector('.day-component:first-of-type');
                     if (previousDay) {
                         const lastClosingText = previousDay.querySelector('.hisab-expected-balance').textContent;
@@ -1023,14 +1005,29 @@
 
                         const prevFake = previousDay.querySelector('.fake-date')?.value || '';
                         let lastDate = parseDDMMYYYY(prevFake) || new Date();
+
                         lastDate.setDate(lastDate.getDate() + 1);
+                        lastDate.setHours(0, 0, 0, 0);
+
+                        // 3. FUTURE DATE ADD BLOCKING LOGIC
+                        if (lastDate > today) {
+                            alert("Aap future (aane wale kal) ki date ka hisab nahi jod sakte!");
+                            return; // Stop function execution
+                        }
+
                         nextDate = lastDate;
                     }
 
                     const comp = createDayComponent();
 
-                    comp.querySelector('.real-date').value = ymdFromDate(nextDate);
+                    // 4. MANUAL DATE SYSTEM REMOVED - Sirf text update hoga
                     comp.querySelector('.fake-date').value = formatDDMMYYYY(nextDate);
+
+                    // 2. SUNDAY HIGHLIGHT CHECK
+                    if (nextDate.getDay() === 0) { // 0 means Sunday
+                        comp.classList.add('sunday-mode');
+                        comp.querySelector('.day-header').classList.add('sunday-mode');
+                    }
 
                     const openingBalanceInput = comp.querySelector('.opening-balance');
                     openingBalanceInput.value = lastClosingBalance.toFixed(2);
@@ -1045,17 +1042,28 @@
             }
 
             async function renderFromStorage() {
+                isRendering = true;
+
                 dayContainer.innerHTML = '';
                 const days = await loadDays();
 
-                if (!days.length) { addNewDay(); return; }
+                if (!days.length) {
+                    addNewDay();
+                    isRendering = false;
+                    return;
+                }
 
                 days.forEach((d, idx) => {
                     const comp = createDayComponent();
 
                     const dd = d.date ? parseDDMMYYYY(d.date) : null;
-                    comp.querySelector('.real-date').value = dd ? ymdFromDate(dd) : '';
                     comp.querySelector('.fake-date').value = dd ? formatDDMMYYYY(dd) : '';
+
+                    // 2. SUNDAY HIGHLIGHT CHECK FOR RENDERED DAYS
+                    if (dd && dd.getDay() === 0) {
+                        comp.classList.add('sunday-mode');
+                        comp.querySelector('.day-header').classList.add('sunday-mode');
+                    }
 
                     const opInput = comp.querySelector('.opening-balance');
                     opInput.value = (d.opening || 0).toFixed(2);
@@ -1082,6 +1090,7 @@
                 });
 
                 trimDOMToMaxDays();
+                isRendering = false;
             }
 
             /* ----------------- INIT ----------------- */
