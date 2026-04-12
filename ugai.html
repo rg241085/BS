@@ -2051,6 +2051,9 @@
         // ==========================================
         // KEYBOARD SHORTCUTS
         // ==========================================
+// ==========================================
+        // KEYBOARD SHORTCUTS
+        // ==========================================
 
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape' || event.key === 'Esc') {
@@ -2070,12 +2073,20 @@
                 if (event.key === 'ArrowDown') {
                     event.preventDefault();
                     let nextRow = activeRow.nextElementSibling;
-                    if (nextRow && nextRow.classList.contains('keyboard-row')) nextRow.focus();
+                    if (nextRow && nextRow.classList.contains('keyboard-row')) {
+                        nextRow.focus();
+                        // NAYA JODA GAYA CODE 👇
+                        nextRow.scrollIntoView({ block: 'center', behavior: 'smooth' }); 
+                    }
                 }
                 else if (event.key === 'ArrowUp') {
                     event.preventDefault();
                     let prevRow = activeRow.previousElementSibling;
-                    if (prevRow && prevRow.classList.contains('keyboard-row')) prevRow.focus();
+                    if (prevRow && prevRow.classList.contains('keyboard-row')) {
+                        prevRow.focus();
+                        // NAYA JODA GAYA CODE 👇
+                        prevRow.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                    }
                 }
                 else if (event.key === ' ') {
                     event.preventDefault();
