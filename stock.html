@@ -910,11 +910,11 @@
     </div>
 
     <div id="jobWorkForm" class="overlay no-print">
-        <div class="form-card" style="max-width: 950px; border-top: 5px solid #f39c12;">
+        <div class="form-card" style="max-width: 1000px; border-top: 5px solid #f39c12;">
             <span class="min-btn" onclick="toggleMinimize(this)" title="Minimize">_</span>
             <span class="close-x" onclick="closeAll()">×</span>
-            <h3 style="color:#e67e22; border-bottom: 1px solid #eee; padding-bottom: 10px;">⚙️ Karkhana / Job Work (Ek
-                Saath Process)</h3>
+            <h3 style="color:#e67e22; border-bottom: 1px solid #eee; padding-bottom: 10px;">⚙️ Karkhana / Job Work
+                (Complete Process)</h3>
 
             <div class="chalan-header" style="grid-template-columns: 1fr 1fr;">
                 <div><label>Date</label><input type="date" id="jobDate"></div>
@@ -925,41 +925,54 @@
             <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
 
                 <div
-                    style="flex: 1; background: #fff3e0; padding: 15px; border-radius: 8px; border: 1px solid #ffcc80; min-width: 300px;">
+                    style="flex: 1; background: #fff3e0; padding: 15px; border-radius: 8px; border: 1px solid #ffcc80; min-width: 320px;">
                     <h4 style="color:#d35400; margin-top:0; border-bottom: 1px dashed #ffcc80; padding-bottom: 5px;">📤
                         Bheja Gaya Maal (OUT)</h4>
 
                     <div style="margin-bottom: 10px;">
-                        <label>Stock Kahan Se Nikalna Hai?</label>
-                        <select id="jobSource"
-                            onchange="document.getElementById('jobOutLot').value=''; document.getElementById('jobOutStockInfo').innerText='';">
+                        <label>Kahan Se Nikalna Hai?</label>
+                        <select id="jobSource" onchange="updateJobOutList(); clearJobOutFields();">
                             <option value="cold">❄️ Cold Storage</option>
                             <option value="shop">🏪 Shop Godown</option>
                         </select>
                     </div>
 
                     <div style="margin-bottom: 10px;">
-                        <label>Purana Lot No (Jise bhejna hai)</label>
-                        <input type="text" id="jobOutLot" oninput="fetchNewJobLotDetails(this)" list="lotList"
-                            placeholder="Lot No. Type Karein">
-                        <div id="jobOutStockInfo" style="font-size: 12px; margin-top: 5px; height: 15px;"></div>
+                        <label>Lot No ya Marka Search Karein</label>
+                        <input type="text" id="jobOutSearch" oninput="fetchNewJobLotDetails(this)"
+                            list="jobOutSmartList" placeholder="🔍 Search Lot or Marka...">
+                        <datalist id="jobOutSmartList"></datalist>
                     </div>
 
-                    <div style="margin-bottom: 10px;">
-                        <label>Item Name</label>
-                        <input type="text" id="jobOutItem" readonly tabindex="-1" style="background:#fdf2e9;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                        <div><label>Item Name</label><input type="text" id="jobOutItem" readonly
+                                style="background:#fdf2e9;"></div>
+                        <div><label>Marka</label><input type="text" id="jobOutMark" readonly
+                                style="background:#fdf2e9;"></div>
+                        <div><label>Rate (₹)</label><input type="text" id="jobOutRate" readonly
+                                style="background:#fdf2e9;"></div>
+                        <div><label>Bharti (Kg)</label><input type="text" id="jobOutBharti" readonly
+                                style="background:#fdf2e9;"></div>
                     </div>
 
-                    <div style="display: flex; gap: 10px;">
-                        <div style="flex:1;"><label>Bhejne ki Qty (Box)</label><input type="number" id="jobOutQty">
+                    <div style="background: #fff; padding: 10px; border-radius: 5px; border: 1px solid #ffcc80;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>Pahle ka Stock:</span> <b id="jobOutPrevStock" style="color:#d35400;">0</b>
                         </div>
-                        <div style="flex:1;"><label>Purani Bharti (Kg)</label><input type="text" id="jobOutBharti"
-                                readonly tabindex="-1" style="background:#fdf2e9;"></div>
+                        <div style="margin-bottom: 8px;">
+                            <label>Kitna Mal Bhejna Hai? (Box)</label>
+                            <input type="number" id="jobOutQty" oninput="calcJobBalance()"
+                                style="border: 2px solid #e67e22; font-size: 16px; font-weight: bold;">
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; border-top: 1px dashed #ccc; pt: 5px;">
+                            <span>Bacha Hua Stock:</span> <b id="jobOutRemStock" style="color:#27ae60;">0</b>
+                        </div>
                     </div>
                 </div>
 
                 <div
-                    style="flex: 1; background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px solid #a5d6a7; min-width: 300px;">
+                    style="flex: 1; background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px solid #a5d6a7; min-width: 320px;">
                     <h4 style="color:#27ae60; margin-top:0; border-bottom: 1px dashed #a5d6a7; padding-bottom: 5px;">📥
                         Taiyar Maal Aaya (IN)</h4>
 
@@ -973,14 +986,14 @@
 
                     <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                         <div style="flex:1;"><label>Naya Lot No</label><input type="text" id="jobInLot"
-                                placeholder="Naya Lot Darj Karein"></div>
+                                placeholder="Lot No."></div>
                         <div style="flex:1;"><label>Naya Marka (Shop)</label><input type="text" id="jobInMark"
-                                placeholder="Marka (Agar hai)"></div>
+                                placeholder="Marka"></div>
                     </div>
 
                     <div style="margin-bottom: 10px;">
-                        <label>Naya Item Name (Agar naam badla hai)</label>
-                        <input type="text" id="jobInItem" list="itemNames" placeholder="Jaise: Badam se Badam Giri">
+                        <label>Naya Item Name</label>
+                        <input type="text" id="jobInItem" list="itemNames" placeholder="Item Name">
                     </div>
 
                     <div style="display: flex; gap: 10px;">
@@ -990,10 +1003,11 @@
                 </div>
             </div>
 
-            <button class="btn-save" id="btnSaveJobNew" style="background:#27ae60;" onclick="saveJobWorkNew()">Karkhana
-                Process Complete Karein ✅</button>
+            <button class="btn-save" style="background:#27ae60;" onclick="saveJobWorkNew()">Karkhana Process Complete
+                Karein ✅</button>
         </div>
     </div>
+
     <div id="editForm" class="overlay no-print">
         <div class="form-card" style="max-width: 800px;">
             <span class="min-btn" onclick="toggleMinimize(this)" title="Minimize">_</span>
@@ -1276,6 +1290,7 @@
     <datalist id="shopAvailableMarkList"></datalist>
     <datalist id="editSmartList"></datalist>
     <datalist id="allShopMarkList"></datalist>
+    <datalist id="jobOutSmartList"></datalist>
 
     <script type="module">
         import { db, doc, setDoc, onSnapshot } from './firebase-config.js';
@@ -1324,7 +1339,7 @@
             if (tabId === 'receiptHist') renderReceiptRegister();
             if (tabId === 'chalanHist') renderChalanRegister();
             if (tabId === 'saleHist') renderSaleRegister();
-            if (tabId === 'returnHist') renderSaleReturnRegister(); // NEW TAB FUNCTION
+            if (tabId === 'returnHist') renderSaleReturnRegister();
         }
 
         function showForm(id) {
@@ -1340,6 +1355,12 @@
             }
 
             updateLists();
+
+            // Special initialization for Job Work Form
+            if (id === 'jobWorkForm') {
+                if (typeof updateJobOutList === 'function') updateJobOutList();
+            }
+
             setTimeout(() => {
                 const firstInput = formOverlay.querySelector('input:not([readonly]):not([disabled]), select:not([disabled])');
                 if (firstInput) firstInput.focus();
@@ -1414,12 +1435,15 @@
             document.getElementById('histSearchLot').value = "";
             document.getElementById('historyTableBody').innerHTML = `<tr><td colspan="5" style="text-align:center; color:#777;">Lot No. dalkar history dekhein</td></tr>`;
 
-            // Clear Job Work form
-            document.getElementById('jobLot').value = '';
-            document.getElementById('jobItem').value = '';
-            document.getElementById('jobQty').value = '';
-            document.getElementById('jobNewBharti').value = '';
-            document.getElementById('jobRef').value = '';
+            // Clear Job Work form fields properly
+            if (document.getElementById('jobOutSearch')) document.getElementById('jobOutSearch').value = '';
+            if (document.getElementById('jobOutQty')) document.getElementById('jobOutQty').value = '';
+            if (document.getElementById('jobInLot')) document.getElementById('jobInLot').value = '';
+            if (document.getElementById('jobInMark')) document.getElementById('jobInMark').value = '';
+            if (document.getElementById('jobInItem')) document.getElementById('jobInItem').value = '';
+            if (document.getElementById('jobInQty')) document.getElementById('jobInQty').value = '';
+            if (document.getElementById('jobInBharti')) document.getElementById('jobInBharti').value = '';
+            if (typeof clearJobOutFields === 'function') clearJobOutFields();
         }
 
         function resetForm(containerId) {
@@ -1871,7 +1895,6 @@
             if (successCount > 0) { saveAllData(); alert("🛒 Sale confirm ho gayi!"); closeAll(); }
         }
 
-        // NAYA: Sale Return Grid Logic
         function fetchReturnShopLotByMark(input) {
             let markNo = input.value.trim(); let row = input.closest('.return-row');
             if (markNo === "") { clearReturnRow(row); calcReturnTotals(); return; }
@@ -1961,49 +1984,83 @@
             });
             if (successCount > 0) { saveAllData(); alert("↩️ Sale Return confirm ho gayi aur stock badh gaya!"); closeAll(); }
         }
-        // --- NAYA JOB WORK LOGIC ---
-        function fetchNewJobLotDetails(input) {
-            let lotNo = input.value.trim().toLowerCase();
+
+        // --- NAYA AUR ADVANCED JOB WORK LOGIC ---
+        function updateJobOutList() {
             let source = document.getElementById('jobSource').value;
-            let info = document.getElementById('jobOutStockInfo');
-
-            if (lotNo === "") {
-                document.getElementById('jobOutItem').value = "";
-                document.getElementById('jobOutBharti').value = "";
-                info.innerText = "";
-                return;
-            }
-
             let targetStock = source === 'cold' ? coldStock : shopStock;
-            let found = targetStock.find(s => s.lot.toLowerCase() === lotNo);
+            let smartHtml = "";
+
+            targetStock.forEach(item => {
+                if (item.qty > 0) {
+                    let marka = item.mark && item.mark !== "-" ? item.mark : "No Marka";
+                    smartHtml += `<option value="${item.lot}">Item: ${item.name} | Marka: ${marka} | Party: ${item.party}</option>`;
+                    if (item.mark && item.mark !== "-") {
+                        smartHtml += `<option value="${item.mark}">Lot: ${item.lot} | Item: ${item.name}</option>`;
+                    }
+                }
+            });
+            let dataListEl = document.getElementById('jobOutSmartList');
+            if (dataListEl) dataListEl.innerHTML = smartHtml;
+        }
+
+        function fetchNewJobLotDetails(input) {
+            let searchVal = input.value.trim().toLowerCase();
+            let source = document.getElementById('jobSource').value;
+            let targetStock = source === 'cold' ? coldStock : shopStock;
+
+            if (searchVal === "") { clearJobOutFields(); return; }
+
+            let found = targetStock.find(s =>
+                s.lot.toLowerCase() === searchVal ||
+                (s.mark && s.mark.toLowerCase() === searchVal)
+            );
 
             if (found) {
                 document.getElementById('jobOutItem').value = found.name;
+                document.getElementById('jobOutMark').value = found.mark !== "-" ? found.mark : "";
+                document.getElementById('jobOutRate').value = found.rate;
                 document.getElementById('jobOutBharti').value = found.bharti;
-                info.innerHTML = `<span style="color:#27ae60; font-weight:bold;">✅ Available Stock: ${found.qty} Box</span>`;
+                document.getElementById('jobOutPrevStock').innerText = found.qty;
 
-                // Suvidha ke liye IN section ka Item Name auto-fill kar dete hain (User chala kar badal sakta hai)
-                if (!document.getElementById('jobInItem').value) {
-                    document.getElementById('jobInItem').value = found.name;
-                }
+                // Auto-fill IN section
+                document.getElementById('jobInItem').value = found.name;
+                document.getElementById('jobInBharti').value = found.bharti;
+                document.getElementById('jobInMark').value = found.mark !== "-" ? found.mark : "";
+
+                calcJobBalance();
             } else {
-                document.getElementById('jobOutItem').value = "Not Found";
-                document.getElementById('jobOutBharti').value = "";
-                info.innerHTML = `<span style="color:red; font-weight:bold;">❌ Yeh Lot is location par nahi hai.</span>`;
+                clearJobOutFields();
             }
         }
 
-        function saveJobWorkNew() {
+        function calcJobBalance() {
+            let prev = parseFloat(document.getElementById('jobOutPrevStock').innerText) || 0;
+            let out = parseFloat(document.getElementById('jobOutQty').value) || 0;
+            let rem = prev - out;
+
+            let remEl = document.getElementById('jobOutRemStock');
+            remEl.innerText = rem;
+            remEl.style.color = rem < 0 ? "red" : "#27ae60";
+        }
+
+        function clearJobOutFields() {
+            document.getElementById('jobOutItem').value = "";
+            document.getElementById('jobOutMark').value = "";
+            document.getElementById('jobOutRate').value = "";
+            document.getElementById('jobOutBharti').value = "";
+            document.getElementById('jobOutPrevStock').innerText = "0";
+            document.getElementById('jobOutRemStock').innerText = "0";
+        }
+
+        async function saveJobWorkNew() {
             let date = document.getElementById('jobDate').value;
             let ref = document.getElementById('jobRef').value.trim() || "JobWork";
 
-            // OUT Variables
             let outSource = document.getElementById('jobSource').value;
-            let outLot = document.getElementById('jobOutLot').value.trim();
-            let outItem = document.getElementById('jobOutItem').value;
+            let outSearch = document.getElementById('jobOutSearch').value.trim().toLowerCase();
             let outQty = parseFloat(document.getElementById('jobOutQty').value);
 
-            // IN Variables
             let inDest = document.getElementById('jobDest').value;
             let inLot = document.getElementById('jobInLot').value.trim();
             let inItem = document.getElementById('jobInItem').value.trim();
@@ -2011,69 +2068,48 @@
             let inQty = parseFloat(document.getElementById('jobInQty').value);
             let inBharti = parseFloat(document.getElementById('jobInBharti').value);
 
-            // Basic Validation
-            if (!outLot || isNaN(outQty) || outQty <= 0 || outItem === "Not Found" || outItem === "") {
-                alert("⚠️ Kripya Bheje gaye maal (OUT) ki sahi details bharein!"); return;
-            }
-            if (!inLot || !inItem || isNaN(inQty) || inQty <= 0 || isNaN(inBharti) || inBharti <= 0) {
-                alert("⚠️ Kripya Taiyar maal (IN) ki sahi details bharein!"); return;
-            }
+            if (!outSearch || isNaN(outQty) || outQty <= 0) { alert("⚠️ Kripya OUT mal ki details sahi bharein!"); return; }
+            if (!inLot || !inItem || isNaN(inQty)) { alert("⚠️ Kripya IN mal ki details bharein!"); return; }
 
-            // Check if stock exists and is sufficient
             let sourceStock = outSource === 'cold' ? coldStock : shopStock;
-            let outIdx = sourceStock.findIndex(s => s.lot.toLowerCase() === outLot.toLowerCase());
+            let outIdx = sourceStock.findIndex(s => s.lot.toLowerCase() === outSearch || (s.mark && s.mark.toLowerCase() === outSearch));
 
             if (outIdx === -1 || sourceStock[outIdx].qty < outQty) {
-                alert(`⚠️ Error: ${outSource === 'cold' ? 'Cold Storage' : 'Shop'} mein itna stock maujood nahi hai!`); return;
+                alert("⚠️ Error: Stock kam hai ya Lot nahi mila!"); return;
             }
 
             let originalItem = sourceStock[outIdx];
+            let originalLot = originalItem.lot;
 
-            // 1. DEDUCT OUT STOCK
+            // Process OUT
             sourceStock[outIdx].qty -= outQty;
-            lotHistory.push({ date: date, lot: outLot, name: outItem, type: 'Job Work (OUT)', ref: ref, qtyIn: '-', qtyOut: outQty });
+            lotHistory.push({ date: date, lot: originalLot, name: originalItem.name, type: 'Job Work (OUT)', ref: ref, qtyIn: '-', qtyOut: outQty });
 
-            // 2. ADD IN STOCK
+            // Process IN
             let destStock = inDest === 'cold' ? coldStock : shopStock;
             let inIdx = destStock.findIndex(s => s.lot.toLowerCase() === inLot.toLowerCase());
 
             if (inIdx !== -1) {
-                // Agar Naya Lot No pehle se mojood hai, to usi me Qty add kar do aur bharti/mark update kardo
                 destStock[inIdx].qty += inQty;
                 destStock[inIdx].bharti = inBharti;
                 destStock[inIdx].mark = inMark;
-                destStock[inIdx].name = inItem;
             } else {
-                // Bilkul Naya Lot create karna
-                let newItem = {
+                destStock.push({
                     coldStore: inDest === 'cold' ? originalItem.coldStore : "Direct to Shop",
-                    party: originalItem.party, // Party name wahi rakhenge jiski pehle thi
+                    party: originalItem.party,
                     name: inItem,
                     lot: inLot,
                     unit: originalItem.unit,
                     bharti: inBharti,
-                    rate: originalItem.rate, // Processing ke baad purana rate rakh rahe hain (Aap chaho to iska field bhi add kar sakte ho)
+                    rate: originalItem.rate,
                     mark: inMark,
                     qty: inQty
-                };
-                destStock.push(newItem);
-                if (!savedNames.includes(inItem)) savedNames.push(inItem);
+                });
             }
-
             lotHistory.push({ date: date, lot: inLot, name: inItem, type: 'Job Work (IN)', ref: ref, qtyIn: inQty, qtyOut: '-' });
 
-            saveAllData();
-            alert("✅ Karkhana Process Successfully Pura Hua!\nPurana stock minus ho gaya aur naya stock add ho gaya hai.");
-
-            // Clear inputs for next time
-            document.getElementById('jobOutLot').value = '';
-            document.getElementById('jobOutQty').value = '';
-            document.getElementById('jobInLot').value = '';
-            document.getElementById('jobInMark').value = '';
-            document.getElementById('jobInQty').value = '';
-            document.getElementById('jobInBharti').value = '';
-            document.getElementById('jobOutStockInfo').innerText = '';
-
+            await saveAllData();
+            alert("✅ Karkhana Process Complete!");
             closeAll();
         }
 
@@ -2240,7 +2276,6 @@
             });
         }
 
-        // NAYA: Render Sale Return Register
         function renderSaleReturnRegister() {
             let tbody = document.getElementById('returnHistBody');
             tbody.innerHTML = "";
@@ -2449,6 +2484,7 @@
             setTimeout(() => { let existingStyle = document.getElementById('print-columns-style'); if (existingStyle) existingStyle.remove(); }, 500);
         }
 
+        // --- WINDOW EXPORTS ---
         window.switchHistTab = switchHistTab;
         window.printCustomReport = printCustomReport;
         window.showForm = showForm;
@@ -2480,18 +2516,22 @@
         window.generateDailyReport = generateDailyReport;
         window.generateSaleFormNumber = generateSaleFormNumber;
         window.toggleMinimize = toggleMinimize;
+        window.autoFillInwardDetails = autoFillInwardDetails;
 
         window.fetchReturnShopLotByMark = fetchReturnShopLotByMark;
         window.calcReturnBalance = calcReturnBalance;
         window.calcReturnTotals = calcReturnTotals;
         window.saveSaleReturnGrid = saveSaleReturnGrid;
         window.generateReturnFormNumber = generateReturnFormNumber;
-        window.renderSaleReturnRegister = renderSaleReturnRegister; // Naya Export
+        window.renderSaleReturnRegister = renderSaleReturnRegister;
 
-        window.toggleJobAction = toggleJobAction;
+        // Karkhana Job Work Exports
+        window.updateJobOutList = updateJobOutList;
         window.fetchNewJobLotDetails = fetchNewJobLotDetails;
+        window.calcJobBalance = calcJobBalance;
+        window.clearJobOutFields = clearJobOutFields;
         window.saveJobWorkNew = saveJobWorkNew;
-        window.autoFillInwardDetails = autoFillInwardDetails;
+
     </script>
 </body>
 
