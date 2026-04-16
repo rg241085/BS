@@ -910,38 +910,90 @@
     </div>
 
     <div id="jobWorkForm" class="overlay no-print">
-        <div class="form-card" style="max-width: 800px; border-top: 5px solid #f39c12;">
+        <div class="form-card" style="max-width: 950px; border-top: 5px solid #f39c12;">
             <span class="min-btn" onclick="toggleMinimize(this)" title="Minimize">_</span>
             <span class="close-x" onclick="closeAll()">×</span>
-            <h3 style="color:#e67e22; border-bottom: 1px solid #eee; padding-bottom: 10px;">⚙️ Karkhana / Job Work
-                (Clean hone bhejna)</h3>
-            <div class="chalan-header" style="grid-template-columns: 1fr 1fr 1fr;">
+            <h3 style="color:#e67e22; border-bottom: 1px solid #eee; padding-bottom: 10px;">⚙️ Karkhana / Job Work (Ek
+                Saath Process)</h3>
+
+            <div class="chalan-header" style="grid-template-columns: 1fr 1fr;">
                 <div><label>Date</label><input type="date" id="jobDate"></div>
-                <div>
-                    <label>Action (Kya karna hai?)</label>
-                    <select id="jobAction" onchange="toggleJobAction()"
-                        style="font-weight:bold; font-size:15px; color:#e67e22;">
-                        <option value="send">📤 Karkhana Bheja (Stock -)</option>
-                        <option value="receive">📥 Karkhana Se Aaya (Stock +)</option>
-                    </select>
-                </div>
                 <div><label>Job Parchi / Ref No.</label><input type="text" id="jobRef" placeholder="Reference No.">
                 </div>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1.5fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                <div><label>Lot No</label><input type="text" id="jobLot" oninput="fetchJobLotDetails(this)"
-                        list="lotList" placeholder="Lot No. Type Karein"></div>
-                <div><label>Item Name</label><input type="text" id="jobItem" readonly tabindex="-1"></div>
-                <div><label id="jobQtyLabel">Bhejne ki Qty (Box/Bag)</label><input type="number" id="jobQty"></div>
-                <div><label>Nayi Bharti (Kg) [Optional]</label><input type="number" id="jobNewBharti"
-                        placeholder="Safai ke baad wajan" disabled></div>
+
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
+
+                <div
+                    style="flex: 1; background: #fff3e0; padding: 15px; border-radius: 8px; border: 1px solid #ffcc80; min-width: 300px;">
+                    <h4 style="color:#d35400; margin-top:0; border-bottom: 1px dashed #ffcc80; padding-bottom: 5px;">📤
+                        Bheja Gaya Maal (OUT)</h4>
+
+                    <div style="margin-bottom: 10px;">
+                        <label>Stock Kahan Se Nikalna Hai?</label>
+                        <select id="jobSource"
+                            onchange="document.getElementById('jobOutLot').value=''; document.getElementById('jobOutStockInfo').innerText='';">
+                            <option value="cold">❄️ Cold Storage</option>
+                            <option value="shop">🏪 Shop Godown</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 10px;">
+                        <label>Purana Lot No (Jise bhejna hai)</label>
+                        <input type="text" id="jobOutLot" oninput="fetchNewJobLotDetails(this)" list="lotList"
+                            placeholder="Lot No. Type Karein">
+                        <div id="jobOutStockInfo" style="font-size: 12px; margin-top: 5px; height: 15px;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 10px;">
+                        <label>Item Name</label>
+                        <input type="text" id="jobOutItem" readonly tabindex="-1" style="background:#fdf2e9;">
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <div style="flex:1;"><label>Bhejne ki Qty (Box)</label><input type="number" id="jobOutQty">
+                        </div>
+                        <div style="flex:1;"><label>Purani Bharti (Kg)</label><input type="text" id="jobOutBharti"
+                                readonly tabindex="-1" style="background:#fdf2e9;"></div>
+                    </div>
+                </div>
+
+                <div
+                    style="flex: 1; background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px solid #a5d6a7; min-width: 300px;">
+                    <h4 style="color:#27ae60; margin-top:0; border-bottom: 1px dashed #a5d6a7; padding-bottom: 5px;">📥
+                        Taiyar Maal Aaya (IN)</h4>
+
+                    <div style="margin-bottom: 10px;">
+                        <label>Naya Stock Kahan Rakhna Hai?</label>
+                        <select id="jobDest">
+                            <option value="shop">🏪 Shop Godown</option>
+                            <option value="cold">❄️ Cold Storage</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <div style="flex:1;"><label>Naya Lot No</label><input type="text" id="jobInLot"
+                                placeholder="Naya Lot Darj Karein"></div>
+                        <div style="flex:1;"><label>Naya Marka (Shop)</label><input type="text" id="jobInMark"
+                                placeholder="Marka (Agar hai)"></div>
+                    </div>
+
+                    <div style="margin-bottom: 10px;">
+                        <label>Naya Item Name (Agar naam badla hai)</label>
+                        <input type="text" id="jobInItem" list="itemNames" placeholder="Jaise: Badam se Badam Giri">
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <div style="flex:1;"><label>Aayi Qty (Box)</label><input type="number" id="jobInQty"></div>
+                        <div style="flex:1;"><label>Nayi Bharti (Kg)</label><input type="number" id="jobInBharti"></div>
+                    </div>
+                </div>
             </div>
-            <input type="hidden" id="jobOldBharti">
-            <button class="btn-save" id="btnSaveJob" style="background:#e67e22;" onclick="saveJobWork()">Karkhana Bheja
-                - Stock Kam Karein 📤</button>
+
+            <button class="btn-save" id="btnSaveJobNew" style="background:#27ae60;" onclick="saveJobWorkNew()">Karkhana
+                Process Complete Karein ✅</button>
         </div>
     </div>
-
     <div id="editForm" class="overlay no-print">
         <div class="form-card" style="max-width: 800px;">
             <span class="min-btn" onclick="toggleMinimize(this)" title="Minimize">_</span>
@@ -1163,12 +1215,15 @@
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;"><span>b. Total IN
                             Qty:</span> <b id="sumColdIn">0</b></div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #2e7d32;">
-                        <span>c. Total (a+b):</span> <b id="sumColdTotal">0</b></div>
+                        <span>c. Total (a+b):</span> <b id="sumColdTotal">0</b>
+                    </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #c0392b;">
-                        <span>d. Total OUT Qty:</span> <b id="sumColdOut">0</b></div>
+                        <span>d. Total OUT Qty:</span> <b id="sumColdOut">0</b>
+                    </div>
                     <div
                         style="display: flex; justify-content: space-between; font-size: 16px; margin-top: 10px; border-top: 1px dashed #90caf9; padding-top: 5px;">
-                        <span>e. Balance Qty (c-d):</span> <b style="color: #1565c0;" id="sumColdBal">0</b></div>
+                        <span>e. Balance Qty (c-d):</span> <b style="color: #1565c0;" id="sumColdBal">0</b>
+                    </div>
                 </div>
                 <div
                     style="flex: 1; min-width: 300px; background: #f3e5f5; border: 2px solid #ce93d8; border-radius: 8px; padding: 15px;">
@@ -1179,12 +1234,15 @@
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;"><span>b. Total IN
                             Qty:</span> <b id="sumShopIn">0</b></div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #2e7d32;">
-                        <span>c. Total (a+b):</span> <b id="sumShopTotal">0</b></div>
+                        <span>c. Total (a+b):</span> <b id="sumShopTotal">0</b>
+                    </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #c0392b;">
-                        <span>d. Total OUT Qty:</span> <b id="sumShopOut">0</b></div>
+                        <span>d. Total OUT Qty:</span> <b id="sumShopOut">0</b>
+                    </div>
                     <div
                         style="display: flex; justify-content: space-between; font-size: 16px; margin-top: 10px; border-top: 1px dashed #ce93d8; padding-top: 5px;">
-                        <span>e. Balance Qty (c-d):</span> <b style="color: #8e44ad;" id="sumShopBal">0</b></div>
+                        <span>e. Balance Qty (c-d):</span> <b style="color: #8e44ad;" id="sumShopBal">0</b>
+                    </div>
                 </div>
             </div>
             <table>
@@ -1903,82 +1961,120 @@
             });
             if (successCount > 0) { saveAllData(); alert("↩️ Sale Return confirm ho gayi aur stock badh gaya!"); closeAll(); }
         }
-
-        // Job Work Logic
-        function toggleJobAction() {
-            let action = document.getElementById('jobAction').value;
-            let btn = document.getElementById('btnSaveJob');
-            let label = document.getElementById('jobQtyLabel');
-            let bhartiInput = document.getElementById('jobNewBharti');
-
-            if (action === 'send') {
-                btn.innerHTML = "Karkhana Bheja - Stock Kam Karein 📤";
-                btn.style.background = "#e67e22";
-                label.innerText = "Bhejne ki Qty (Box/Bag)";
-                bhartiInput.disabled = true;
-                bhartiInput.value = "";
-            } else {
-                btn.innerHTML = "Clean Hoke Aaya - Stock Wapis Badhayein 📥";
-                btn.style.background = "#27ae60";
-                label.innerText = "Aane ki Qty (Box/Bag)";
-                bhartiInput.disabled = false;
-                bhartiInput.value = document.getElementById('jobOldBharti').value;
-            }
-        }
-
-        function fetchJobLotDetails(input) {
+        // --- NAYA JOB WORK LOGIC ---
+        function fetchNewJobLotDetails(input) {
             let lotNo = input.value.trim().toLowerCase();
-            if (lotNo === "") { document.getElementById('jobItem').value = ""; return; }
-            let found = coldStock.find(s => s.lot.toLowerCase() === lotNo) || shopStock.find(s => s.lot.toLowerCase() === lotNo);
+            let source = document.getElementById('jobSource').value;
+            let info = document.getElementById('jobOutStockInfo');
+
+            if (lotNo === "") {
+                document.getElementById('jobOutItem').value = "";
+                document.getElementById('jobOutBharti').value = "";
+                info.innerText = "";
+                return;
+            }
+
+            let targetStock = source === 'cold' ? coldStock : shopStock;
+            let found = targetStock.find(s => s.lot.toLowerCase() === lotNo);
 
             if (found) {
-                document.getElementById('jobItem').value = found.name;
-                document.getElementById('jobOldBharti').value = found.bharti;
-                if (document.getElementById('jobAction').value === 'receive') {
-                    document.getElementById('jobNewBharti').value = found.bharti;
+                document.getElementById('jobOutItem').value = found.name;
+                document.getElementById('jobOutBharti').value = found.bharti;
+                info.innerHTML = `<span style="color:#27ae60; font-weight:bold;">✅ Available Stock: ${found.qty} Box</span>`;
+
+                // Suvidha ke liye IN section ka Item Name auto-fill kar dete hain (User chala kar badal sakta hai)
+                if (!document.getElementById('jobInItem').value) {
+                    document.getElementById('jobInItem').value = found.name;
                 }
             } else {
-                document.getElementById('jobItem').value = "Not Found";
+                document.getElementById('jobOutItem').value = "Not Found";
+                document.getElementById('jobOutBharti').value = "";
+                info.innerHTML = `<span style="color:red; font-weight:bold;">❌ Yeh Lot is location par nahi hai.</span>`;
             }
         }
 
-        function saveJobWork() {
+        function saveJobWorkNew() {
             let date = document.getElementById('jobDate').value;
-            let action = document.getElementById('jobAction').value;
             let ref = document.getElementById('jobRef').value.trim() || "JobWork";
-            let lot = document.getElementById('jobLot').value.trim();
-            let name = document.getElementById('jobItem').value;
-            let qty = parseFloat(document.getElementById('jobQty').value);
-            let newBharti = parseFloat(document.getElementById('jobNewBharti').value);
 
-            if (!lot || isNaN(qty) || qty <= 0 || name === "Not Found") {
-                alert("Kripya sahi Lot No. aur Qty bharein!"); return;
+            // OUT Variables
+            let outSource = document.getElementById('jobSource').value;
+            let outLot = document.getElementById('jobOutLot').value.trim();
+            let outItem = document.getElementById('jobOutItem').value;
+            let outQty = parseFloat(document.getElementById('jobOutQty').value);
+
+            // IN Variables
+            let inDest = document.getElementById('jobDest').value;
+            let inLot = document.getElementById('jobInLot').value.trim();
+            let inItem = document.getElementById('jobInItem').value.trim();
+            let inMark = document.getElementById('jobInMark').value.trim() || "-";
+            let inQty = parseFloat(document.getElementById('jobInQty').value);
+            let inBharti = parseFloat(document.getElementById('jobInBharti').value);
+
+            // Basic Validation
+            if (!outLot || isNaN(outQty) || outQty <= 0 || outItem === "Not Found" || outItem === "") {
+                alert("⚠️ Kripya Bheje gaye maal (OUT) ki sahi details bharein!"); return;
+            }
+            if (!inLot || !inItem || isNaN(inQty) || inQty <= 0 || isNaN(inBharti) || inBharti <= 0) {
+                alert("⚠️ Kripya Taiyar maal (IN) ki sahi details bharein!"); return;
             }
 
-            let targetStock = coldStock;
-            let sIdx = targetStock.findIndex(s => s.lot.toLowerCase() === lot.toLowerCase());
+            // Check if stock exists and is sufficient
+            let sourceStock = outSource === 'cold' ? coldStock : shopStock;
+            let outIdx = sourceStock.findIndex(s => s.lot.toLowerCase() === outLot.toLowerCase());
 
-            if (sIdx === -1) {
-                targetStock = shopStock;
-                sIdx = targetStock.findIndex(s => s.lot.toLowerCase() === lot.toLowerCase());
+            if (outIdx === -1 || sourceStock[outIdx].qty < outQty) {
+                alert(`⚠️ Error: ${outSource === 'cold' ? 'Cold Storage' : 'Shop'} mein itna stock maujood nahi hai!`); return;
             }
 
-            if (sIdx !== -1) {
-                if (action === 'send') {
-                    if (qty > targetStock[sIdx].qty) { alert("⚠️ Error: Stock mein itni quantity nahi hai!"); return; }
-                    targetStock[sIdx].qty -= qty;
-                    lotHistory.push({ date: date, lot: lot, name: name, type: 'Job Work (OUT)', ref: ref, qtyIn: '-', qtyOut: qty });
-                    alert("📤 Maal safai ke liye Karkhana bhej diya gaya!");
-                } else {
-                    targetStock[sIdx].qty += qty;
-                    if (!isNaN(newBharti) && newBharti > 0) { targetStock[sIdx].bharti = newBharti; }
-                    lotHistory.push({ date: date, lot: lot, name: name, type: 'Job Work (IN)', ref: ref, qtyIn: qty, qtyOut: '-' });
-                    alert("📥 Maal Karkhana se wapis aa gaya!");
-                }
-                saveAllData(); closeAll();
+            let originalItem = sourceStock[outIdx];
+
+            // 1. DEDUCT OUT STOCK
+            sourceStock[outIdx].qty -= outQty;
+            lotHistory.push({ date: date, lot: outLot, name: outItem, type: 'Job Work (OUT)', ref: ref, qtyIn: '-', qtyOut: outQty });
+
+            // 2. ADD IN STOCK
+            let destStock = inDest === 'cold' ? coldStock : shopStock;
+            let inIdx = destStock.findIndex(s => s.lot.toLowerCase() === inLot.toLowerCase());
+
+            if (inIdx !== -1) {
+                // Agar Naya Lot No pehle se mojood hai, to usi me Qty add kar do aur bharti/mark update kardo
+                destStock[inIdx].qty += inQty;
+                destStock[inIdx].bharti = inBharti;
+                destStock[inIdx].mark = inMark;
+                destStock[inIdx].name = inItem;
             } else {
-                alert("❌ Yeh Lot No. stock mein nahi mila!");
+                // Bilkul Naya Lot create karna
+                let newItem = {
+                    coldStore: inDest === 'cold' ? originalItem.coldStore : "Direct to Shop",
+                    party: originalItem.party, // Party name wahi rakhenge jiski pehle thi
+                    name: inItem,
+                    lot: inLot,
+                    unit: originalItem.unit,
+                    bharti: inBharti,
+                    rate: originalItem.rate, // Processing ke baad purana rate rakh rahe hain (Aap chaho to iska field bhi add kar sakte ho)
+                    mark: inMark,
+                    qty: inQty
+                };
+                destStock.push(newItem);
+                if (!savedNames.includes(inItem)) savedNames.push(inItem);
             }
+
+            lotHistory.push({ date: date, lot: inLot, name: inItem, type: 'Job Work (IN)', ref: ref, qtyIn: inQty, qtyOut: '-' });
+
+            saveAllData();
+            alert("✅ Karkhana Process Successfully Pura Hua!\nPurana stock minus ho gaya aur naya stock add ho gaya hai.");
+
+            // Clear inputs for next time
+            document.getElementById('jobOutLot').value = '';
+            document.getElementById('jobOutQty').value = '';
+            document.getElementById('jobInLot').value = '';
+            document.getElementById('jobInMark').value = '';
+            document.getElementById('jobInQty').value = '';
+            document.getElementById('jobInBharti').value = '';
+            document.getElementById('jobOutStockInfo').innerText = '';
+
+            closeAll();
         }
 
         function fetchLotForEdit(lotNo) {
@@ -2393,8 +2489,8 @@
         window.renderSaleReturnRegister = renderSaleReturnRegister; // Naya Export
 
         window.toggleJobAction = toggleJobAction;
-        window.fetchJobLotDetails = fetchJobLotDetails;
-        window.saveJobWork = saveJobWork;
+        window.fetchNewJobLotDetails = fetchNewJobLotDetails;
+        window.saveJobWorkNew = saveJobWorkNew;
         window.autoFillInwardDetails = autoFillInwardDetails;
     </script>
 </body>
