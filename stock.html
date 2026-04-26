@@ -2371,7 +2371,25 @@
                     let wt = item.totalQty * item.bharti; let val = wt * item.rate;
                     gColdBox += item.coldQty; gShopBox += item.shopQty; gTotalBox += item.totalQty; gTotalWt += wt; gTotalVal += val;
                     let storeBadge = item.coldStore !== "-" ? `<span class="badge-store">${item.coldStore}</span>` : '';
-                    mBody.innerHTML += `<tr class="clickable-row" onclick="openQuickLedger('${item.lot}')"><td>${storeBadge}</td><td class="party-name">${item.party}</td><td><span class="badge-lot">${item.lot}</span></td><td><b>${item.name}</b></td><td>${item.mark}</td><td>${item.bharti} Kg</td><td>₹${item.rate}</td><td class="col-cold">${item.coldQty || "-"}</td><td class="col-shop">${item.shopQty || "-"}</td><td class="col-total">${item.totalQty}</td><td>${wt.toFixed(2)}</td><td style="font-weight:bold;">₹${Math.round(val).toLocaleString('en-IN')}</td></tr>`;
+                    // Function ke shuru mein variables banayein
+                    let mHtml = "";
+                    let zHtml = "";
+
+                    Object.values(masterDict).forEach(item => {
+                        if (item.totalQty <= 0) {
+                            zHtml += `<tr class="clickable-row" onclick="openQuickLedger('${item.lot}')"><td class="party-name">${item.party}</td><td><span class="badge-lot">${item.lot}</span></td><td><b>${item.name}</b></td><td>${item.mark}</td><td style="color:#c0392b;">Bik Chuka 🔴</td></tr>`;
+                        } else {
+                            let wt = item.totalQty * item.bharti; let val = wt * item.rate;
+                            gColdBox += item.coldQty; gShopBox += item.shopQty; gTotalBox += item.totalQty; gTotalWt += wt; gTotalVal += val;
+                            let storeBadge = item.coldStore !== "-" ? `<span class="badge-store">${item.coldStore}</span>` : '';
+
+                            mHtml += `<tr class="clickable-row" onclick="openQuickLedger('${item.lot}')"><td>${storeBadge}</td><td class="party-name">${item.party}</td><td><span class="badge-lot">${item.lot}</span></td><td><b>${item.name}</b></td><td>${item.mark}</td><td>${item.bharti} Kg</td><td>₹${item.rate}</td><td class="col-cold">${item.coldQty || "-"}</td><td class="col-shop">${item.shopQty || "-"}</td><td class="col-total">${item.totalQty}</td><td>${wt.toFixed(2)}</td><td style="font-weight:bold;">₹${Math.round(val).toLocaleString('en-IN')}</td></tr>`;
+                        }
+                    });
+
+                    // Loop ke baad ek saath insert karein (Instant rendering)
+                    mBody.innerHTML = mHtml;
+                    zBody.innerHTML = zHtml || "<tr><td colspan='5' style='text-align:center;'>Koi zero stock item nahi hai.</td></tr>";
                 }
             });
 
@@ -2380,6 +2398,9 @@
             document.getElementById('thTotalQty').innerHTML = `🟢 Total Qty ↕️<br><span style="font-size:12px; color:#ffd700;">Grand Total: ${gTotalBox}</span>`;
             document.getElementById('thTotalWt').innerHTML = `Total Weight ↕️<br><span style="font-size:11px; color:#ffd700;">Total: ${gTotalWt.toFixed(2)} Kg</span>`;
             document.getElementById('thTotalVal').innerHTML = `Total Value (₹) ↕️<br><span style="font-size:12px; color:#ffd700;">Total: ₹${Math.round(gTotalVal).toLocaleString('en-IN')}</span>`; if (zBody.innerHTML === "") zBody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Koi zero stock item nahi hai.</td></tr>";
+            if (window.parent && window.parent.updateStockTotal) {
+                window.parent.updateStockTotal(gTotalVal);
+            }
         }
 
         function searchMasterTable() {
