@@ -2518,61 +2518,80 @@
             let dateInput = document.getElementById("reportDate").value;
             if (!dateInput) return;
 
-            // Set Print Header Date
+            // Print Header Date Set Karein
             let dateObj = new Date(dateInput);
             let formattedDate = dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
             document.getElementById("printReportHeader").innerText = `Dryfu - Daily Shop Report (${formattedDate})`;
 
             let tbody = document.getElementById("dailyReportBody");
             let sumBody = document.getElementById("itemSummaryBody");
-
-            // FIX: Purane tfoot wale variables yahan se hata diye hain taaki error na aaye
             tbody.innerHTML = ""; sumBody.innerHTML = "";
 
             let shopReportMap = {};
             let itemSummaryMap = {};
 
-            function initLot(lot, name) {
-                if (!shopReportMap[lot]) {
-                    let foundItem = shopStock.find(s => s.lot.toLowerCase() === lot.toLowerCase()) || coldStock.find(s => s.lot.toLowerCase() === lot.toLowerCase());
-                    let marka = (foundItem && foundItem.mark && foundItem.mark !== "-") ? foundItem.mark : "-";
-                    let itemName = name || (foundItem ? foundItem.name : "Unknown");
+            // STEP 1: Current Master Stock ko Base (Absolute Truth) banana
+            shopStock.forEach(item => {
+                let marka = (item.mark && item.mark !== "-") ? item.mark : "-";
+                shopReportMap[item.lot.toLowerCase()] = {
+                    lot: item.lot, name: item.name, marka: marka,
+                    closingStock: item.qty || 0, // Master stock se current physical stock
+                    opening: 0, inQty: 0, inDetails: [], outQty: 0, outDetails: []
+                };
+            });
 
-                    shopReportMap[lot] = {
-                        lot: lot, name: itemName, marka: marka,
+            // Helper function: Agar koi lot aaj bik kar Master Stock me 0 ho gaya ho
+            function initLot(lot, name) {
+                let lotKey = lot.toLowerCase();
+                if (!shopReportMap[lotKey]) {
+                    let foundItem = coldStock.find(s => s.lot.toLowerCase() === lotKey);
+                    let marka = (foundItem && foundItem.mark && foundItem.mark !== "-") ? foundItem.mark : "-";
+                    shopReportMap[lotKey] = {
+                        lot: lot, name: name || (foundItem ? foundItem.name : "Unknown"), marka: marka,
+                        closingStock: 0,
                         opening: 0, inQty: 0, inDetails: [], outQty: 0, outDetails: []
                     };
                 }
+                return shopReportMap[lotKey];
             }
 
+            // STEP 2: History padhna aur Reverse Calculate karna
             lotHistory.forEach(h => {
-                let qIn = parseFloat(h.qtyIn) || 0; let qOut = parseFloat(h.qtyOut) || 0;
-                let d = h.date; let lot = h.lot;
-                let isShopTransaction = false; let shopInVal = 0; let shopOutVal = 0; let detailStr = "";
+                let qIn = parseFloat(h.qtyIn) || 0;
+                let qOut = parseFloat(h.qtyOut) || 0;
+                let d = h.date;
+                let lot = h.lot;
+                let type = h.type || "";
+                let lotKey = lot.toLowerCase();
 
-                if (h.type === 'Transfer to Shop') {
-                    isShopTransaction = true; shopInVal = qOut; detailStr = `Cold Se (${h.ref})`;
-                } else if (h.type === 'Shop IN') {
-                    isShopTransaction = true; shopInVal = qIn; detailStr = `Direct IN (${h.ref})`;
-                } else if (h.type === 'Sale Return') {
-                    isShopTransaction = true; shopInVal = qIn; detailStr = `Return (${h.billNo || h.ref})`;
-                } else if (h.type === 'Sale (Bika)') {
-                    isShopTransaction = true; shopOutVal = qOut; detailStr = `Sale Bill: ${h.billNo || '-'}`;
+                let isShopTx = false; let shopInVal = 0; let shopOutVal = 0; let detailStr = "";
+
+                if (type === 'Transfer to Shop') {
+                    isShopTx = true; shopInVal = qOut; detailStr = `Cold Se (${h.ref})`;
+                } else if (type === 'Shop IN') {
+                    isShopTx = true; shopInVal = qIn; detailStr = `Direct IN (${h.ref})`;
+                } else if (type === 'Sale Return') {
+                    isShopTx = true; shopInVal = qIn; detailStr = `Return (${h.billNo || h.ref})`;
+                } else if (type === 'Sale (Bika)') {
+                    isShopTx = true; shopOutVal = qOut; detailStr = `Sale Bill: ${h.billNo || '-'}`;
                 }
 
-                if (isShopTransaction) {
-                    initLot(lot, h.name);
-                    if (d < dateInput) {
-                        shopReportMap[lot].opening += shopInVal;
-                        shopReportMap[lot].opening -= shopOutVal;
+                if (isShopTx) {
+                    let lotData = initLot(lot, h.name);
+
+                    if (d > dateInput) {
+                        // Agar aap purani date ki report dekh rahe hain, toh future transactions ko REVERSE karein
+                        lotData.closingStock -= shopInVal;
+                        lotData.closingStock += shopOutVal;
                     } else if (d === dateInput) {
+                        // Report wale din ki IN/OUT activity record karein
                         if (shopInVal > 0) {
-                            shopReportMap[lot].inQty += shopInVal;
-                            shopReportMap[lot].inDetails.push(`${detailStr} -> <b>${shopInVal}</b>`);
+                            lotData.inQty += shopInVal;
+                            lotData.inDetails.push(`${detailStr} -> <b>${shopInVal}</b>`);
                         }
                         if (shopOutVal > 0) {
-                            shopReportMap[lot].outQty += shopOutVal;
-                            shopReportMap[lot].outDetails.push(`${detailStr} -> <b>${shopOutVal}</b>`);
+                            lotData.outQty += shopOutVal;
+                            lotData.outDetails.push(`${detailStr} -> <b>${shopOutVal}</b>`);
                         }
                     }
                 }
@@ -2581,27 +2600,36 @@
             let totalOpening = 0, totalIn = 0, totalOut = 0, totalClosing = 0;
             let hasData = false;
 
-            // Prepare Table and Summary Data
+            // STEP 3: Opening Balance Nikalna aur Table Render Karna
             Object.values(shopReportMap).forEach(data => {
-                let closing = data.opening + data.inQty - data.outQty;
+                // REVERSE FORMULA: Opening = Closing - IN + OUT
+                data.opening = data.closingStock - data.inQty + data.outQty;
 
-                if (data.opening !== 0 || data.inQty !== 0 || data.outQty !== 0) {
+                // STRICT CHECK: Agar kisi purani error se math minus me jaye, toh code use auto-correct karke 0 kar dega
+                if (data.opening < 0) {
+                    data.opening = 0;
+                    // Formula ko balance rakhne ke liye closing ko bhi align kar denge
+                    data.closingStock = data.opening + data.inQty - data.outQty;
+                    if (data.closingStock < 0) data.closingStock = 0;
+                }
+
+                // Sirf wahi item dikhayein jinme aaj stock ho ya koi IN/OUT activity hui ho
+                if (data.opening > 0 || data.inQty > 0 || data.outQty > 0 || data.closingStock > 0) {
                     hasData = true;
-                    totalOpening += data.opening; totalIn += data.inQty; totalOut += data.outQty; totalClosing += closing;
+                    totalOpening += data.opening; totalIn += data.inQty; totalOut += data.outQty; totalClosing += data.closingStock;
 
-                    // Group for Item Summary
+                    // Summary Grouping
                     if (!itemSummaryMap[data.name]) {
                         itemSummaryMap[data.name] = { opening: 0, inQty: 0, outQty: 0, closing: 0 };
                     }
                     itemSummaryMap[data.name].opening += data.opening;
                     itemSummaryMap[data.name].inQty += data.inQty;
                     itemSummaryMap[data.name].outQty += data.outQty;
-                    itemSummaryMap[data.name].closing += closing;
+                    itemSummaryMap[data.name].closing += data.closingStock;
 
                     let inDetailsHtml = data.inDetails.join('<br>') || '-';
                     let outDetailsHtml = data.outDetails.join('<br>') || '-';
 
-                    // Detailed Row Output - Yahan Marka aur Lot merge kiye gaye hain
                     tbody.innerHTML += `
                         <tr>
                             <td><b>${data.name}</b></td>
@@ -2614,13 +2642,13 @@
                             <td style="font-size:11px; color:#555; word-wrap: break-word;">${inDetailsHtml}</td>
                             <td style="color:#c0392b; font-weight:bold; text-align:center; font-size:14px;">${data.outQty > 0 ? '-' + data.outQty : '-'}</td>
                             <td style="font-size:11px; color:#555; word-wrap: break-word;">${outDetailsHtml}</td>
-                            <td style="color:#2980b9; font-weight:bold; text-align:center; font-size:15px;">${closing}</td>
+                            <td style="color:#2980b9; font-weight:bold; text-align:center; font-size:15px;">${data.closingStock}</td>
                         </tr>
                     `;
                 }
             });
 
-            // Render Item Summary Table and Grand Totals
+            // Summary rendering aur Grand Totals
             if (hasData) {
                 Object.keys(itemSummaryMap).forEach(itemName => {
                     let sData = itemSummaryMap[itemName];
@@ -2635,7 +2663,6 @@
                     `;
                 });
 
-                // Summary Total (Tbody ke last me)
                 sumBody.innerHTML += `
                     <tr style="background: #eaeded; border-top: 2px solid #bdc3c7;">
                         <td style="text-align:right; color:#2c3e50; font-weight:bold;">GRAND TOTAL:</td>
@@ -2646,7 +2673,6 @@
                     </tr>
                 `;
 
-                // Detailed Table Total (Tbody ke last me)
                 tbody.innerHTML += `
                     <tr style="background: #fdfdfd; border-top: 2px solid #2c3e50; box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);">
                         <td colspan="2" style="text-align:right; color:#8e44ad; font-size: 14px; font-weight:bold;">GRAND TOTAL:</td>
