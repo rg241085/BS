@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dryfu - Outstanding Dashboard</title>
-    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js" defer></script>
     <style>
         /* --- Keyboard Focus Style --- */
         tr.keyboard-row:focus {
@@ -1551,8 +1551,10 @@
             tableBody.innerHTML = htmlContent;
             document.getElementById("totalOutstanding").innerText = total.toLocaleString('en-IN');
 
-            // Render hone ke baad calculation UI update karo
-            calculateSelectedTotal();
+            // ugai.html mein applyFilters ya renderTable ke baad
+            if (window.parent && window.parent.updateUgaiTotal) {
+                window.parent.updateUgaiTotal(total); // 'total' wo variable hai jo aapne calculate kiya
+            }
         }
 
         // NAYA FUNCTION
