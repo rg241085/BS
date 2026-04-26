@@ -669,15 +669,20 @@
                     <th onclick="sortTable(3)" style="cursor:pointer;" title="Click to Sort">Item Name ↕️</th>
                     <th onclick="sortTable(4)" style="cursor:pointer;" title="Click to Sort">Mark No ↕️</th>
                     <th>Bharti</th>
-                    <th>Rate (₹)</th>
+                    <th onclick="sortTable(6)" style="cursor:pointer;" title="Click to Sort">Rate (₹) ↕️</th>
+
                     <th id="thColdQty" onclick="sortTable(7)"
                         style="background:#2980b9; color:white; text-align:center; cursor:pointer;">🔵 Cold Qty ↕️</th>
                     <th id="thShopQty" onclick="sortTable(8)"
                         style="background:#8e44ad; color:white; text-align:center; cursor:pointer;">🟣 Shop Qty ↕️</th>
                     <th id="thTotalQty" onclick="sortTable(9)"
                         style="background:#27ae60; color:white; text-align:center; cursor:pointer;">🟢 Total Qty ↕️</th>
-                    <th id="thTotalWt">Total Weight</th>
-                    <th id="thTotalVal">Total Value (₹)</th>
+
+                    <th id="thTotalWt" onclick="sortTable(10)" style="cursor:pointer;" title="Click to Sort">Total
+                        Weight ↕️</th>
+
+                    <th id="thTotalVal" onclick="sortTable(11)" style="cursor:pointer;" title="Click to Sort">Total
+                        Value (₹) ↕️</th>
                 </tr>
             </thead>
             <tbody id="masterStockBody"></tbody>
@@ -2373,9 +2378,8 @@
             document.getElementById('thColdQty').innerHTML = `🔵 Cold Qty ↕️<br><span style="font-size:11px; color:#ffd700;">Total: ${gColdBox}</span>`;
             document.getElementById('thShopQty').innerHTML = `🟣 Shop Qty ↕️<br><span style="font-size:11px; color:#ffd700;">Total: ${gShopBox}</span>`;
             document.getElementById('thTotalQty').innerHTML = `🟢 Total Qty ↕️<br><span style="font-size:12px; color:#ffd700;">Grand Total: ${gTotalBox}</span>`;
-            document.getElementById('thTotalWt').innerHTML = `Total Weight<br><span style="font-size:11px; color:#ffd700;">Total: ${gTotalWt.toFixed(2)} Kg</span>`;
-            document.getElementById('thTotalVal').innerHTML = `Total Value (₹)<br><span style="font-size:12px; color:#ffd700;">Total: ₹${Math.round(gTotalVal).toLocaleString('en-IN')}</span>`;
-            if (zBody.innerHTML === "") zBody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Koi zero stock item nahi hai.</td></tr>";
+            document.getElementById('thTotalWt').innerHTML = `Total Weight ↕️<br><span style="font-size:11px; color:#ffd700;">Total: ${gTotalWt.toFixed(2)} Kg</span>`;
+            document.getElementById('thTotalVal').innerHTML = `Total Value (₹) ↕️<br><span style="font-size:12px; color:#ffd700;">Total: ₹${Math.round(gTotalVal).toLocaleString('en-IN')}</span>`; if (zBody.innerHTML === "") zBody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Koi zero stock item nahi hai.</td></tr>";
         }
 
         function searchMasterTable() {
