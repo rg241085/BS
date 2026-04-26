@@ -156,11 +156,9 @@
             border: 2px solid #4f46e5;
             box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);
             cursor: pointer;
-            /* Change to pointer for mobile interaction */
             text-align: center;
             min-width: 150px;
             user-select: none;
-            /* Text select hone se roke double tap par */
         }
 
         .net-worth-tab:hover {
@@ -227,17 +225,30 @@
             color: white;
         }
 
-        /* MAIN IFRAME */
-        iframe {
+        /* MAIN IFRAME CONTAINER */
+        #iframe-container {
             flex-grow: 1;
-            /* Automatically takes remaining height */
+            position: relative;
             width: 100%;
+        }
+
+        .app-frame {
+            width: 100%;
+            height: 100%;
             border: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
             background-color: #f4f7f6;
         }
 
+        .app-frame.active {
+            display: block;
+        }
+
         /* =========================================
-           MOBILE RESPONSIVE DESIGN (Naya Code)
+           MOBILE RESPONSIVE DESIGN
            ========================================= */
         @media (max-width: 768px) {
             .top-header {
@@ -249,25 +260,19 @@
 
             .main-tabs {
                 flex-wrap: nowrap;
-                /* Taki card niche na gire */
                 overflow-x: auto;
-                /* Daaye-baaye swipe karne ke liye */
                 padding-bottom: 5px;
                 gap: 10px;
                 -ms-overflow-style: none;
-                /* IE and Edge */
                 scrollbar-width: none;
-                /* Firefox */
             }
 
             .main-tabs::-webkit-scrollbar {
                 display: none;
-                /* Chrome, Safari and Opera scrollbar hide */
             }
 
             .stat-tab {
                 min-width: 130px;
-                /* Mobile par thoda chota */
                 height: 60px;
             }
 
@@ -278,13 +283,11 @@
 
             .net-worth-tab {
                 flex-grow: 1;
-                /* Net worth pheli hui dikhegi */
                 min-width: unset;
             }
 
             .action-btns {
                 flex-direction: row;
-                /* Mobile par refresh aur logout ek line me */
                 flex-grow: 1;
             }
 
@@ -298,14 +301,12 @@
    ========================================= */
         @media (max-width: 768px) {
             .top-header {
-                /* Jadoo: Net Worth upar aur Tabs niche karne ke liye */
                 flex-direction: column-reverse;
                 padding: 10px;
                 gap: 12px;
                 border-bottom: none;
             }
 
-            /* --- Upar Wali Line (Net Worth + Buttons) --- */
             .right-section {
                 width: 100%;
                 justify-content: space-between;
@@ -317,52 +318,43 @@
                 flex-grow: 1;
                 min-width: unset;
                 height: 55px;
-                /* Touch ke liye perfect height */
                 margin: 0;
             }
 
             .action-btns {
                 flex-direction: row;
-                /* Refresh aur Logout side-by-side */
                 gap: 8px;
             }
 
             .icon-btn {
                 padding: 0 15px;
                 height: 55px;
-                /* Net worth ke barabar height */
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 font-size: 18px;
             }
 
-            /* --- Niche Wali Line (Scrollable Menu Tabs) --- */
             .main-tabs {
                 width: 100%;
                 flex-wrap: nowrap;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
-                /* iPhone par smooth scroll */
                 padding-bottom: 5px;
                 gap: 10px;
                 scroll-snap-type: x mandatory;
-                /* Swipe karne par card apne aap fit hoga */
             }
 
-            /* Scrollbar chhupana taaki clean dikhe */
             .main-tabs::-webkit-scrollbar {
                 display: none;
             }
 
             .stat-tab {
                 flex: 0 0 auto;
-                /* Tabs ko pichakne se rokega */
                 width: 140px;
                 min-width: unset;
                 height: 65px;
                 scroll-snap-align: start;
-                /* Magnetic snap effect */
             }
 
             .dropdown-select {
@@ -376,8 +368,7 @@
 
     <div class="top-header">
         <div class="main-tabs">
-
-            <div class="stat-tab" onclick="loadPage('cash.html', this)">
+            <div class="stat-tab" onclick="switchTab('frame-cash', this)">
                 <div class="tab-title">💵 Cash </div>
                 <div class="tab-value" id="stat-cash"></div>
             </div>
@@ -387,12 +378,12 @@
                 <div class="tab-value" id="stat-bank"></div>
             </div>
 
-            <div class="stat-tab active" onclick="loadPage('payment.html', this)">
+            <div class="stat-tab active" onclick="switchTab('frame-payment', this)">
                 <div class="tab-title">📤 Payment</div>
                 <div class="tab-value" id="stat-payable"></div>
             </div>
 
-            <div class="stat-tab" onclick="loadPage('ugai.html', this)">
+            <div class="stat-tab" onclick="switchTab('frame-ugai', this)">
                 <div class="tab-title">
                     <select id="ugaiFilterType" class="dropdown-select"
                         onchange="updateDashboardStats(); event.stopPropagation();">
@@ -403,7 +394,7 @@
                 <div class="tab-value" id="stat-receivable"></div>
             </div>
 
-            <div class="stat-tab" onclick="loadPage('stock.html', this)">
+            <div class="stat-tab" onclick="switchTab('frame-stock', this)">
                 <div class="tab-title">📦 Stock Value</div>
                 <div class="tab-value" id="stat-stock-val"></div>
             </div>
@@ -425,7 +416,12 @@
         </div>
     </div>
 
-    <iframe id="main-frame" src="payment.html"></iframe>
+    <div id="iframe-container">
+        <iframe id="frame-payment" src="payment.html" class="app-frame active"></iframe>
+        <iframe id="frame-cash" src="cash.html" class="app-frame"></iframe>
+        <iframe id="frame-ugai" src="ugai.html" class="app-frame"></iframe>
+        <iframe id="frame-stock" src="stock.html" class="app-frame"></iframe>
+    </div>
 
     <script type="module">
         import { db, doc, collection, onSnapshot, auth, onAuthStateChanged, signOut, setDoc } from './firebase-config.js';
@@ -461,8 +457,8 @@
         const balancesDoc = doc(db, "balances", "main");
         const cashCounterDoc = doc(db, "erp", "cashCounter");
         const paymentsCol = collection(db, "payments");
-        const inventoryDoc = doc(db, "erp", "inventory");
-        const outstandingDoc = doc(db, "erp", "outstanding");
+
+        // (Cleaned up redundant inventoryDoc/outstandingDoc since they pass values directly from child frames now)
 
         function updateUI() {
             let ugaiFilter = document.getElementById('ugaiFilterType');
@@ -522,7 +518,6 @@
         netWorthBox.addEventListener('click', (e) => {
             const currentTime = new Date().getTime();
             const tapLength = currentTime - lastTap;
-            // Agar 500ms (aadhe second) ke andar 2 baar click/tap kiya gaya ho
             if (tapLength < 500 && tapLength > 0) {
                 togglePrivacyMode();
                 e.preventDefault();
@@ -557,7 +552,7 @@
             updateUI();
         });
 
-        // 2. Cash Counter (Galla) Listener [PHYSICAL CASH LOGIC]
+        // 2. Cash Counter (Galla) Listener
         onSnapshot(cashCounterDoc, (snap) => {
             cash = 0;
             if (snap.exists() && snap.data().days && snap.data().days.length > 0) {
@@ -596,32 +591,16 @@
             updateUI();
         });
 
-        // 4. Inventory Data
-        onSnapshot(inventoryDoc, (snap) => {
-            totalStockVal = 0;
-            if (snap.exists()) {
-                let data = snap.data();
-                let cStock = data.coldStock || [];
-                let sStock = data.shopStock || [];
-                [...cStock, ...sStock].forEach(item => {
-                    let weight = Number(item.qty) * Number(item.bharti || 0);
-                    totalStockVal += (weight * Number(item.rate || 0));
-                });
-            }
+        // Values received from iframes
+        window.updateStockTotal = function (totalValue) {
+            totalStockVal = totalValue;
             updateUI();
-        });
+        };
 
-        // 5. Outstanding Data
-        onSnapshot(outstandingDoc, (snap) => {
-            totalReceivable = 0;
-            if (snap.exists()) {
-                let data = snap.data().data || [];
-                data.forEach(row => {
-                    if (!row.hidden) totalReceivable += Number(row.amount || 0);
-                });
-            }
+        window.updateUgaiTotal = function (totalValue) {
+            totalReceivable = totalValue;
             updateUI();
-        });
+        };
 
         // --- Bank Update Function ---
         window.updateBankBalance = async function () {
@@ -629,7 +608,6 @@
                 if (!confirm("Balance dekhne aur edit karne ke liye 'Show' mode active karna hoga.\n\nPC me F9 dabayein ya Mobile me 'Net Worth' par double-tap karein!")) {
                     return;
                 }
-                // Agar user OK karta hai, to bhi privacy hat jayegi
                 togglePrivacyMode();
             }
 
@@ -644,9 +622,16 @@
             }
         };
 
-        // --- Page Load & Tab Switching Logic ---
-        window.loadPage = function (pageUrl, btnElement) {
-            document.getElementById('main-frame').src = pageUrl;
+        // --- NAYA Page Load & Tab Switching Logic (Instant Switch) ---
+        window.switchTab = function (frameId, btnElement) {
+            // 1. Saare frames chhupao
+            document.querySelectorAll('.app-frame').forEach(frame => {
+                frame.classList.remove('active');
+            });
+            // 2. Sirf select kiya hua frame dikhao
+            document.getElementById(frameId).classList.add('active');
+
+            // 3. Tab Buttons ki styling update karo
             document.querySelectorAll('.stat-tab').forEach(btn => btn.classList.remove('active'));
             if (btnElement) {
                 btnElement.classList.add('active');
