@@ -931,6 +931,66 @@
 
             /* ----------------- LIST WIRING ----------------- */
             function handleListWiring(dayComponent) {
+
+                // ======== NAYA CODE START (Arrow Keys Navigation) ========
+                dayComponent.querySelector('.counter-table').addEventListener('keydown', (e) => {
+                    // Sirf arrow keys par action lena hai
+                    if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+
+                    const input = e.target;
+                    // Check karein ki jo select hai wo humara count-input hi hai
+                    if (!input.classList.contains('count-input')) return;
+
+                    // Default behavior (value change hona) ko rok dega
+                    e.preventDefault();
+
+                    const td = input.closest('td');
+                    const tr = input.closest('tr');
+                    if (!td || !tr) return;
+
+                    let cellIndex = Array.from(tr.children).indexOf(td);
+                    let nextTr = tr;
+                    let nextTd = td;
+                    let nextInput = null;
+
+                    // Loop chalayenge taaki agar bich me koi box disabled ho, toh wo agle valid box ko dhoondh le
+                    while (!nextInput) {
+                        if (e.key === 'ArrowRight') {
+                            nextTd = nextTd.nextElementSibling;
+                            if (!nextTd) break;
+                        } else if (e.key === 'ArrowLeft') {
+                            nextTd = nextTd.previousElementSibling;
+                            if (!nextTd) break;
+                        } else if (e.key === 'ArrowDown') {
+                            nextTr = nextTr.nextElementSibling;
+                            if (!nextTr) break;
+                            nextTd = nextTr.children[cellIndex];
+                        } else if (e.key === 'ArrowUp') {
+                            nextTr = nextTr.previousElementSibling;
+                            if (!nextTr) break;
+                            nextTd = nextTr.children[cellIndex];
+                        }
+
+                        if (nextTd) {
+                            const inp = nextTd.querySelector('input.count-input');
+                            // Agar input box mil gaya aur wo disabled nahi hai
+                            if (inp && !inp.disabled) {
+                                nextInput = inp;
+                            }
+                        } else {
+                            break; // Aakhri row/col aa gaya ho toh loop tod do
+                        }
+                    }
+
+                    // Agar agla input mil gaya toh uspe focus karein
+                    if (nextInput) {
+                        nextInput.focus();
+                        nextInput.select(); // Box select kar lega taaki naya number direct type ho sake
+                    }
+                });
+                // ======== NAYA CODE END ========
+
+                // Niche aapka pehle ka likha hua code as it is rahega
                 dayComponent.querySelector('.incoming-list').addEventListener('click', (e) => handleListClick(e, dayComponent));
                 dayComponent.querySelector('.outgoing-list').addEventListener('click', (e) => handleListClick(e, dayComponent));
                 dayComponent.querySelector('.extra-list-body').addEventListener('click', (e) => handleListClick(e, dayComponent));
@@ -967,7 +1027,6 @@
                     }
                 });
             }
-
             /* ----------------- BUILD & RENDER ----------------- */
             function createDayComponent() {
                 const frag = dayTemplate.content.cloneNode(true);
