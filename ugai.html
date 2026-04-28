@@ -22,7 +22,7 @@
         }
 
         .container {
-            max-width: 1100px;
+            max-width: 1180px;
             margin: auto;
             background: white;
             padding: 15px;
@@ -850,6 +850,8 @@
             <div><label>End Date</label><input type="date" id="f-end" onchange="applyFilters()"></div>
             <div><label>Min Amount (₹)</label><input type="number" id="f-min" placeholder="0" oninput="applyFilters()">
             </div>
+            <div><label>Max Amount (₹)</label><input type="number" id="f-max" placeholder="Max"
+                    oninput="applyFilters()"></div>
         </div>
 
         <div class="table-container">
@@ -861,8 +863,8 @@
                                 style="transform: scale(1.2); cursor: pointer;">
                         </th>
                         <th onclick="sortData('dateVal')">Date <span class="sort-icon" id="sort-dateVal"></span></th>
-                        <th onclick="sortData('billNo')">Bill No. (OS.ID) <span class="sort-icon"
-                                id="sort-billNo"></span></th>
+                        <th onclick="sortData('billNo')">Bill No. (OS.ID) <span class="sort-icon" id="sort-billNo"></span>
+                        </th>
                         <th onclick="sortData('name')">Account Name <span class="sort-icon" id="sort-name"></span></th>
                         <th onclick="sortData('broker')">Broker Name <span class="sort-icon" id="sort-broker"></span>
                         </th>
@@ -879,143 +881,140 @@
                 </tbody>
             </table>
         </div>
+    </div> <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h3>Receive Payment & Settlement</h3>
 
-        <div id="paymentModal" class="modal">
-            <div class="modal-content">
-                <span class="close-btn" onclick="closeModal()">&times;</span>
-                <h3>Receive Payment & Settlement</h3>
-
-                <div class="modal-info"
-                    style="border: 2px solid #000; background: #fff; padding: 15px; border-radius: 6px;">
-                    <div
-                        style="display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 8px; margin-bottom: 8px;">
-                        <span style="font-weight: bold; font-size: 15px; color: #d9534f;">B. N - <span
-                                id="m-broker"></span></span>
-                        <span style="font-weight: bold; font-size: 15px;">BILL NO - <span id="m-bill"></span></span>
-                    </div>
-
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <span style="font-weight: bold; font-size: 18px; color: #0056b3;" id="m-party"></span>
-                        <span style="font-weight: bold; font-size: 15px;" id="m-bill-date"></span>
-                    </div>
-
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; background: #f4f7f6; padding: 8px; border-radius: 4px;">
-                        <span>Original Due Amount:</span>
-                        <span id="m-due" style="color: #d9534f; font-weight: bold; font-size: 16px;"></span>
-                    </div>
-
-                    <div class="bill-age-box">
-                        ⏱️ Bill is <span id="m-bill-age" style="font-size: 22px; color: #d84315;">0</span> Days Old
-                    </div>
+            <div class="modal-info"
+                style="border: 2px solid #000; background: #fff; padding: 15px; border-radius: 6px;">
+                <div
+                    style="display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 8px; margin-bottom: 8px;">
+                    <span style="font-weight: bold; font-size: 15px; color: #d9534f;">B. N - <span
+                            id="m-broker"></span></span>
+                    <span style="font-weight: bold; font-size: 15px;">BILL NO - <span id="m-bill"></span></span>
                 </div>
 
-                <div id="m-item-details"
-                    style="display:none; margin-top: 10px; background: #fff; border: 1px dashed #008CBA; padding: 10px; border-radius: 4px; max-height: 160px; overflow-y: auto;">
-                    <h4 style="margin-top: 0; margin-bottom: 5px; font-size: 13px; color: #0056b3;">📦 Bill ki Item
-                        Details:</h4>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;"
-                        id="m-item-table">
-                        <thead>
-                            <tr style="background:#f4f7f6; border-bottom: 1px solid #ccc;">
-                                <th>Item Name</th>
-                                <th>Nag</th>
-                                <th>Qty</th>
-                                <th>Rate</th>
-                                <th>Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody id="m-item-tbody">
-                        </tbody>
-                    </table>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <span style="font-weight: bold; font-size: 18px; color: #0056b3;" id="m-party"></span>
+                    <span style="font-weight: bold; font-size: 15px;" id="m-bill-date"></span>
                 </div>
 
-                <div class="radio-group">
-                    <label><input type="radio" name="adj_type" value="none" checked onchange="toggleAdjustment()"> Sirf
-                        Bill Amount</label>
-                    <label><input type="radio" name="adj_type" value="interest" onchange="toggleAdjustment()"> ➕
-                        Interest Lagayein</label>
-                    <label><input type="radio" name="adj_type" value="discount" onchange="toggleAdjustment()"> ➖
-                        Discount Dein</label>
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; background: #f4f7f6; padding: 8px; border-radius: 4px;">
+                    <span>Original Due Amount:</span>
+                    <span id="m-due" style="color: #d9534f; font-weight: bold; font-size: 16px;"></span>
                 </div>
 
-                <div class="interest-box" id="box-interest">
-                    <div class="flex-row">
-                        <div><label>Credit Days (Din):</label><input type="number" id="m-credit-days" value="0"
-                                placeholder="e.g. 30" oninput="calculateInterest()"></div>
-                        <div><label>Rate (% Monthly):</label><input type="number" id="m-int-rate" value="0"
-                                placeholder="e.g. 1.5" step="0.1" oninput="calculateInterest()"></div>
-                    </div>
-                    <div style="margin-top: 15px;">
-                        <label>➕ Calculated Interest (₹):</label>
-                        <input type="number" id="m-interest" placeholder="0" oninput="updateLiveTotal()">
-                        <span class="auto-calc-text" id="m-overdue-info">Interest for: 0 Days</span>
-                    </div>
+                <div class="bill-age-box">
+                    ⏱️ Bill is <span id="m-bill-age" style="font-size: 22px; color: #d84315;">0</span> Days Old
                 </div>
+            </div>
 
-                <div class="discount-box" id="box-discount">
-                    <div class="flex-row">
-                        <div><label>Discount (%):</label><input type="number" id="m-disc-percent" value=""
-                                placeholder="e.g. 2" step="0.1" oninput="calcDiscFromPercent()"></div>
-                        <div><label>Discount Amount (₹):</label><input type="number" id="m-discount" value="0"
-                                placeholder="0" oninput="calcDiscFromAmount()"></div>
-                    </div>
-                </div>
+            <div id="m-item-details"
+                style="display:none; margin-top: 10px; background: #fff; border: 1px dashed #008CBA; padding: 10px; border-radius: 4px; max-height: 160px; overflow-y: auto;">
+                <h4 style="margin-top: 0; margin-bottom: 5px; font-size: 13px; color: #0056b3;">📦 Bill ki Item
+                    Details:</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;"
+                    id="m-item-table">
+                    <thead>
+                        <tr style="background:#f4f7f6; border-bottom: 1px solid #ccc;">
+                            <th>Item Name</th>
+                            <th>Nag</th>
+                            <th>Qty</th>
+                            <th>Rate</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="m-item-tbody">
+                    </tbody>
+                </table>
+            </div>
 
-                <div class="final-payable">Total Payable Now: <span id="live-total"
-                        style="color: #d9534f; font-size: 24px;">0</span></div>
+            <div class="radio-group">
+                <label><input type="radio" name="adj_type" value="none" checked onchange="toggleAdjustment()"> Sirf
+                    Bill Amount</label>
+                <label><input type="radio" name="adj_type" value="interest" onchange="toggleAdjustment()"> ➕
+                    Interest Lagayein</label>
+                <label><input type="radio" name="adj_type" value="discount" onchange="toggleAdjustment()"> ➖
+                    Discount Dein</label>
+            </div>
 
-                <label style="margin-top: 15px;">Amount Received (₹):</label>
-                <input type="number" id="m-received" placeholder="Kitne paise aaye?"
-                    style="border: 2px solid #008CBA; font-weight: bold; font-size: 16px;">
-
+            <div class="interest-box" id="box-interest">
                 <div class="flex-row">
-                    <div>
-                        <label>Payment Mode:</label>
-                        <select id="m-mode">
-                            <option value="Cash">Cash</option>
-                            <option value="Cheque">Cheque</option>
-                            <option value="DD">DD</option>
-                            <option value="UPI / Online">UPI / Online</option>
-                            <option value="Bank Transfer">Bank Transfer</option>
-                        </select>
-                    </div>
-                    <div><label>Ref / Note:</label><input type="text" id="m-ref" placeholder="Cheque/UTR No."></div>
+                    <div><label>Credit Days (Din):</label><input type="number" id="m-credit-days" value="0"
+                            placeholder="e.g. 30" oninput="calculateInterest()"></div>
+                    <div><label>Rate (% Monthly):</label><input type="number" id="m-int-rate" value="0"
+                            placeholder="e.g. 1.5" step="0.1" oninput="calculateInterest()"></div>
                 </div>
-
-                <button class="print-receipt-btn" onclick="generateReceipt()">🖨️ Print Receipt Voucher</button>
-            </div>
-        </div>
-
-        <div id="partyDetailsModal" class="modal">
-            <div class="modal-content">
-                <span class="close-btn" onclick="closePartyDetailsModal()">&times;</span>
-                <h3 id="pd-title" style="color: #0056b3;">Party Details</h3>
-                <div class="table-container"
-                    style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; margin-top: 10px;">
-                    <table class="details-table">
-                        <thead>
-                            <tr>
-                                <th>S.No.</th>
-                                <th>Date</th>
-                                <th>Bill No.</th>
-                                <th style="text-align: right;">Amount (₹)</th>
-                                <th style="text-align: center;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pd-table-body">
-                        </tbody>
-                    </table>
-                </div>
-                <div class="final-payable"
-                    style="margin-top: 15px; background: #fdfdfd; padding: 10px; border-radius: 4px;">
-                    Total Outstanding Balance: <span id="pd-total" style="color: #d9534f; font-size: 22px;">0</span>
+                <div style="margin-top: 15px;">
+                    <label>➕ Calculated Interest (₹):</label>
+                    <input type="number" id="m-interest" placeholder="0" oninput="updateLiveTotal()">
+                    <span class="auto-calc-text" id="m-overdue-info">Interest for: 0 Days</span>
                 </div>
             </div>
-        </div>
 
+            <div class="discount-box" id="box-discount">
+                <div class="flex-row">
+                    <div><label>Discount (%):</label><input type="number" id="m-disc-percent" value=""
+                            placeholder="e.g. 2" step="0.1" oninput="calcDiscFromPercent()"></div>
+                    <div><label>Discount Amount (₹):</label><input type="number" id="m-discount" value="0"
+                            placeholder="0" oninput="calcDiscFromAmount()"></div>
+                </div>
+            </div>
+
+            <div class="final-payable">Total Payable Now: <span id="live-total"
+                    style="color: #d9534f; font-size: 24px;">0</span></div>
+
+            <label style="margin-top: 15px;">Amount Received (₹):</label>
+            <input type="number" id="m-received" placeholder="Kitne paise aaye?"
+                style="border: 2px solid #008CBA; font-weight: bold; font-size: 16px;">
+
+            <div class="flex-row">
+                <div>
+                    <label>Payment Mode:</label>
+                    <select id="m-mode">
+                        <option value="Cash">Cash</option>
+                        <option value="Cheque">Cheque</option>
+                        <option value="DD">DD</option>
+                        <option value="UPI / Online">UPI / Online</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                    </select>
+                </div>
+                <div><label>Ref / Note:</label><input type="text" id="m-ref" placeholder="Cheque/UTR No."></div>
+            </div>
+
+            <button class="print-receipt-btn" onclick="generateReceipt()">🖨️ Print Receipt Voucher</button>
+        </div>
     </div>
+
+    <div id="partyDetailsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closePartyDetailsModal()">&times;</span>
+            <h3 id="pd-title" style="color: #0056b3;">Party Details</h3>
+            <div class="table-container"
+                style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; margin-top: 10px;">
+                <table class="details-table">
+                    <thead>
+                        <tr>
+                            <th>S.No.</th>
+                            <th>Date</th>
+                            <th>Bill No.</th>
+                            <th style="text-align: right;">Amount (₹)</th>
+                            <th style="text-align: center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pd-table-body">
+                    </tbody>
+                </table>
+            </div>
+            <div class="final-payable"
+                style="margin-top: 15px; background: #fdfdfd; padding: 10px; border-radius: 4px;">
+                Total Outstanding Balance: <span id="pd-total" style="color: #d9534f; font-size: 22px;">0</span>
+            </div>
+        </div>
+    </div>
+
     <div id="itemsModal" class="modal">
         <div class="modal-content" style="width: 850px; max-width: 95%;">
             <span class="close-btn" onclick="closeItemsModal()">&times;</span>
@@ -1448,6 +1447,7 @@
             let fStart = document.getElementById("f-start").value;
             let fEnd = document.getElementById("f-end").value;
             let fMin = document.getElementById("f-min").value;
+            let fMax = document.getElementById("f-max").value; // NAYA CODE: Max amount read karein
 
             currentFilteredData = allData.filter(row => {
                 if (row.hidden) return false;
@@ -1457,8 +1457,11 @@
                 let matchDate = true;
                 if (fStart) matchDate = matchDate && (row.dateVal >= fStart);
                 if (fEnd) matchDate = matchDate && (row.dateVal <= fEnd);
+
                 let matchAmount = true;
                 if (fMin !== "") matchAmount = matchAmount && (row.amount >= parseFloat(fMin));
+                if (fMax !== "") matchAmount = matchAmount && (row.amount <= parseFloat(fMax)); // NAYA CODE: Max amount ki condition
+
                 return matchParty && matchBill && matchBroker && matchDate && matchAmount;
             });
             applySorting();
@@ -1824,10 +1827,15 @@
         function closePartyDetailsModal() { document.getElementById("partyDetailsModal").style.display = "none"; }
 
         function clearFilters() {
-            document.getElementById("f-party").value = ""; document.getElementById("f-bill").value = "";
-            document.getElementById("f-broker").value = ""; document.getElementById("f-start").value = "";
-            document.getElementById("f-end").value = ""; document.getElementById("f-min").value = "";
-            currentSortCol = ''; applyFilters();
+            document.getElementById("f-party").value = "";
+            document.getElementById("f-bill").value = "";
+            document.getElementById("f-broker").value = "";
+            document.getElementById("f-start").value = "";
+            document.getElementById("f-end").value = "";
+            document.getElementById("f-min").value = "";
+            document.getElementById("f-max").value = ""; // NAYA CODE: Max amount ko bhi clear karein
+            currentSortCol = '';
+            applyFilters();
         }
 
         function toggleAdjustment() {
@@ -2081,9 +2089,6 @@
             calculateSelectedTotal();
         }
 
-        // ==========================================
-        // KEYBOARD SHORTCUTS
-        // ==========================================
         // ==========================================
         // KEYBOARD SHORTCUTS
         // ==========================================
