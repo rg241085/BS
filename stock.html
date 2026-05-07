@@ -2151,6 +2151,12 @@
             sourceStock[outIdx].qty -= outQty;
             lotHistory.push({ date: date, lot: originalLot, name: originalItem.name, type: 'Job Work (OUT)', ref: ref, qtyIn: '-', qtyOut: outQty });
 
+            // Process OUT
+            sourceStock[outIdx].qty -= outQty;
+            // NAYI LINE: Check karein ki maal Shop se gaya ya Cold se
+            let outTypeStr = outSource === 'shop' ? 'Job Work Shop (OUT)' : 'Job Work Cold (OUT)';
+            lotHistory.push({ date: date, lot: originalLot, name: originalItem.name, type: outTypeStr, ref: ref, qtyIn: '-', qtyOut: outQty });
+
             // Process IN
             let destStock = inDest === 'cold' ? coldStock : shopStock;
             let inIdx = destStock.findIndex(s => s.lot.toLowerCase() === inLot.toLowerCase());
@@ -2172,8 +2178,9 @@
                     qty: inQty
                 });
             }
-            lotHistory.push({ date: date, lot: inLot, name: inItem, type: 'Job Work (IN)', ref: ref, qtyIn: inQty, qtyOut: '-' });
-
+            // NAYI LINE: Check karein ki naya maal Shop mein aaya ya Cold mein
+            let inTypeStr = inDest === 'shop' ? 'Job Work Shop (IN)' : 'Job Work Cold (IN)';
+            lotHistory.push({ date: date, lot: inLot, name: inItem, type: inTypeStr, ref: ref, qtyIn: inQty, qtyOut: '-' });
             await saveAllData();
             alert("✅ Karkhana Process Complete!");
             closeAll();
@@ -2574,6 +2581,10 @@
                     isShopTx = true; shopInVal = qIn; detailStr = `Return (${h.billNo || h.ref})`;
                 } else if (type === 'Sale (Bika)') {
                     isShopTx = true; shopOutVal = qOut; detailStr = `Sale Bill: ${h.billNo || '-'}`;
+                } else if (type === 'Job Work Shop (IN)') {
+                    isShopTx = true; shopInVal = qIn; detailStr = `Karkhana Se Aaya (${h.ref})`;
+                } else if (type === 'Job Work Shop (OUT)') {
+                    isShopTx = true; shopOutVal = qOut; detailStr = `Karkhana Ko Gaya (${h.ref})`;
                 }
 
                 if (isShopTx) {
