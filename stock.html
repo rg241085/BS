@@ -2414,25 +2414,36 @@
             } else {
                 let color = typeFlag === 'IN' ? '#27ae60' : '#e67e22';
                 document.getElementById('docDetailsTitle').innerText = `📄 Document Details: ${ref} (${date})`;
-                thead.innerHTML = `<tr><th style="background:${color}; color:white;">Item Name</th><th style="background:${color}; color:white;">Lot No</th><th style="background:${color}; color:white;">Marka</th><th style="background:${color}; color:white;">Qty</th></tr>`;
+                thead.innerHTML = `<tr><th style="background:${color}; color:white;">Item Name</th><th style="background:${color}; color:white;">Lot No</th><th style="background:${color}; color:white;">Marka</th><th style="background:${color}; color:white;">Qty Details</th></tr>`;
             }
 
             let filtered = lotHistory.filter(h => h.date === date && h.ref === ref);
 
             filtered.forEach(h => {
-                let qty = (typeFlag === 'IN' || typeFlag === 'RETURN') ? h.qtyIn : h.qtyOut;
                 let foundItem = coldStock.find(s => s.lot.toLowerCase() === h.lot.toLowerCase()) || shopStock.find(s => s.lot.toLowerCase() === h.lot.toLowerCase());
                 let marka = (foundItem && foundItem.mark && foundItem.mark !== "-") ? foundItem.mark : "-";
 
                 if (typeFlag === 'SALE') {
                     let bNo = h.billNo || "-";
-                    tbody.innerHTML += `<tr><td style="font-weight:bold; color:#555;">${bNo}</td><td><b>${h.name}</b></td><td><span class="badge-lot">${h.lot}</span></td><td style="font-weight:bold; color:#8e44ad;">${marka}</td><td style="color:#c0392b; font-weight:bold; font-size:15px;">${qty}</td></tr>`;
+                    tbody.innerHTML += `<tr><td style="font-weight:bold; color:#555;">${bNo}</td><td><b>${h.name}</b></td><td><span class="badge-lot">${h.lot}</span></td><td style="font-weight:bold; color:#8e44ad;">${marka}</td><td style="color:#c0392b; font-weight:bold; font-size:15px;">${h.qtyOut}</td></tr>`;
                 } else if (typeFlag === 'RETURN') {
                     let bNo = h.billNo || "-";
-                    tbody.innerHTML += `<tr><td style="font-weight:bold; color:#555;">${bNo}</td><td><b>${h.name}</b></td><td><span class="badge-lot">${h.lot}</span></td><td style="font-weight:bold; color:#c0392b;">${marka}</td><td style="color:#27ae60; font-weight:bold; font-size:15px;">${qty}</td></tr>`;
+                    tbody.innerHTML += `<tr><td style="font-weight:bold; color:#555;">${bNo}</td><td><b>${h.name}</b></td><td><span class="badge-lot">${h.lot}</span></td><td style="font-weight:bold; color:#c0392b;">${marka}</td><td style="color:#27ae60; font-weight:bold; font-size:15px;">${h.qtyIn}</td></tr>`;
                 } else {
-                    let qtyColor = typeFlag === 'IN' ? '#27ae60' : '#c0392b';
-                    tbody.innerHTML += `<tr><td><b>${h.name}</b></td><td><span class="badge-lot">${h.lot}</span></td><td style="font-weight:bold; color:#555;">${marka}</td><td style="color:${qtyColor}; font-weight:bold; font-size:15px;">${qty}</td></tr>`;
+
+                    // 🟢 NAYA LOGIC: IN aur OUT dono ko ek sath handle karega
+                    let displayQty = "";
+                    if (h.type && h.type.includes("IN")) {
+                        displayQty = `<span style="color:#27ae60;">${h.qtyIn} (Aaya)</span>`;
+                    } else if (h.type && h.type.includes("OUT")) {
+                        displayQty = `<span style="color:#c0392b;">${h.qtyOut} (Gaya)</span>`;
+                    } else {
+                        let qty = (typeFlag === 'IN') ? h.qtyIn : h.qtyOut;
+                        let qtyColor = typeFlag === 'IN' ? '#27ae60' : '#c0392b';
+                        displayQty = `<span style="color:${qtyColor};">${qty}</span>`;
+                    }
+
+                    tbody.innerHTML += `<tr><td><b>${h.name}</b></td><td><span class="badge-lot">${h.lot}</span></td><td style="font-weight:bold; color:#555;">${marka}</td><td style="font-weight:bold; font-size:15px;">${displayQty}</td></tr>`;
                 }
             });
             document.getElementById('docDetailsModal').style.display = 'block';
