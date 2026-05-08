@@ -2120,6 +2120,9 @@
         }
 
         async function saveJobWorkNew() {
+            // 1. Button ko select karein
+            let saveBtn = document.querySelector('#jobWorkForm .btn-save');
+
             let date = document.getElementById('jobDate').value;
             let ref = document.getElementById('jobRef').value.trim() || "JobWork";
 
@@ -2134,6 +2137,7 @@
             let inQty = parseFloat(document.getElementById('jobInQty').value);
             let inBharti = parseFloat(document.getElementById('jobInBharti').value);
 
+            // Validation
             if (!outSearch || isNaN(outQty) || outQty <= 0) { alert("⚠️ Kripya OUT mal ki details sahi bharein!"); return; }
             if (!inLot || !inItem || isNaN(inQty)) { alert("⚠️ Kripya IN mal ki details bharein!"); return; }
 
@@ -2144,48 +2148,66 @@
                 alert("⚠️ Error: Stock kam hai ya Lot nahi mila!"); return;
             }
 
-            let originalItem = sourceStock[outIdx];
-            let originalLot = originalItem.lot;
-
-            // Process OUT
-            sourceStock[outIdx].qty -= outQty;
-            lotHistory.push({ date: date, lot: originalLot, name: originalItem.name, type: 'Job Work (OUT)', ref: ref, qtyIn: '-', qtyOut: outQty });
-
-            // Process OUT
-            sourceStock[outIdx].qty -= outQty;
-            // NAYI LINE: Check karein ki maal Shop se gaya ya Cold se
-            let outTypeStr = outSource === 'shop' ? 'Job Work Shop (OUT)' : 'Job Work Cold (OUT)';
-            lotHistory.push({ date: date, lot: originalLot, name: originalItem.name, type: outTypeStr, ref: ref, qtyIn: '-', qtyOut: outQty });
-
-            // Process IN
-            let destStock = inDest === 'cold' ? coldStock : shopStock;
-            let inIdx = destStock.findIndex(s => s.lot.toLowerCase() === inLot.toLowerCase());
-
-            if (inIdx !== -1) {
-                destStock[inIdx].qty += inQty;
-                destStock[inIdx].bharti = inBharti;
-                destStock[inIdx].mark = inMark;
-            } else {
-                destStock.push({
-                    coldStore: inDest === 'cold' ? originalItem.coldStore : "Direct to Shop",
-                    party: originalItem.party,
-                    name: inItem,
-                    lot: inLot,
-                    unit: originalItem.unit,
-                    bharti: inBharti,
-                    rate: originalItem.rate,
-                    mark: inMark,
-                    qty: inQty
-                });
+            // 🔴 2. BUTTON KO DISABLE KAREIN (Taki double click na ho)
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.innerText = "⏳ Save ho raha hai... Kripya rukiye!";
+                saveBtn.style.opacity = "0.7";
+                saveBtn.style.cursor = "not-allowed";
             }
-            // NAYI LINE: Check karein ki naya maal Shop mein aaya ya Cold mein
-            let inTypeStr = inDest === 'shop' ? 'Job Work Shop (IN)' : 'Job Work Cold (IN)';
-            lotHistory.push({ date: date, lot: inLot, name: inItem, type: inTypeStr, ref: ref, qtyIn: inQty, qtyOut: '-' });
-            await saveAllData();
-            alert("✅ Karkhana Process Complete!");
-            closeAll();
-        }
 
+            try {
+                let originalItem = sourceStock[outIdx];
+                let originalLot = originalItem.lot;
+
+                // Process OUT (Single Time)
+                sourceStock[outIdx].qty -= outQty;
+                let outTypeStr = outSource === 'shop' ? 'Job Work Shop (OUT)' : 'Job Work Cold (OUT)';
+                lotHistory.push({ date: date, lot: originalLot, name: originalItem.name, type: outTypeStr, ref: ref, qtyIn: '-', qtyOut: outQty });
+
+                // Process IN
+                let destStock = inDest === 'cold' ? coldStock : shopStock;
+                let inIdx = destStock.findIndex(s => s.lot.toLowerCase() === inLot.toLowerCase());
+
+                if (inIdx !== -1) {
+                    destStock[inIdx].qty += inQty;
+                    destStock[inIdx].bharti = inBharti;
+                    destStock[inIdx].mark = inMark;
+                } else {
+                    destStock.push({
+                        coldStore: inDest === 'cold' ? originalItem.coldStore : "Direct to Shop",
+                        party: originalItem.party,
+                        name: inItem,
+                        lot: inLot,
+                        unit: originalItem.unit,
+                        bharti: inBharti,
+                        rate: originalItem.rate,
+                        mark: inMark,
+                        qty: inQty
+                    });
+                }
+
+                let inTypeStr = inDest === 'shop' ? 'Job Work Shop (IN)' : 'Job Work Cold (IN)';
+                lotHistory.push({ date: date, lot: inLot, name: inItem, type: inTypeStr, ref: ref, qtyIn: inQty, qtyOut: '-' });
+
+                // Data Firebase par save karein
+                await saveAllData();
+                alert("✅ Karkhana Process Complete!");
+                closeAll();
+
+            } catch (error) {
+                console.error("Error saving Karkhana Job Work: ", error);
+                alert("❌ Save karte samay error aayi. Internet connection check karein.");
+            } finally {
+                // 🟢 3. BUTTON KO WAPAS NORMAL KAREIN (Success ya Error dono case mein)
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerText = "Karkhana Process Complete Karein ✅";
+                    saveBtn.style.opacity = "1";
+                    saveBtn.style.cursor = "pointer";
+                }
+            }
+        }
         function fetchLotForEdit(lotNo) {
             lotNo = lotNo.trim().toLowerCase();
             if (lotNo === "") { document.getElementById('editFields').style.display = "none"; document.getElementById('editErrorMsg').style.display = "none"; return; }
