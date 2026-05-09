@@ -863,7 +863,8 @@
                                 style="transform: scale(1.2); cursor: pointer;">
                         </th>
                         <th onclick="sortData('dateVal')">Date <span class="sort-icon" id="sort-dateVal"></span></th>
-                        <th onclick="sortData('billNo')">Bill No. (OS.ID) <span class="sort-icon" id="sort-billNo"></span>
+                        <th onclick="sortData('billNo')">Bill No. (OS.ID) <span class="sort-icon"
+                                id="sort-billNo"></span>
                         </th>
                         <th onclick="sortData('name')">Account Name <span class="sort-icon" id="sort-name"></span></th>
                         <th onclick="sortData('broker')">Broker Name <span class="sort-icon" id="sort-broker"></span>
@@ -881,7 +882,8 @@
                 </tbody>
             </table>
         </div>
-    </div> <div id="paymentModal" class="modal">
+    </div>
+    <div id="paymentModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal()">&times;</span>
             <h3>Receive Payment & Settlement</h3>
@@ -997,6 +999,7 @@
                 <table class="details-table">
                     <thead>
                         <tr>
+                            <th style="width: 40px; text-align: center;">Select</th>
                             <th>S.No.</th>
                             <th>Date</th>
                             <th>Bill No.</th>
@@ -1137,10 +1140,35 @@
     </div>
 
     <script type="module">
+        // 1. Import hamesha sabse upar rahega
         import { db, doc, setDoc, onSnapshot } from './firebase-config.js';
 
+        // 2. Auto Popup aur Memory ke Variables
+        let autoPopupTimer;
+        let lastMainRowBillNo = null; // NAYA: Ab hum DOM ki jagah Bill No. yaad rakhenge
+        let blockAutoPopup = false;   // NAYA: Esc karne par wapas turant khulne se rokne ke liye
+
+        window.triggerAutoPopup = function (el, partyName) {
+            if (blockAutoPopup) return; // Agar Esc dabaya hai, toh timer mat chalao
+
+            // Row ke andar se bill number nikal kar save kar lo
+            let cb = el.querySelector('.row-checkbox');
+            if (cb) lastMainRowBillNo = cb.getAttribute('data-billno');
+
+            clearTimeout(autoPopupTimer);
+            autoPopupTimer = setTimeout(() => {
+                showPartyDetails(partyName);
+            }, 600);
+        };
+
+        window.cancelAutoPopup = function () {
+            clearTimeout(autoPopupTimer);
+        };
+
+        // --- Yahan se aapka baaki ka code shuru hoga ---
         let allData = [];
         let currentFilteredData = [];
+        // ... (baaki sab waisa hi rahega)
         let currentSortCol = '';
         let isAscending = true;
         let receiptCounter = 1;
@@ -1534,8 +1562,7 @@
                 let isChecked = selectedBills.has(entry.billNo) ? "checked" : "";
 
                 htmlContent += `
-                <tr tabindex="0" class="keyboard-row" onclick="this.focus()">
-                    <td style="text-align: center;">
+              <tr tabindex="0" class="keyboard-row" onclick="this.focus()" onfocus="triggerAutoPopup(this, '${jsSafeName}')" onblur="cancelAutoPopup()">      <td style="text-align: center;">
                         <input type="checkbox" class="row-checkbox" tabindex="-1" data-amount="${entry.amount}" data-billno="${entry.billNo}" onchange="handleCheckboxChange(this, '${entry.billNo}')" ${isChecked} style="transform: scale(1.2); cursor: pointer;">
                     </td>
                     <td>${entry.displayDate}</td>
@@ -1795,28 +1822,36 @@
         function showPartyDetails(partyName) {
             document.getElementById("pd-title").innerText = partyName + " - All Outstanding Bills";
             let tbody = document.getElementById("pd-table-body");
-            tbody.innerHTML = ""; let total = 0;
+            tbody.innerHTML = "";
+            let total = 0;
 
             let partyBills = allData.filter(row => row.name === partyName && !row.hidden);
             partyBills.sort((a, b) => (a.dateVal > b.dateVal) ? 1 : -1);
 
             if (partyBills.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Koi bill pending nahi hai.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Koi bill pending nahi hai.</td></tr>`;
             } else {
                 partyBills.forEach((bill, index) => {
                     total += bill.amount;
                     let jsSafeName = bill.name.replace(/'/g, "\\'");
+
+                    // Checkbox ke liye state check karein (taaki main table aur popup sync rahein)
+                    let isChecked = selectedBills.has(bill.billNo) ? "checked" : "";
+
                     tbody.innerHTML += `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${bill.displayDate}</td>
-                            <td>${bill.billNo}</td>
-                            <td style="color: #d9534f; font-weight: bold; text-align: right;">₹${bill.amount.toLocaleString('en-IN')}</td>
-                            <td style="text-align: center;">
-                                <button class="pay-btn" onclick="closePartyDetailsModal(); openPaymentModal('${jsSafeName}', '${bill.billNo}', ${bill.amount}, '${bill.dateVal}', '${bill.displayDate}', '${bill.broker}')">Pay</button>
-                            </td>
-                        </tr>
-                    `;
+                <tr class="modal-keyboard-row" tabindex="0" onclick="this.focus()">
+                    <td style="text-align: center;">
+                        <input type="checkbox" class="row-checkbox" data-billno="${bill.billNo}" onchange="handleCheckboxChange(this, '${bill.billNo}')" ${isChecked}>
+                    </td>
+                    <td>${index + 1}</td>
+                    <td>${bill.displayDate}</td>
+                    <td>${bill.billNo}</td>
+                    <td style="color: #d9534f; font-weight: bold; text-align: right;">₹${bill.amount.toLocaleString('en-IN')}</td>
+                    <td style="text-align: center;">
+                        <button class="pay-btn" onclick="closePartyDetailsModal(); openPaymentModal('${jsSafeName}', '${bill.billNo}', ${bill.amount}, '${bill.dateVal}', '${bill.displayDate}', '${bill.broker}')">Pay</button>
+                    </td>
+                </tr>
+            `;
                 });
             }
 
@@ -2094,6 +2129,7 @@
         // ==========================================
 
         document.addEventListener('keydown', function (event) {
+            // 1. ESCAPE: Sabhi modal band karne ke liye
             if (event.key === 'Escape' || event.key === 'Esc') {
                 let paymentModal = document.getElementById("paymentModal");
                 let partyDetailsModal = document.getElementById("partyDetailsModal");
@@ -2101,19 +2137,48 @@
                 let periodModal = document.getElementById("periodModal");
 
                 if (paymentModal && paymentModal.style.display === "block") closeModal();
-                if (partyDetailsModal && partyDetailsModal.style.display === "block") closePartyDetailsModal();
                 if (itemsModal && itemsModal.style.display === "block") closeItemsModal();
                 if (periodModal && periodModal.style.display === "block") cancelPeriod();
+
+                if (partyDetailsModal && partyDetailsModal.style.display === "block") {
+                    closePartyDetailsModal();
+
+                    // NAYA LOGIC: DOM element ki jagah Bill No. se fresh row dhoond kar focus karenge
+                    let rowToFocus = null;
+                    if (lastMainRowBillNo) {
+                        let cb = document.querySelector('.row-checkbox[data-billno="' + lastMainRowBillNo + '"]');
+                        if (cb) rowToFocus = cb.closest('tr'); // Taaja (fresh) row mil gayi
+                    }
+
+                    if (!rowToFocus) {
+                        rowToFocus = document.querySelector('.keyboard-row'); // Fallback (Pehli row)
+                    }
+
+                    if (rowToFocus) {
+                        blockAutoPopup = true; // Agle kuch seconds tak popup dobara na khule
+
+                        // Halka sa delay dekar focus karein taaki background error na aaye
+                        setTimeout(() => {
+                            rowToFocus.focus();
+                            rowToFocus.scrollIntoView({ block: 'center', behavior: 'smooth' });
+
+                            // Focus aane ke thodi der baad block hata do
+                            setTimeout(() => { blockAutoPopup = false; }, 800);
+                        }, 50);
+                    }
+                }
+                return;
             }
 
             let activeRow = document.activeElement;
+
+            // --- MAIN TABLE NAVIGATION (Purana + Naya Enter) ---
             if (activeRow && activeRow.classList.contains('keyboard-row')) {
                 if (event.key === 'ArrowDown') {
                     event.preventDefault();
                     let nextRow = activeRow.nextElementSibling;
                     if (nextRow && nextRow.classList.contains('keyboard-row')) {
                         nextRow.focus();
-                        // NAYA JODA GAYA CODE 👇
                         nextRow.scrollIntoView({ block: 'center', behavior: 'smooth' });
                     }
                 }
@@ -2122,7 +2187,6 @@
                     let prevRow = activeRow.previousElementSibling;
                     if (prevRow && prevRow.classList.contains('keyboard-row')) {
                         prevRow.focus();
-                        // NAYA JODA GAYA CODE 👇
                         prevRow.scrollIntoView({ block: 'center', behavior: 'smooth' });
                     }
                 }
@@ -2132,24 +2196,57 @@
                     if (checkbox) {
                         checkbox.checked = !checkbox.checked;
                         let bNo = checkbox.getAttribute('data-billno');
-
-                        // NAYA JODA GAYA 👇
                         if (checkbox.checked) selectedBills.add(bNo);
                         else selectedBills.delete(bNo);
-
                         calculateSelectedTotal();
                     }
                 }
                 else if (event.key === 'Enter') {
                     event.preventDefault();
-                    let partyCell = activeRow.querySelector('.party-name-link');
-                    if (partyCell) {
-                        let pName = partyCell.getAttribute('data-name');
-                        if (pName) showPartyDetails(pName);
+                    // Naya logic: Enter dabane par popup (modal) ki pehli row par focus bhejein
+                    setTimeout(() => {
+                        let firstModalRow = document.querySelector('.modal-keyboard-row');
+                        if (firstModalRow) firstModalRow.focus();
+                    }, 100);
+                }
+            }
+
+            // --- MODAL (POPUP) NAVIGATION (Naya Code) ---
+            else if (activeRow && activeRow.classList.contains('modal-keyboard-row')) {
+                if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    let next = activeRow.nextElementSibling;
+                    if (next && next.classList.contains('modal-keyboard-row')) {
+                        next.focus();
+                        next.scrollIntoView({ block: 'center', behavior: 'smooth' });
                     }
+                }
+                else if (event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    let prev = activeRow.previousElementSibling;
+                    if (prev && prev.classList.contains('modal-keyboard-row')) {
+                        prev.focus();
+                        prev.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                    }
+                }
+                else if (event.key === ' ') { // SPACE to Select in Popup
+                    event.preventDefault();
+                    let checkbox = activeRow.querySelector('input[type="checkbox"]');
+                    if (checkbox) {
+                        checkbox.checked = !checkbox.checked;
+                        handleCheckboxChange(checkbox, checkbox.getAttribute('data-billno'));
+                        // Popup ke andar se select karne par main table bhi update karein
+                        renderTable(currentFilteredData);
+                    }
+                }
+                else if (event.key === 'Enter') { // Enter to Pay in Popup
+                    event.preventDefault();
+                    let payBtn = activeRow.querySelector('.pay-btn');
+                    if (payBtn) payBtn.click();
                 }
             }
         });
+
 
         // ==========================================
         // GLOBAL BINDINGS
