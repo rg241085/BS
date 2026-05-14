@@ -17,7 +17,7 @@
 
         .container {
             background: white;
-            max-width: 1000px;
+            max-width: 1050px;
             margin: auto;
             padding: 30px;
             border-radius: 12px;
@@ -42,7 +42,6 @@
             align-items: center;
         }
 
-        /* Main Header Totals */
         .main-header-amount {
             color: #ef4444;
             font-size: 20px;
@@ -97,9 +96,13 @@
 
         .grid-input {
             display: grid;
-            grid-template-columns: 2fr 1.5fr 3fr 120px;
+            grid-template-columns: 1fr 1fr 2fr 1.5fr;
             gap: 15px;
             align-items: end;
+        }
+
+        .narration-span {
+            grid-column: span 3;
         }
 
         .input-group {
@@ -138,7 +141,7 @@
             font-size: 15px;
             cursor: pointer;
             transition: 0.2s;
-            height: 44px;
+            height: 46px;
         }
 
         .btn-add:hover {
@@ -148,7 +151,7 @@
         /* Table Design */
         .table-grid {
             display: grid;
-            grid-template-columns: 100px 2fr 1.5fr 3fr 100px;
+            grid-template-columns: 110px 100px 2fr 1.5fr 2fr 100px;
             gap: 15px;
             align-items: center;
             text-align: left;
@@ -162,6 +165,19 @@
             border-radius: 8px 8px 0 0;
             font-size: 13px;
             letter-spacing: 0.5px;
+        }
+
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .sortable:hover {
+            color: #93c5fd;
         }
 
         .list-container {
@@ -188,6 +204,12 @@
         .date-text {
             font-size: 12px;
             color: #64748b;
+        }
+
+        .bill-text {
+            font-size: 13px;
+            color: #475569;
+            font-weight: 500;
         }
 
         .name-text {
@@ -265,16 +287,16 @@
             }
 
             .table-grid {
-                grid-template-columns: 100px 2fr 1.5fr 3fr;
+                grid-template-columns: 110px 100px 2fr 1.5fr 2fr;
+            }
+
+            .sortable {
+                color: black !important;
             }
         }
 
-        /* =========================================
-   📱 MOBILE RESPONSIVE DESIGN (Media Queries)
-   ========================================= */
+        /* MOBILE RESPONSIVE DESIGN */
         @media (max-width: 768px) {
-
-            /* Header Area Layout */
             .header-section {
                 flex-direction: column;
                 align-items: flex-start;
@@ -290,21 +312,22 @@
             .header-actions button {
                 margin-left: 0;
                 flex: 1;
-                /* Dono buttons barabar jagah lenge */
                 padding: 12px;
             }
 
             .main-header-amount {
                 display: block;
-                /* Amount ko nayi line par dikhane ke liye */
                 margin-left: 0;
                 margin-top: 5px;
             }
 
-            /* Form Inputs ko ek ke niche ek karna */
             .grid-input {
                 grid-template-columns: 1fr;
                 gap: 12px;
+            }
+
+            .narration-span {
+                grid-column: span 1;
             }
 
             .btn-add {
@@ -312,12 +335,8 @@
                 height: 50px;
             }
 
-            /* -------------------------------------
-       Table ko 'Card' style me badalna
-       ------------------------------------- */
             .table-header {
                 display: none;
-                /* Mobile par upar wali heading hide kar denge */
             }
 
             .list-container {
@@ -338,7 +357,6 @@
                 gap: 6px;
             }
 
-            /* Card ke andar text ki setting */
             .date-text {
                 font-size: 12px;
                 margin-bottom: 2px;
@@ -347,23 +365,18 @@
             .name-text {
                 font-size: 18px;
                 padding-right: 80px;
-                /* Action buttons ke liye jagah chhodna */
             }
 
             .amount-text {
                 font-size: 20px;
-                color: #ef4444;
             }
 
             .narration-text {
-                font-size: 14px;
-                color: #64748b;
                 margin-top: 4px;
                 border-top: 1px dashed #e2e8f0;
                 padding-top: 8px;
             }
 
-            /* Edit/Delete buttons ko card ke top-right me set karna */
             .actions {
                 position: absolute;
                 top: 15px;
@@ -398,15 +411,23 @@
         <div class="form-card">
             <div class="grid-input">
                 <div class="input-group">
-                    <label>1. PAYEE NAME</label>
+                    <label>1. DATE</label>
+                    <input type="date" id="dateInput">
+                </div>
+                <div class="input-group">
+                    <label>2. BILL NO.</label>
+                    <input type="text" id="billNo" placeholder="e.g. DRY-101">
+                </div>
+                <div class="input-group">
+                    <label>3. PAYEE NAME</label>
                     <input type="text" id="name" placeholder="Name of person/supplier">
                 </div>
                 <div class="input-group">
-                    <label>2. AMOUNT (₹)</label>
+                    <label>4. AMOUNT (₹)</label>
                     <input type="number" id="amt" placeholder="0.00">
                 </div>
-                <div class="input-group">
-                    <label>3. NARRATION / DETAILS</label>
+                <div class="input-group narration-span">
+                    <label>5. NARRATION / DETAILS</label>
                     <input type="text" id="narration" placeholder="Almonds vendor, Packaging bill, etc...">
                 </div>
                 <button class="btn-add" id="mainBtn" onclick="addOrUpdatePayment()">+ ADD ENTRY</button>
@@ -414,9 +435,10 @@
         </div>
 
         <div class="table-grid table-header">
-            <div>DATE</div>
-            <div>NAME</div>
-            <div>AMOUNT</div>
+            <div class="sortable" onclick="handleSort('date')" id="head-date">DATE 🔽</div>
+            <div>BILL NO.</div>
+            <div class="sortable" onclick="handleSort('name')" id="head-name">NAME ↕️</div>
+            <div class="sortable" onclick="handleSort('amount')" id="head-amount">AMOUNT ↕️</div>
             <div>NARRATION</div>
             <div class="action-header" style="text-align: center;">ACTION</div>
         </div>
@@ -429,13 +451,24 @@
 
         let payments = [];
         let editingId = null;
+        let sortCol = 'date';
+        let sortAsc = false; // false = descending (naya pehle)
 
         const formatMoney = (num) => {
             return Number(num).toLocaleString('en-IN');
         };
 
+        // Security logic for escaping HTML
+        const escapeHTML = (str) => {
+            if (!str) return '';
+            let div = document.createElement('div');
+            div.innerText = str;
+            return div.innerHTML;
+        };
+
         const paymentsCol = collection(db, "payments");
 
+        // Fetch Data from Firebase
         onSnapshot(paymentsCol, (snapshot) => {
             payments = [];
             snapshot.forEach((doc) => {
@@ -444,16 +477,24 @@
             showPayments();
         });
 
+        // Add or Update Entry
         window.addOrUpdatePayment = async function () {
+            let dateInputVal = document.getElementById('dateInput').value;
+            let billVal = document.getElementById('billNo').value;
             let nameInput = document.getElementById('name').value;
             let amtInput = document.getElementById('amt').value;
             let narrInput = document.getElementById('narration').value;
-            let today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+            // Agar date select nahi ki toh aaj ki date de do
+            if (!dateInputVal) {
+                dateInputVal = new Date().toISOString().split('T')[0];
+            }
 
             if (nameInput !== '' && Number(amtInput) > 0) {
                 if (!editingId) {
                     await addDoc(paymentsCol, {
-                        date: today,
+                        date: dateInputVal,
+                        billNo: billVal,
                         name: nameInput,
                         amount: Number(amtInput),
                         narration: narrInput,
@@ -462,6 +503,8 @@
                 } else {
                     const paymentRef = doc(db, "payments", editingId);
                     await updateDoc(paymentRef, {
+                        date: dateInputVal,
+                        billNo: billVal,
                         name: nameInput,
                         amount: Number(amtInput),
                         narration: narrInput,
@@ -473,6 +516,9 @@
                     btn.style.backgroundColor = "#3b82f6";
                 }
 
+                // Clear fields after submission
+                document.getElementById('dateInput').value = '';
+                document.getElementById('billNo').value = '';
                 document.getElementById('name').value = '';
                 document.getElementById('amt').value = '';
                 document.getElementById('narration').value = '';
@@ -481,9 +527,12 @@
             }
         };
 
+        // Edit Entry & Auto Focus
         window.editPayment = function (id) {
             let p = payments.find(pay => pay.id === id);
             if (p) {
+                document.getElementById('dateInput').value = p.date || '';
+                document.getElementById('billNo').value = p.billNo || '';
                 document.getElementById('name').value = p.name;
                 document.getElementById('amt').value = p.amount;
                 document.getElementById('narration').value = p.narration || "";
@@ -492,15 +541,24 @@
                 let btn = document.getElementById('mainBtn');
                 btn.innerText = "✓ UPDATE ENTRY";
                 btn.style.backgroundColor = "#eab308";
+
+                // Auto Scroll aur Focus Logic
+                document.querySelector('.form-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => {
+                    document.getElementById('name').focus();
+                }, 300);
             }
         };
 
+        // Delete Entry
         window.deletePayment = async function (id) {
             if (confirm("Mark this as PAID? It will be removed from the list. ✅")) {
                 if (editingId === id) {
                     editingId = null;
                     document.getElementById('mainBtn').innerText = "+ ADD ENTRY";
                     document.getElementById('mainBtn').style.backgroundColor = "#3b82f6";
+                    document.getElementById('dateInput').value = '';
+                    document.getElementById('billNo').value = '';
                     document.getElementById('name').value = '';
                     document.getElementById('amt').value = '';
                     document.getElementById('narration').value = '';
@@ -509,23 +567,19 @@
             }
         };
 
-        // SECURE & OBFUSCATED CLEAR ALL FUNCTION
+        // Clear All Data
         window.clearAllData = async function () {
-            // No hint in the prompt anymore
             let authKey = prompt("⚠️ SYSTEM WARNING: Action restricted.\n\nEnter Admin Authorization Key:");
+            if (authKey === null) return;
 
-            if (authKey === null) return; // if user clicks cancel
-
-            // Obfuscated logic: Generates 'DDMMYYYYEDIT' without writing 'EDIT' or 'Date' explicitly
             let d = new Date();
             let req = [
                 String(d.getDate()).padStart(2, '0'),
                 String(d.getMonth() + 1).padStart(2, '0'),
                 d.getFullYear(),
-                String.fromCharCode(69, 68, 73, 84) // This generates 'EDIT'
+                String.fromCharCode(69, 68, 73, 84)
             ].join('');
 
-            // Using btoa (Base64 encoding) to compare, so it's not a direct string match
             if (btoa(authKey) === btoa(req)) {
                 const deletePromises = payments.map(p => deleteDoc(doc(db, "payments", p.id)));
                 await Promise.all(deletePromises);
@@ -535,12 +589,51 @@
             }
         };
 
+        // Sorting Handler
+        window.handleSort = function (column) {
+            if (sortCol === column) {
+                sortAsc = !sortAsc;
+            } else {
+                sortCol = column;
+                sortAsc = (column === 'name') ? true : false;
+            }
+
+            document.getElementById('head-date').innerHTML = 'DATE ' + (sortCol === 'date' ? (sortAsc ? '🔼' : '🔽') : '↕️');
+            document.getElementById('head-name').innerHTML = 'NAME ' + (sortCol === 'name' ? (sortAsc ? '🔼' : '🔽') : '↕️');
+            document.getElementById('head-amount').innerHTML = 'AMOUNT ' + (sortCol === 'amount' ? (sortAsc ? '🔼' : '🔽') : '↕️');
+
+            showPayments();
+        };
+
+        // Display Data
         function showPayments() {
             let listElement = document.getElementById('paymentList');
             let totalPayable = 0;
             listElement.innerHTML = '';
 
-            payments.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+            // Smart Sorting Logic
+            payments.sort((a, b) => {
+                let valA, valB;
+
+                if (sortCol === 'date') {
+                    valA = new Date(a.date).getTime() || 0;
+                    valB = new Date(b.date).getTime() || 0;
+                    if (valA === valB) {
+                        valA = a.timestamp || 0;
+                        valB = b.timestamp || 0;
+                    }
+                } else if (sortCol === 'name') {
+                    valA = a.name.toLowerCase();
+                    valB = b.name.toLowerCase();
+                } else if (sortCol === 'amount') {
+                    valA = Number(a.amount);
+                    valB = Number(b.amount);
+                }
+
+                if (valA < valB) return sortAsc ? -1 : 1;
+                if (valA > valB) return sortAsc ? 1 : -1;
+                return 0;
+            });
 
             if (payments.length === 0) {
                 listElement.innerHTML = '<div class="empty-msg">No pending payments. You are all clear! 🎉</div>';
@@ -548,18 +641,28 @@
                 payments.forEach((payment) => {
                     totalPayable += Number(payment.amount);
 
+                    // Date ko sundar format me dikhane ke liye (Optional)
+                    let displayDate = payment.date;
+                    if (payment.date && payment.date.includes('-')) {
+                        let parts = payment.date.split('-');
+                        displayDate = `${parts[2]}-${parts[1]}-${parts[0]}`; // DD-MM-YYYY
+                    }
+
                     let row = document.createElement('div');
                     row.className = 'table-grid list-item';
+
+                    // XSS protection (escapeHTML) applied here
                     row.innerHTML = `
-                    <div class="date-text">${payment.date}</div>
-                    <div class="name-text">${payment.name}</div>
-                    <div class="amount-text">₹${formatMoney(payment.amount)}</div>
-                    <div class="narration-text">${payment.narration ? payment.narration : '-'}</div>
-                    <div class="actions">
-                        <button class="icon-btn edit-btn" onclick="editPayment('${payment.id}')" title="Edit">✏️</button>
-                        <button class="icon-btn delete-btn" onclick="deletePayment('${payment.id}')" title="Mark as Paid">✅</button>
-                    </div>
-                `;
+                        <div class="date-text">${displayDate}</div>
+                        <div class="bill-text">${escapeHTML(payment.billNo) ? escapeHTML(payment.billNo) : '-'}</div>
+                        <div class="name-text">${escapeHTML(payment.name)}</div>
+                        <div class="amount-text">₹${formatMoney(payment.amount)}</div>
+                        <div class="narration-text">${escapeHTML(payment.narration) ? escapeHTML(payment.narration) : '-'}</div>
+                        <div class="actions">
+                            <button class="icon-btn edit-btn" onclick="editPayment('${payment.id}')" title="Edit">✏️</button>
+                            <button class="icon-btn delete-btn" onclick="deletePayment('${payment.id}')" title="Mark as Paid">✅</button>
+                        </div>
+                    `;
                     listElement.appendChild(row);
                 });
             }
