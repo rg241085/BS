@@ -277,9 +277,52 @@
             overflow-y: auto;
         }
 
+        /* --- Party Details Modal (Top to Bottom Sidebar) --- */
+        #partyDetailsModal {
+            background-color: transparent;
+            pointer-events: none;
+        }
+
         #partyDetailsModal .modal-content {
-            width: 650px;
-            max-width: 95%;
+            pointer-events: auto;
+            position: fixed;
+            top: 15px;
+            /* Upar se shuru hoga */
+            right: 15px;
+            /* Right side me rahega */
+            bottom: 15px;
+            /* Niche tak stretch karega */
+            width: 320px !important;
+            /* Width aur kam kar di (S.No. hatne ki wajah se) */
+            margin: 0;
+            padding: 15px;
+            box-shadow: -4px 8px 24px rgba(0, 0, 0, 0.3);
+            border: 2px solid #0056b3;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            /* Taki scroll sirf table me aaye, title me nahi */
+        }
+
+        /* Card chota hua hai, font thoda adjust kiya */
+        #partyDetailsModal .details-table th,
+        #partyDetailsModal .details-table td {
+            padding: 6px 4px;
+            font-size: 12px;
+        }
+
+        #partyDetailsModal h3 {
+            font-size: 15px;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+        }
+
+        /* Jab list puri screen se badi hogi, tabhi scroll aayega */
+        #partyDetailsModal .table-container {
+            flex-grow: 1;
+            max-height: none !important;
+            /* Purani inline height ko override karega */
+            overflow-y: auto;
         }
 
         .details-table {
@@ -1000,7 +1043,7 @@
                     <thead>
                         <tr>
                             <th style="width: 40px; text-align: center;">Select</th>
-                            <th>S.No.</th>
+
                             <th>Date</th>
                             <th>Bill No.</th>
                             <th style="text-align: right;">Amount (₹)</th>
@@ -1843,7 +1886,7 @@
                     <td style="text-align: center;">
                         <input type="checkbox" class="row-checkbox" data-billno="${bill.billNo}" onchange="handleCheckboxChange(this, '${bill.billNo}')" ${isChecked}>
                     </td>
-                    <td>${index + 1}</td>
+                   
                     <td>${bill.displayDate}</td>
                     <td>${bill.billNo}</td>
                     <td style="color: #d9534f; font-weight: bold; text-align: right;">₹${bill.amount.toLocaleString('en-IN')}</td>
