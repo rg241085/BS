@@ -2231,7 +2231,7 @@
 
             let activeRow = document.activeElement;
 
-            // --- MAIN TABLE NAVIGATION (Purana + Naya Enter) ---
+            // --- MAIN TABLE NAVIGATION ---
             if (activeRow && activeRow.classList.contains('keyboard-row')) {
                 if (event.key === 'ArrowDown') {
                     event.preventDefault();
@@ -2260,17 +2260,19 @@
                         calculateSelectedTotal();
                     }
                 }
-                else if (event.key === 'Enter') {
+                // NAYA LOGIC: Enter ki jagah ArrowRight se modal mein jayein
+                else if (event.key === 'ArrowRight') {
                     event.preventDefault();
-                    // Naya logic: Enter dabane par popup (modal) ki pehli row par focus bhejein
                     setTimeout(() => {
-                        let firstModalRow = document.querySelector('.modal-keyboard-row');
-                        if (firstModalRow) firstModalRow.focus();
-                    }, 100);
+                        let firstModalRow = document.querySelector('#partyDetailsModal .modal-keyboard-row');
+                        if (firstModalRow) {
+                            firstModalRow.focus();
+                        }
+                    }, 50); // Halka sa delay taaki modal render ho jaye
                 }
             }
 
-            // --- MODAL (POPUP) NAVIGATION (Naya Code) ---
+            // --- MODAL (POPUP) NAVIGATION ---
             else if (activeRow && activeRow.classList.contains('modal-keyboard-row')) {
                 if (event.key === 'ArrowDown') {
                     event.preventDefault();
@@ -2288,13 +2290,32 @@
                         prev.scrollIntoView({ block: 'center', behavior: 'smooth' });
                     }
                 }
+                // NAYA LOGIC: ArrowLeft dabane par wapas main table mein jayein
+                else if (event.key === 'ArrowLeft') {
+                    event.preventDefault();
+                    let rowToFocus = null;
+
+                    // Jis row se aaye the, wapas usi par focus karein
+                    if (lastMainRowBillNo) {
+                        let cb = document.querySelector('.row-checkbox[data-billno="' + lastMainRowBillNo + '"]');
+                        if (cb) rowToFocus = cb.closest('tr');
+                    }
+
+                    if (!rowToFocus) {
+                        rowToFocus = document.querySelector('.keyboard-row'); // Fallback
+                    }
+
+                    if (rowToFocus) {
+                        rowToFocus.focus();
+                        rowToFocus.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                    }
+                }
                 else if (event.key === ' ') { // SPACE to Select in Popup
                     event.preventDefault();
                     let checkbox = activeRow.querySelector('input[type="checkbox"]');
                     if (checkbox) {
                         checkbox.checked = !checkbox.checked;
                         handleCheckboxChange(checkbox, checkbox.getAttribute('data-billno'));
-                        // Popup ke andar se select karne par main table bhi update karein
                         renderTable(currentFilteredData);
                     }
                 }
@@ -2305,7 +2326,6 @@
                 }
             }
         });
-
 
         // ==========================================
         // GLOBAL BINDINGS
