@@ -1641,13 +1641,23 @@
             }
         }
 
-        // NAYA FUNCTION
         function handleCheckboxChange(checkbox, billNo) {
-            if (checkbox.checked) {
+            let isChecked = checkbox.checked;
+
+            // 1. Memory me update karein ki bill select hua hai ya nahi
+            if (isChecked) {
                 selectedBills.add(billNo);
             } else {
                 selectedBills.delete(billNo);
             }
+
+            // 2. Asli Jadu Yahan Hai: Screen par jahan-jahan ye bill number ka checkbox hai, un sabko sync kar do
+            let allMatchingCheckboxes = document.querySelectorAll('.row-checkbox[data-billno="' + billNo + '"]');
+            allMatchingCheckboxes.forEach(cb => {
+                cb.checked = isChecked;
+            });
+
+            // 3. Amount Total update karein
             calculateSelectedTotal();
         }
 
@@ -2253,11 +2263,9 @@
                     event.preventDefault();
                     let checkbox = activeRow.querySelector('.row-checkbox');
                     if (checkbox) {
-                        checkbox.checked = !checkbox.checked;
-                        let bNo = checkbox.getAttribute('data-billno');
-                        if (checkbox.checked) selectedBills.add(bNo);
-                        else selectedBills.delete(bNo);
-                        calculateSelectedTotal();
+                        checkbox.checked = !checkbox.checked; // Tick ya Untick karein
+                        // Naya: Sync karne ke liye apna naya function call karein
+                        handleCheckboxChange(checkbox, checkbox.getAttribute('data-billno'));
                     }
                 }
                 // NAYA LOGIC: Enter ki jagah ArrowRight se modal mein jayein
@@ -2310,13 +2318,13 @@
                         rowToFocus.scrollIntoView({ block: 'center', behavior: 'smooth' });
                     }
                 }
-                else if (event.key === ' ') { // SPACE to Select in Popup
+                else if (event.key === ' ') {
                     event.preventDefault();
-                    let checkbox = activeRow.querySelector('input[type="checkbox"]');
+                    let checkbox = activeRow.querySelector('.row-checkbox');
                     if (checkbox) {
-                        checkbox.checked = !checkbox.checked;
+                        checkbox.checked = !checkbox.checked; // Tick ya Untick karein
+                        // Naya: Sync karne ke liye apna naya function call karein
                         handleCheckboxChange(checkbox, checkbox.getAttribute('data-billno'));
-                        renderTable(currentFilteredData);
                     }
                 }
                 else if (event.key === 'Enter') { // Enter to Pay in Popup
