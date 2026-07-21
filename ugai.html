@@ -19,6 +19,7 @@
             background-color: #f4f7f6;
             margin: 0;
             padding: 10px;
+            transition: padding-right 0.3s ease;
         }
 
         .container {
@@ -28,6 +29,16 @@
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            /* Naya: Smooth sliding animation */
+            transition: max-width 0.3s ease, margin-left 0.3s ease;
+        }
+
+        /* JAB SIDEBAR KHULEGA TOH MAIN TABLE LEFT MEIN SHIFT HO JAYEGI */
+        body.sidebar-open .container {
+            margin-left: 15px;
+            /* Left ka space use karega */
+            max-width: calc(100% - 410px);
+            /* Right side mein 410px ki fixed jagah chhod dega */
         }
 
         h2 {
@@ -1900,9 +1911,14 @@
 
             document.getElementById("pd-total").innerText = "₹" + total.toLocaleString('en-IN');
             document.getElementById("partyDetailsModal").style.display = "block";
+            document.body.classList.add("sidebar-open");
         }
 
-        function closePartyDetailsModal() { document.getElementById("partyDetailsModal").style.display = "none"; }
+        function closePartyDetailsModal() {
+            document.getElementById("partyDetailsModal").style.display = "none";
+            // YEH NAYI LINE ADD KAREIN:
+            document.body.classList.remove("sidebar-open");
+        }
 
         function clearFilters() {
             document.getElementById("f-party").value = "";
