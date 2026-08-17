@@ -1625,9 +1625,9 @@
                     <td>${entry.broker}</td>
                     <td style="color: #d9534f; font-weight: bold;">₹${entry.amount.toLocaleString('en-IN')}</td>
                     <td class="action-cell">
-                        <button class="pay-btn" tabindex="-1" onclick="openPaymentModal('${jsSafeName}', '${entry.billNo}', ${entry.amount}, '${entry.dateVal}', '${entry.displayDate}', '${entry.broker}')">Receive Payment</button>
-                        <button class="hide-btn" tabindex="-1" title="Bill temporary hide karein" onclick="hideBill('${entry.billNo}')">👁️ Hide</button>
-                    </td>
+                       <button class="pay-btn" tabindex="-1" onclick="openPaymentModal('${jsSafeName}', '${entry.billNo}', ${entry.amount}, '${entry.dateVal}', '${entry.displayDate}', '${entry.broker}')">Receive Payment</button>
+<button style="background-color: #20c997; color: white; border: none; padding: 6px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-left: 5px;" tabindex="-1" title="Payment aa gaya hai to list se hatayein" onclick="markAsPaid('${entry.billNo}')">✅ Paid</button>
+<button class="hide-btn" tabindex="-1" title="Bill temporary hide karein" onclick="hideBill('${entry.billNo}')">👁️ Hide</button> </td>
                 </tr>
             `;
             });
@@ -1911,9 +1911,10 @@
                     <td>${bill.displayDate}</td>
                     <td>${bill.billNo}</td>
                     <td style="color: #d9534f; font-weight: bold; text-align: right;">₹${bill.amount.toLocaleString('en-IN')}</td>
-                    <td style="text-align: center;">
-                        <button class="pay-btn" onclick="closePartyDetailsModal(); openPaymentModal('${jsSafeName}', '${bill.billNo}', ${bill.amount}, '${bill.dateVal}', '${bill.displayDate}', '${bill.broker}')">Pay</button>
-                    </td>
+                   <td style="text-align: center; white-space: nowrap;">
+    <button class="pay-btn" onclick="closePartyDetailsModal(); openPaymentModal('${jsSafeName}', '${bill.billNo}', ${bill.amount}, '${bill.dateVal}', '${bill.displayDate}', '${bill.broker}')">Pay</button>
+    <button style="background-color: #20c997; color: white; border: none; padding: 6px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-left: 5px;" onclick="markAsPaid('${bill.billNo}'); closePartyDetailsModal();">✅ Paid</button>
+</td>
                 </tr>
             `;
                 });
@@ -2335,6 +2336,23 @@
             }
         });
 
+        // NAYA FUNCTION: Bill ko Paid mark karke list se hatane ke liye
+        function markAsPaid(billNo) {
+            if (confirm(`Kya aap waqai Bill No: ${billNo} ko 'Paid' mark karke list se hatana chahte hain?`)) {
+                // allData me se us bill ko filter karke hata dein
+                allData = allData.filter(row => row.billNo !== billNo);
+
+                // Naya data Firebase par save karein
+                saveToStorage();
+
+                // Memory se bhi hata dein agar selected tha
+                selectedBills.delete(billNo);
+                calculateSelectedTotal();
+
+                alert(`✅ Bill ${billNo} outstanding list se hata diya gaya hai.`);
+            }
+        }
+
         // ==========================================
         // GLOBAL BINDINGS
         // ==========================================
@@ -2364,6 +2382,7 @@
         window.confirmPeriod = confirmPeriod;
         window.syncItemsWithOutstanding = syncItemsWithOutstanding;
         window.handleCheckboxChange = handleCheckboxChange; // Ise List me add kar dein
+        window.markAsPaid = markAsPaid; // Ye line jod dein
 
     </script>
 </body>
