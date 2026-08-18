@@ -92,7 +92,8 @@
 
         .filter-section {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            /* NAYA: Ye saare 8 filters ko barabar hisso mein baant kar ek hi line mein rakhega */
+            grid-template-columns: repeat(8, 1fr);
             gap: 8px;
             margin-bottom: 10px;
             background: #fdfdfd;
@@ -772,6 +773,16 @@
 
         /* --- MOBILE RESPONSIVE DESIGN --- */
         @media (max-width: 768px) {
+
+            .hide-mobile {
+                display: none !important;
+            }
+
+            body {
+                padding: 5px;
+            }
+
+
             body {
                 padding: 5px;
             }
@@ -844,6 +855,143 @@
                 align-items: flex-start;
                 gap: 10px;
             }
+
+
+            /* --- NAYA COMPACT CARD STYLE (Mobile View) --- */
+            #outstandingTable {
+                min-width: 100% !important;
+            }
+
+            #outstandingTable thead {
+                display: none;
+            }
+
+            #outstandingTable tbody tr {
+                display: flex;
+                /* Naya: Isse hum items ko upar-neeche shift kar sakte hain */
+                flex-direction: column;
+                background: #fff;
+                margin-bottom: 10px;
+                /* Card ke beech ka gap kam kiya */
+                padding: 10px 12px;
+                /* Card ke andar ka gap kam kiya */
+                border-radius: 8px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                border: 1px solid #ddd;
+                position: relative;
+            }
+
+            #outstandingTable tbody td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 4px 0;
+                /* Naya: Lines ke beech ki height bohot kam kar di */
+                border-bottom: none;
+                /* Dashed line hata di cleaner look ke liye */
+                text-align: right;
+                font-size: 13px;
+            }
+
+            /* --- MAGIC: Order change karke Party Name ko sabse upar bhejna --- */
+            #outstandingTable tbody td:nth-child(4) {
+                order: 1;
+            }
+
+            /* Party Name (Top) */
+            #outstandingTable tbody td:nth-child(2) {
+                order: 2;
+            }
+
+            /* Date */
+            #outstandingTable tbody td:nth-child(3) {
+                order: 3;
+            }
+
+            /* Bill No */
+            #outstandingTable tbody td:nth-child(5) {
+                order: 4;
+            }
+
+            /* Broker */
+            #outstandingTable tbody td:nth-child(6) {
+                order: 5;
+            }
+
+            /* Amount */
+            #outstandingTable tbody td:nth-child(7) {
+                order: 6;
+            }
+
+            /* Actions (Bottom) */
+
+            /* 1. Checkbox (Top Right) */
+            #outstandingTable tbody td:nth-child(1) {
+                position: absolute;
+                top: 10px;
+                right: 12px;
+                padding: 0;
+                border: none;
+                width: auto;
+                order: 0;
+            }
+
+            /* 4. Party Name Styling (Card Title) */
+            #outstandingTable tbody td:nth-child(4) {
+                display: block;
+                text-align: left;
+                font-size: 15px;
+                /* Font thoda chota kiya */
+                color: #0056b3;
+                border-bottom: 1px solid #eee;
+                /* Patli line */
+                margin-bottom: 4px;
+                padding-bottom: 6px;
+                padding-right: 30px;
+                /* Checkbox overlap na ho */
+            }
+
+            /* 7. Action Buttons (Bottom) */
+            #outstandingTable tbody td:nth-child(7) {
+                display: flex;
+                justify-content: space-around;
+                gap: 5px;
+                margin-top: 6px;
+                padding-top: 8px;
+                border-top: 1px solid #eee;
+                background: transparent;
+            }
+
+            /* Labels Add Karna (Patla aur light color me) */
+            #outstandingTable tbody td:nth-child(2)::before {
+                content: "Date:";
+                font-size: 12px;
+                color: #777;
+            }
+
+            #outstandingTable tbody td:nth-child(3)::before {
+                content: "Bill No:";
+                font-size: 12px;
+                color: #777;
+            }
+
+            #outstandingTable tbody td:nth-child(5)::before {
+                content: "Broker:";
+                font-size: 12px;
+                color: #777;
+            }
+
+            #outstandingTable tbody td:nth-child(6)::before {
+                content: "Due Amount:";
+                font-weight: bold;
+                color: #333;
+            }
+
+            /* Amount ko thoda bada dikhane ke liye */
+            #outstandingTable tbody td:nth-child(6) {
+                font-size: 15px;
+                margin-top: 2px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -858,7 +1006,7 @@
 
     <div class="container" id="main-dashboard">
 
-        <div class="top-controls">
+        <div class="top-controls hide-mobile">
             <div>
                 <label for="csvFileInput" style="font-weight: bold; margin-right: 5px; font-size: 13px;">1. Aaj ki
                     Excel/CSV:</label>
@@ -893,19 +1041,30 @@
         </div>
 
         <div class="filter-section" id="filters" style="display: none;">
+            <!-- Dikhana Hai -->
             <div><label>Party Name</label><input type="text" id="f-party" placeholder="Search Party..."
                     oninput="applyFilters()"></div>
-            <div><label>Bill Number</label><input type="text" id="f-bill" placeholder="Search Bill No..."
-                    oninput="applyFilters()"></div>
+
+            <!-- Hide Karna Hai -->
+            <div class="hide-mobile"><label>Bill Number</label><input type="text" id="f-bill"
+                    placeholder="Search Bill No..." oninput="applyFilters()"></div>
+
+            <!-- Dikhana Hai -->
             <div><label>Broker Name</label><select id="f-broker" onchange="applyFilters()">
                     <option value="">All Brokers</option>
                 </select></div>
-            <div><label>Start Date</label><input type="date" id="f-start" onchange="applyFilters()"></div>
-            <div><label>End Date</label><input type="date" id="f-end" onchange="applyFilters()"></div>
-            <div><label>Min Amount (₹)</label><input type="number" id="f-min" placeholder="0" oninput="applyFilters()">
+
+            <!-- Baaki sab Hide Karna Hai -->
+            <div class="hide-mobile"><label>Start Date</label><input type="date" id="f-start" onchange="applyFilters()">
             </div>
-            <div><label>Max Amount (₹)</label><input type="number" id="f-max" placeholder="Max"
+            <div class="hide-mobile"><label>End Date</label><input type="date" id="f-end" onchange="applyFilters()">
+            </div>
+            <div class="hide-mobile"><label>Min Amount (₹)</label><input type="number" id="f-min" placeholder="0"
                     oninput="applyFilters()"></div>
+            <div class="hide-mobile"><label>Max Amount (₹)</label><input type="number" id="f-max" placeholder="Max"
+                    oninput="applyFilters()"></div>
+            <div class="hide-mobile"><label>Month Wise</label><input type="month" id="f-month"
+                    onchange="applyFilters()"></div>
         </div>
 
         <div class="table-container">
@@ -1529,7 +1688,10 @@
             let fStart = document.getElementById("f-start").value;
             let fEnd = document.getElementById("f-end").value;
             let fMin = document.getElementById("f-min").value;
-            let fMax = document.getElementById("f-max").value; // NAYA CODE: Max amount read karein
+            let fMax = document.getElementById("f-max").value;
+
+            // 1. NAYA CODE: Month input ki value lein
+            let fMonth = document.getElementById("f-month").value;
 
             currentFilteredData = allData.filter(row => {
                 if (row.hidden) return false;
@@ -1542,9 +1704,18 @@
 
                 let matchAmount = true;
                 if (fMin !== "") matchAmount = matchAmount && (row.amount >= parseFloat(fMin));
-                if (fMax !== "") matchAmount = matchAmount && (row.amount <= parseFloat(fMax)); // NAYA CODE: Max amount ki condition
+                if (fMax !== "") matchAmount = matchAmount && (row.amount <= parseFloat(fMax));
 
-                return matchParty && matchBill && matchBroker && matchDate && matchAmount;
+                // 2. NAYA CODE: Month match karne ka logic
+                let matchMonth = true;
+                if (fMonth) {
+                    // row.dateVal hamesha "YYYY-MM-DD" format mein hota hai
+                    // Toh hum check kar rahe hain ki kya date "YYYY-MM" (fMonth) se shuru hoti hai
+                    matchMonth = row.dateVal.startsWith(fMonth);
+                }
+
+                // Return mein matchMonth ko bhi jod dein
+                return matchParty && matchBill && matchBroker && matchDate && matchAmount && matchMonth;
             });
             applySorting();
         }
@@ -1938,7 +2109,11 @@
             document.getElementById("f-start").value = "";
             document.getElementById("f-end").value = "";
             document.getElementById("f-min").value = "";
-            document.getElementById("f-max").value = ""; // NAYA CODE: Max amount ko bhi clear karein
+            document.getElementById("f-max").value = "";
+
+            // YEH NAYI LINE ADD KAREIN
+            document.getElementById("f-month").value = "";
+
             currentSortCol = '';
             applyFilters();
         }
