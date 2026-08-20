@@ -1112,8 +1112,12 @@
                 <div style="background:#f3e5f5; padding:15px; border-radius:5px;"><label style="color:#8e44ad;">🟣 Shop
                         Qty</label><input type="number" id="editShopQty" style="font-weight:bold; font-size:16px;">
                 </div>
-                <button class="btn-save" style="grid-column: 1 / -1; background:#d35400; margin-top:10px;"
-                    onclick="saveLotEdit()">Update Details & Adjust Stock ✅</button>
+                <div style="grid-column: 1 / -1; display: flex; gap: 10px; margin-top:10px;">
+                    <button class="btn-save" style="background:#d35400; flex: 1;" onclick="saveLotEdit()">Update Details
+                        ✅</button>
+                    <button class="btn-save" style="background:#c0392b; flex: 1;" onclick="deleteLot()">Lot Delete
+                        Karein 🗑️</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1279,6 +1283,11 @@
                 </thead>
                 <tbody id="qlTableBody"></tbody>
             </table>
+
+            <!-- NAYA DELETE BUTTON YAHAN AAYEGA -->
+            <button id="ledgerDeleteBtn" class="btn-save" style="background:#c0392b; margin-top:20px;"
+                onclick="deleteLotFromLedger()">Lot Delete Karein 🗑️</button>
+
         </div>
     </div>
 
@@ -1510,6 +1519,29 @@
             if (document.getElementById('jobInQty')) document.getElementById('jobInQty').value = '';
             if (document.getElementById('jobInBharti')) document.getElementById('jobInBharti').value = '';
             if (typeof clearJobOutFields === 'function') clearJobOutFields();
+        }
+
+        function deleteLot() {
+            let lotNo = document.getElementById('editSearchLot').value.trim();
+            if (!lotNo) return;
+
+            // User se confirm karna zaroori hai taaki galti se delete na ho jaye
+            let confirmDelete = confirm(`⚠️ DHYAN DEIN: Kya aap sach mein Lot No. '${lotNo}' ko hamesha ke liye delete karna chahte hain?`);
+
+            if (confirmDelete) {
+                // Cold Stock aur Shop Stock se ye lot hata dein
+                coldStock = coldStock.filter(s => s.lot.toLowerCase() !== lotNo.toLowerCase());
+                shopStock = shopStock.filter(s => s.lot.toLowerCase() !== lotNo.toLowerCase());
+
+                // (Optional) Agar aap history se bhi iska record hatana chahte hain toh is line ko uncomment karein:
+                // lotHistory = lotHistory.filter(h => h.lot.toLowerCase() !== lotNo.toLowerCase());
+
+                // Database mein save karein
+                saveAllData();
+
+                alert(`✅ Lot '${lotNo}' successfully delete ho gaya hai!`);
+                closeAll();
+            }
         }
 
         function resetForm(containerId) {
@@ -2262,12 +2294,20 @@
         function openQuickLedger(lotNo) {
             let tbody = document.getElementById('qlTableBody'); tbody.innerHTML = "";
             document.getElementById('qlTitle').innerText = "📜 Lot Ledger - Lot: " + lotNo;
+
+            // Nayi line jo humne add ki thi
+            document.getElementById('ledgerDeleteBtn').dataset.lot = lotNo;
+
             let filtered = lotHistory.filter(h => h.lot.toLowerCase() === lotNo.toLowerCase());
-            if (filtered.length === 0) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">No History</td></tr>`;
-            else filtered.forEach(h => {
-                let typeClass = h.type.includes("IN") || h.type.includes("Return") ? "hist-in" : (h.type.includes("Transfer") || h.type.includes("Job Work") ? "hist-trans" : "hist-sale");
-                tbody.innerHTML += `<tr><td>${h.date}</td><td class="${typeClass}">${h.type}</td><td>${h.ref}</td><td style="color:#2980b9;">${h.qtyIn}</td><td style="color:#e74c3c;">${h.qtyOut}</td></tr>`;
-            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">No History</td></tr>`;
+            } else {
+                filtered.forEach(h => {
+                    let typeClass = h.type.includes("IN") || h.type.includes("Return") ? "hist-in" : (h.type.includes("Transfer") || h.type.includes("Job Work") ? "hist-trans" : "hist-sale");
+                    tbody.innerHTML += `<tr><td>${h.date}</td><td class="${typeClass}">${h.type}</td><td>${h.ref}</td><td style="color:#2980b9;">${h.qtyIn}</td><td style="color:#e74c3c;">${h.qtyOut}</td></tr>`;
+                });
+            }
             document.getElementById('quickLedgerModal').style.display = 'block';
         }
 
@@ -2281,6 +2321,32 @@
                 let typeClass = h.type.includes("IN") || h.type.includes("Return") ? "hist-in" : (h.type.includes("Transfer") || h.type.includes("Job Work") ? "hist-trans" : "hist-sale");
                 tbody.innerHTML += `<tr><td>${h.date}</td><td class="${typeClass}">${h.type}</td><td>${h.ref}</td><td style="color:#2980b9;">${h.qtyIn}</td><td style="color:#e74c3c;">${h.qtyOut}</td></tr>`;
             });
+        }
+
+
+        function deleteLotFromLedger() {
+            // Button ke data se lot number nikalna
+            let lotNo = document.getElementById('ledgerDeleteBtn').dataset.lot;
+            if (!lotNo) return;
+
+            let confirmDelete = confirm(`⚠️ DHYAN DEIN: Kya aap sach mein Lot No. '${lotNo}' ko hamesha ke liye delete karna chahte hain?`);
+
+            if (confirmDelete) {
+                // Cold Stock aur Shop Stock se hatana
+                coldStock = coldStock.filter(s => s.lot.toLowerCase() !== lotNo.toLowerCase());
+                shopStock = shopStock.filter(s => s.lot.toLowerCase() !== lotNo.toLowerCase());
+
+                // Database mein save karna
+                saveAllData();
+
+                alert(`✅ Lot '${lotNo}' successfully delete ho gaya hai!`);
+
+                // Modal ko band karna
+                document.getElementById('quickLedgerModal').style.display = 'none';
+
+                // Master Table ko turant refresh karna taaki delete hua lot screen se gayab ho jaye
+                renderMasterTable();
+            }
         }
 
         function renderReceiptRegister() {
@@ -2800,6 +2866,7 @@
         window.saveSaleReturnGrid = saveSaleReturnGrid;
         window.generateReturnFormNumber = generateReturnFormNumber;
         window.renderSaleReturnRegister = renderSaleReturnRegister;
+        window.deleteLotFromLedger = deleteLotFromLedger;
 
         // Karkhana Job Work Exports
         window.updateJobOutList = updateJobOutList;
@@ -2807,6 +2874,7 @@
         window.calcJobBalance = calcJobBalance;
         window.clearJobOutFields = clearJobOutFields;
         window.saveJobWorkNew = saveJobWorkNew;
+        window.deleteLot = deleteLot;
 
     </script>
 </body>
