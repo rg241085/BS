@@ -497,12 +497,14 @@
                         <div class="metric"><span class="summary-difference match">MATCHED: 0.00</span></div>
                     </div>
 
-                    <div class="header-buttons">
-                        <button class="btn add-new-day-btn">Add New Day</button>
-                        <button class="btn clear-day-btn" title="Clear only this day">Clear Current Day</button>
-                        <button class="btn recalc-all-btn"
-                            title="Set each day's opening from previous day's closing">Recalculate All Days</button>
-                    </div>
+                   <div class="header-buttons">
+    <button class="btn add-new-day-btn">Add New Day</button>
+    <button class="btn clear-day-btn" title="Clear only this day">Clear Current Day</button>
+    <button class="btn recalc-all-btn" title="Set each day's opening from previous day's closing">Recalculate All</button>
+    
+    <!-- YAHAN NAYA BUTTON ADD KIYA HAI -->
+    <button class="btn optimize-cash-btn" style="background: #6f42c1;" title="Notes ko Packets aur Loose mein auto-set karein">📦 Smart Organize</button>
+</div>
                 </div>
             </div>
 
@@ -761,6 +763,44 @@
                 calculateAll(dayComponent);
                 saveFromDOM();
             }
+
+            /* ----------------- SMART ORGANIZE (PACKETS/LOOSE) ----------------- */
+function optimizeCash(dayComponent) {
+    dayComponent.querySelectorAll('.denom-row').forEach(row => {
+        // Sirf Note wale rows par kaam karega (agar disabled nahi hai)
+        const packetInput = row.querySelector('.packet-input');
+        if (packetInput.disabled) return; 
+
+        const loose1Input = row.querySelector('.loose-1-input');
+        const loose2Input = row.querySelector('.loose-2-input');
+        const loose3Input = row.querySelector('.loose-3-input');
+
+        // Current values padhna
+        const packets = parseFloat(packetInput.value) || 0;
+        const loose1 = parseFloat(loose1Input.value) || 0;
+        const loose2 = parseFloat(loose2Input.value) || 0;
+        const loose3 = parseFloat(loose3Input.value) || 0;
+
+        // Total notes count karna (Packets + Loose)
+        const totalNotes = (packets * 100) + loose1 + loose2 + loose3;
+
+        if (totalNotes > 0) {
+            // Naye packets aur bache huye loose notes nikalna
+            const properPackets = Math.floor(totalNotes / 100);
+            const remainingLoose = totalNotes % 100;
+
+            // Values ko update karna
+            packetInput.value = properPackets;
+            loose1Input.value = remainingLoose;
+            loose2Input.value = 0; // Loose 2 aur 3 ko khaali/0 kar diya
+            loose3Input.value = 0;
+        }
+    });
+
+    // Calculation update aur save karein
+    calculateAll(dayComponent);
+    saveFromDOM();
+}
 
             function addExtraEntry(dayComponent, narration, amount) {
                 const listBody = dayComponent.querySelector('.extra-list-body');
