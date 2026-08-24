@@ -1193,14 +1193,19 @@ function optimizeCash(dayComponent) {
             }
 
             /* ----------------- INIT ----------------- */
-            function attachHeaderButtons(dayComponent) {
-                const addBtn = dayComponent.querySelector('.add-new-day-btn');
-                const clearBtn = dayComponent.querySelector('.clear-day-btn');
-                const recalcBtn = dayComponent.querySelector('.recalc-all-btn');
-                if (addBtn) addBtn.addEventListener('click', addNewDay);
-                if (clearBtn) clearBtn.addEventListener('click', () => clearCurrentDay(dayComponent));
-                if (recalcBtn) recalcBtn.addEventListener('click', recalcAllDays);
-            }
+          function attachHeaderButtons(dayComponent) {
+    const addBtn = dayComponent.querySelector('.add-new-day-btn');
+    const clearBtn = dayComponent.querySelector('.clear-day-btn');
+    const recalcBtn = dayComponent.querySelector('.recalc-all-btn');
+    const optimizeBtn = dayComponent.querySelector('.optimize-cash-btn'); // <--- Ye Line Jodein
+
+    if (addBtn) addBtn.addEventListener('click', addNewDay);
+    if (clearBtn) clearBtn.addEventListener('click', () => clearCurrentDay(dayComponent));
+    if (recalcBtn) recalcBtn.addEventListener('click', recalcAllDays);
+    
+    // <--- Ye Line Jodein
+    if (optimizeBtn) optimizeBtn.addEventListener('click', () => optimizeCash(dayComponent)); 
+}
 
             await renderFromStorage();
         });
